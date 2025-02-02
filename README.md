@@ -1,2 +1,3 @@
 # runningmate
-Python script to extract data from tsx files
+Python script to extract data from tcx files
+

@@ -1,0 +1,9 @@
+# created by virtualenv automatically
+tcx-files/
+svg-files/
+png-files/
+excel-files/
+venv/
+.DS_Store
+.idea
+.env.local
