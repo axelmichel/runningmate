@@ -1,11 +1,9 @@
 from PyQt6.QtSvgWidgets import QSvgWidget
-from PyQt6.QtWebEngineCore import QWebEngineSettings
 from PyQt6.QtWidgets import (
-    QDialog, QLabel, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, QFileDialog, QWidget
+    QDialog, QLabel, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, QFileDialog, QWidget, QMessageBox
 )
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtCore import QUrl, Qt
+from PyQt6.QtCore import Qt
 import os
 import webbrowser
 
@@ -16,6 +14,8 @@ class RunDetailsWindow(QDialog):
     def __init__(self, run_data):
         super().__init__()
         self.run_id = run_data[0]  # Run ID for database updates
+        self.activity_type = run_data[17]  # Activity Type
+        self.date = run_data[1]  # Date
         self.track_img_path = run_data[18] if len(run_data) > 18 else None  # Track image path
         self.elevation_img_path = run_data[19] if len(run_data) > 19 else None  # Elevation image path
         self.map_html = run_data[20] if len(run_data) > 20 else None  # Map HTML file
@@ -26,25 +26,30 @@ class RunDetailsWindow(QDialog):
 
     def initUI(self, run_data):
         """Setup UI elements for displaying run details with a structured layout."""
-        self.setWindowTitle("Run Details")
+        self.setWindowTitle(f"Run Details - {self.activity_type} on {self.date}")
         self.setGeometry(100, 100, 1000, 800)  # Adjusted size for structured layout
 
         # ==== MAIN LAYOUT ====
         main_layout = QVBoxLayout()
 
-        # ==== ROW 1: Running Data | Map | Elevation Profile ====
+        # ==== TITLE ====
+        title_label = QLabel(f"{self.activity_type} - {self.date}")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        title_label.setStyleSheet("font-size: 18px; font-weight: bold; padding: 10px 0px;")
+        main_layout.addWidget(title_label)
+
+        # ==== ROW 1: Data | Plot + Show Map Button | Elevation Profile ====
         top_layout = QHBoxLayout()
 
-        # LEFT: Running Data
+        # LEFT: Run Data (excluding Activity Type & Date)
         left_top_layout = QVBoxLayout()
         headers = [
-            "Date", "Start Time", "Distance (km)", "Total Time", "Elevation Gain (m)",
+            "Start Time", "Distance (km)", "Total Time", "Elevation Gain (m)",
             "Avg Speed (km/h)", "Avg Steps (SPM)", "Total Steps", "Avg Power (Watts)",
-            "Avg Heart Rate (BPM)", "Avg Pace", "Fastest Pace", "Slowest Pace", "Pause", "Activity Type"
+            "Avg Heart Rate (BPM)", "Avg Pace", "Fastest Pace", "Slowest Pace", "Pause"
         ]
 
         db_columns = [
-            1,  # Date
             4,  # Start Time
             5,  # Distance (km)
             6,  # Total Time
@@ -57,52 +62,40 @@ class RunDetailsWindow(QDialog):
             13,  # Avg Pace
             14,  # Fastest Pace
             15,  # Slowest Pace
-            16,  # Pause
-            17  # Activity Type
+            16  # Pause
         ]
 
         for header, db_index in zip(headers, db_columns):
-            label = QLabel(f"{header}: {run_data[db_index]}")
+            label = QLabel(f"<b>{header}:</b> {run_data[db_index]}")
             left_top_layout.addWidget(label)
 
         top_layout.addLayout(left_top_layout, 1)
 
-        # MIDDLE: Map Display
+        # MIDDLE: Track Plot + Show Map Button
         middle_top_layout = QVBoxLayout()
+        if os.path.exists(self.track_img_path):
+            track_pixmap = QPixmap(self.track_img_path).scaled(300, 300)
+            track_display = QLabel()
+            track_display.setPixmap(track_pixmap)
+            track_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            middle_top_layout.addWidget(track_display)
 
-        if os.path.exists(self.map_html):
-            map_view = QWebEngineView()
-
-            # Enable loading of external JS resources (Fixes "L is not defined" error)
-            map_view.settings().setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
-            map_view.settings().setAttribute(QWebEngineSettings.WebAttribute.AllowRunningInsecureContent, True)
-
-            # Load the HTML map file
-            map_view.setUrl(QUrl.fromLocalFile(self.map_html))
-            map_view.setFixedSize(400, 400)
-
-            # Center the map in the column
-            map_label = QLabel("Map View")
-            map_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-            open_map_btn = QPushButton("Open in New Window")
-            open_map_btn.clicked.connect(self.open_map_in_browser)
-
-            middle_top_layout.addWidget(map_label)
-            middle_top_layout.addWidget(map_view)
-            middle_top_layout.addWidget(open_map_btn, alignment=Qt.AlignmentFlag.AlignCenter)
+        # Show Map Button
+        show_map_btn = QPushButton("Show Map in Browser")
+        show_map_btn.clicked.connect(self.open_map_in_browser)
+        middle_top_layout.addWidget(show_map_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         top_layout.addLayout(middle_top_layout, 1)
 
         # RIGHT: Elevation Profile
         if os.path.exists(self.elevation_img_path):
             elevation_display = QSvgWidget(self.elevation_img_path)
-            elevation_display.setFixedSize(300, 300)
+            elevation_display.setFixedSize(600, 300)
             top_layout.addWidget(elevation_display, 1)
 
         main_layout.addLayout(top_layout)
 
-        # ==== ROW 2: Comment Box | Uploaded Image | Track Map ====
+        # ==== ROW 2: Comment Box | Uploaded Image ====
         bottom_layout = QHBoxLayout()
 
         # LEFT: Comment Box
@@ -120,38 +113,25 @@ class RunDetailsWindow(QDialog):
 
         bottom_layout.addLayout(left_bottom_layout, 1)
 
-        # MIDDLE: Uploaded Image (Photo)
-        middle_bottom_layout = QVBoxLayout()
+        # RIGHT: Uploaded Image (Photo)
+        right_bottom_layout = QVBoxLayout()
         self.photo_display = QLabel()
         if self.photo_path and os.path.exists(self.photo_path):
             self.photo_display.setPixmap(QPixmap(self.photo_path).scaled(300, 300))
-        middle_bottom_layout.addWidget(self.photo_display)
+            self.photo_display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        right_bottom_layout.addWidget(self.photo_display)
 
         # Button to upload a photo
         upload_photo_btn = QPushButton("Upload Photo")
         upload_photo_btn.clicked.connect(self.upload_photo)
-        middle_bottom_layout.addWidget(upload_photo_btn)
+        right_bottom_layout.addWidget(upload_photo_btn)
 
-        bottom_layout.addLayout(middle_bottom_layout, 1)
-
-        # RIGHT: Track Map
-        if os.path.exists(self.track_img_path):
-            track_pixmap = QPixmap(self.track_img_path).scaled(300, 300)
-            track_display = QLabel()
-            track_display.setPixmap(track_pixmap)
-            bottom_layout.addWidget(track_display, 1)
+        bottom_layout.addLayout(right_bottom_layout, 1)
 
         main_layout.addLayout(bottom_layout)
 
         self.setLayout(main_layout)
-
-    def open_map_in_browser(self):
-        """Opens the map HTML in the default browser."""
-        if self.map_html and os.path.exists(self.map_html):
-            print(f"Opening map: {self.map_html}")  # Debugging
-            webbrowser.open(f"file://{os.path.abspath(self.map_html)}")
-        else:
-            print("Map file does not exist or path is invalid.")
 
     def save_comment(self):
         """Saves the comment to the database."""
@@ -170,3 +150,10 @@ class RunDetailsWindow(QDialog):
 
             # Update UI
             self.photo_display.setPixmap(QPixmap(save_photo_path).scaled(300, 300))
+
+    def open_map_in_browser(self):
+        """Opens the map HTML file in the default web browser."""
+        if self.map_html and os.path.exists(self.map_html):
+            webbrowser.open(f"file://{os.path.abspath(self.map_html)}")
+        else:
+            QMessageBox.warning(self, "Map Error", "Map file not found.")
