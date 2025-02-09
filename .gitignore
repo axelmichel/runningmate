@@ -4,5 +4,12 @@ files
 dist
 build
 .DS_Store
-.idea
 .env.local
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# dev
+.project
+.idea
