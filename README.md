@@ -35,6 +35,12 @@ Feel free to contribute by submitting issues or pull requests on GitHub. Make su
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
 
+## Future Enhancements
+- Integration of weather data: Enhance activity analysis by correlating runs with weather conditions.
+- Search and filter activities: Implement functionality to search and filter running records easily.
+- Calendar with activities: Add a calendar view to visualize running sessions over time.
+- Weekly, monthly, and yearly statistics with comparisons: Provide deeper insights and track progress over different timeframes.
+
 ## Contact
 For questions or support, reach out via [michel.axel@gmail.com](mailto:michel.axel@gmail.com) or open an issue on GitHub.
 
