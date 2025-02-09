@@ -205,6 +205,7 @@ class RunningDataApp(QWidget):
         avg_steps, total_steps = calculate_steps(df)
 
         base_name = os.path.basename(file_path).replace(".tcx", "")
+        date, time = base_name.split("_")[:2]  # Extract date and start time
         track_img = os.path.join(IMG_DIR, f"{base_name}_track.png")
         elevation_img = os.path.join(IMG_DIR, f"{base_name}_elevation.svg")
         map_html = os.path.join(IMG_DIR, f"{base_name}_map.html")
@@ -216,7 +217,9 @@ class RunningDataApp(QWidget):
         if not os.path.exists(map_html):
             plot_activity_map(df, map_html)
 
-        run_data = compute_run_db_data(df, base_name, avg_steps, total_steps, avg_pace, fastest_pace, slowest_pace, pause_time, activity_type)
+        year, month = date.split("-")[:2]
+
+        run_data = compute_run_db_data(df, base_name, year, month, avg_steps, total_steps, avg_pace, fastest_pace, slowest_pace, pause_time, activity_type)
         insert_run(run_data, track_img, elevation_img, map_html)
 
 

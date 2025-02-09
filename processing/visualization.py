@@ -1,7 +1,5 @@
 import folium
 import matplotlib.pyplot as plt
-from PIL import Image
-import io
 
 
 def plot_track(df, output_path):
@@ -24,6 +22,7 @@ def plot_track(df, output_path):
     # Save with tight bounding box and high resolution
     plt.savefig(output_path, dpi=300, transparent=True, bbox_inches='tight', pad_inches=0)
     plt.close(fig)
+
 
 def plot_activity_map(df, output_path):
     """Plots the activity route on an OpenStreetMap and saves it as a PNG file."""

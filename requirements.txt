@@ -1,11 +1,8 @@
-PIL
 PyQt6
 folium
 io
 matplotlib
 numpy
 pandas
-processing
 pyproj
-ui
-webbrowser
+sqlite3
