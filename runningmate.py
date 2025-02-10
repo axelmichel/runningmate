@@ -12,7 +12,7 @@ from processing.data_processing import convert_to_utm, calculate_distance, calcu
 from processing.parse_tcx import parse_tcx
 from processing.visualization import plot_track, plot_elevation, plot_activity_map
 
-from processing.database_handler import initialize_database, insert_run, get_years, get_months, get_runs, get_run_by_id
+from database.database_handler import initialize_database, insert_run, get_years, get_months, get_runs, get_run_by_id
 from ui.window_run_details import RunDetailsWindow
 
 # Directories

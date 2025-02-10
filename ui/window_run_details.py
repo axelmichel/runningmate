@@ -1,13 +1,13 @@
 from PyQt6.QtSvgWidgets import QSvgWidget
 from PyQt6.QtWidgets import (
-    QDialog, QLabel, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, QFileDialog, QWidget, QMessageBox
+    QDialog, QLabel, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, QFileDialog, QMessageBox
 )
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
 import os
 import webbrowser
 
-from processing.database_handler import update_comment, update_photo
+from database.database_handler import update_comment, update_photo
 
 
 class RunDetailsWindow(QDialog):

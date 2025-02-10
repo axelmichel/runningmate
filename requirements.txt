@@ -1,8 +1,6 @@
 PyQt6
 folium
-io
 matplotlib
 numpy
 pandas
 pyproj
-sqlite3
