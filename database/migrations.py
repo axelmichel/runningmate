@@ -75,13 +75,6 @@ def apply_migrations():
             "ALTER TABLE runs ADD COLUMN activity_id INTEGER REFERENCES activities(id)",
             "CREATE TABLE IF NOT EXISTS media (id INTEGER PRIMARY KEY AUTOINCREMENT, activity_id INTEGER NOT NULL, media_type TEXT NOT NULL, file_path TEXT NOT NULL, FOREIGN KEY (activity_id) REFERENCES activities(id))"
         ]),
-        (6, [
-            "INSERT INTO activities (date_time, distance, activity_type, comment) SELECT date, distance, activity_type, comment FROM runs",
-            "UPDATE runs SET activity_id = (SELECT id FROM activities WHERE activities.date_time = runs.date AND activities.distance = runs.distance AND activities.activity_type = activities.activity_type)",
-            "INSERT INTO media (activity_id, media_type, file_path) SELECT runs.activity_id, 'image', runs.photo FROM runs WHERE runs.photo IS NOT NULL AND runs.photo != ''",
-            "ALTER TABLE runs DROP COLUMN comment",
-            "ALTER TABLE runs DROP COLUMN photo"
-        ]),
         (7, """
             CREATE TABLE IF NOT EXISTS cycling (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -120,20 +113,31 @@ def apply_migrations():
                     FOREIGN KEY (activity_id) REFERENCES activities(id)
                 );
             """),
-        (9, """ 
-         INSERT INTO cycling (activity_id, date, month, year, start_time, distance, total_time, elevation_gain, avg_speed, avg_power, avg_heart_rate, avg_pace, fastest_pace, slowest_pace, pause, activity, track_img, elevation_img, map_html)
-            SELECT activity_id, date, strftime('%m', date), strftime('%Y', date), time, distance, total_time,
-            elevation_gain, avg_speed, avg_power, avg_heart_rate, pace, fastest_pace, slowest_pace, pause,
-            activity_type, track_img, elevation_img, map_html FROM runs WHERE activity_type = 'Biking'
-        """),
+        (10, [
+            "INSERT INTO activities (date_time, distance, activity_type, comment) SELECT date, distance, activity, comment FROM runs",
+            "UPDATE runs SET activity_id = (SELECT id FROM activities WHERE activities.date_time = runs.date AND activities.distance = runs.distance AND activities.activity_type = runs.activity)",
+            "INSERT INTO media (activity_id, media_type, file_path) SELECT runs.activity_id, 'image', runs.photo FROM runs WHERE runs.photo IS NOT NULL AND runs.photo != ''",
+            "ALTER TABLE runs DROP COLUMN comment",
+            "ALTER TABLE runs DROP COLUMN photo"
+        ]),
+        (11, """ 
+             INSERT INTO cycling (activity_id, date, month, year, start_time, distance, total_time, elevation_gain, avg_speed, avg_power, avg_heart_rate, avg_pace, fastest_pace, slowest_pace, pause, activity, track_img, elevation_img, map_html)
+                SELECT activity_id, date, strftime('%m', date), strftime('%Y', date), start_time, distance, total_time,
+                elevation_gain, avg_speed, avg_power, avg_heart_rate, avg_pace, fastest_pace, slowest_pace, pause,
+                activity, track_img, elevation_img, map_html FROM runs WHERE activity = 'Biking'
+            """),
     ]
 
     current_version = get_current_version()
     conn, cursor = connect()
 
-    for version, query in migrations:
+    for version, queries in migrations:
         if version > current_version:
-            cursor.execute(query)
+            if isinstance(queries, list):  # ✅ If multiple queries, loop through them
+                for query in queries:
+                    cursor.execute(query)
+            else:
+                cursor.execute(queries)
             cursor.execute("INSERT INTO schema_version (version) VALUES (?)", (version,))
             conn.commit()
 

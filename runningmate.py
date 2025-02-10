@@ -12,7 +12,8 @@ from processing.data_processing import convert_to_utm, calculate_distance, calcu
 from processing.parse_tcx import parse_tcx
 from processing.visualization import plot_track, plot_elevation, plot_activity_map
 
-from database.database_handler import initialize_database, insert_run, get_years, get_months, get_runs, get_run_by_id
+from database.database_handler import insert_run, get_years, get_months, get_runs, get_run_by_id
+from database.migrations import apply_migrations
 from ui.window_run_details import RunDetailsWindow
 
 # Directories
@@ -240,7 +241,8 @@ if __name__ == "__main__":
 
     # Step 1: Initialize Database
     update_splash("Initializing database...")
-    initialize_database()
+    apply_migrations()
+
 
     # Step 2: Load UI after a short delay (allowing splash to be visible)
     def start_main_app():

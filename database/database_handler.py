@@ -1,8 +1,6 @@
 import sqlite3
 import os
 
-from database.migrations import apply_migrations
-
 DB_PATH = os.path.expanduser("~/RunningData/running_data.db")
 
 
@@ -11,11 +9,6 @@ def connect():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     return conn, cursor
-
-
-def initialize_database():
-    apply_migrations()
-
 
 def insert_run(data, track_img, elevation_img, map_html):
     conn, cursor = connect()
