@@ -8,23 +8,28 @@ from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtCore import Qt, QTimer
 
 from processing.compute_statistics import compute_run_db_data
-from processing.data_processing import convert_to_utm, calculate_distance, calculate_pace, detect_pauses, calculate_steps
+from processing.data_processing import convert_to_utm, calculate_distance, calculate_pace, detect_pauses, \
+    calculate_steps
 from processing.parse_tcx import parse_tcx
 from processing.visualization import plot_track, plot_elevation, plot_activity_map
 
-from database.database_handler import insert_run, get_years, get_months, get_runs, get_run_by_id
+from database.database_handler import DatabaseHandler
 from database.migrations import apply_migrations
 from ui.window_run_details import RunDetailsWindow
 
 # Directories
 IMG_DIR = os.path.expanduser("~/RunningData/images")
-
 if not os.path.exists(IMG_DIR):
     os.makedirs(IMG_DIR)
+
+MEDIA_DIR = os.path.expanduser("~/RunningData/media")
+if not os.path.exists(MEDIA_DIR):
+    os.makedirs(MEDIA_DIR)
 
 
 class NumericTableWidgetItem(QTableWidgetItem):
     """Custom TableWidgetItem that ensures proper numeric sorting."""
+
     def __init__(self, value):
         super().__init__(str(value))  # Store as text
         try:
@@ -42,11 +47,13 @@ class NumericTableWidgetItem(QTableWidgetItem):
 
 
 class RunningDataApp(QWidget):
-    def __init__(self):
+    def __init__(self, db_handler: DatabaseHandler):
         super().__init__()
-        self.setWindowIcon(QIcon("icon.png"))  # Set custom icon
-        self.last_sorted_column = None  # Track last clicked column
-        self.sort_order = Qt.SortOrder.AscendingOrder  # Default sort order
+        self.db = db_handler  # ✅ Use DatabaseHandler instance
+        self.setWindowIcon(QIcon("icon.icns"))
+        self.last_sorted_column = None
+        self.sort_order = Qt.SortOrder.AscendingOrder
+        self.run_id_mapping = {}  # ✅ Store row → run_id mapping
         self.initUI()
 
     def initUI(self):
@@ -67,8 +74,9 @@ class RunningDataApp(QWidget):
         layout.addWidget(self.monthComboBox)
 
         self.tableWidget = QTableWidget()
-        self.tableWidget.setSortingEnabled(True)  # Enable sorting
+        self.tableWidget.setSortingEnabled(True)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.tableWidget.cellClicked.connect(self.handle_cell_clicked)  # ✅ Connect cell click event
 
         layout.addWidget(self.tableWidget)
 
@@ -87,7 +95,8 @@ class RunningDataApp(QWidget):
         self.move(x, y)
 
     def load_years(self):
-        years = get_years()
+        years = self.db.get_years()
+        self.yearComboBox.clear()
         self.yearComboBox.addItems(years)
         if years:
             self.yearComboBox.setCurrentText(years[0])
@@ -96,7 +105,7 @@ class RunningDataApp(QWidget):
     def load_months(self):
         selected_year = self.yearComboBox.currentText()
         if selected_year:
-            months = get_months(selected_year)
+            months = self.db.get_months(selected_year)
             self.monthComboBox.clear()
             self.monthComboBox.addItems(months)
             if months:
@@ -111,7 +120,7 @@ class RunningDataApp(QWidget):
         if not selected_year or not selected_month:
             return
 
-        runs = get_runs(selected_year, selected_month)
+        runs = self.db.get_runs(selected_year, selected_month)
 
         headers = [
             "Date", "Start Time", "Distance (km)", "Total Time", "Elevation Gain (m)",
@@ -159,7 +168,6 @@ class RunningDataApp(QWidget):
 
                 self.tableWidget.setItem(i, j, item)
 
-
     def handle_cell_clicked(self, row, column):
         """Opens the details window for the clicked run."""
         try:
@@ -178,10 +186,10 @@ class RunningDataApp(QWidget):
                 return
 
             # Fetch run details from the DB
-            run_data = get_run_by_id(run_id)
+            run_data = self.db.get_run_by_id(run_id)
 
             if run_data:
-                self.details_window = RunDetailsWindow(run_data)
+                self.details_window = RunDetailsWindow(run_data, MEDIA_DIR, self.db)
                 self.details_window.exec()
 
                 # Ensure reference is cleared after closing
@@ -220,39 +228,42 @@ class RunningDataApp(QWidget):
 
         year, month = date.split("-")[:2]
 
-        run_data = compute_run_db_data(df, base_name, year, month, avg_steps, total_steps, avg_pace, fastest_pace, slowest_pace, pause_time, activity_type)
-        insert_run(run_data, track_img, elevation_img, map_html)
+        run_data = compute_run_db_data(df, base_name, year, month, avg_steps, total_steps, avg_pace, fastest_pace,
+                                       slowest_pace, pause_time, activity_type)
+        self.db.insert_run(run_data, track_img, elevation_img, map_html)
 
 
-# ==========================
-# 🌟 Improved Splash Screen
-# ==========================
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # Load splash screen
-    splash_pixmap = QPixmap("splash_png.jpg")
+    splash_pixmap = QPixmap("splash_screen.png")
     splash = QSplashScreen(splash_pixmap)
     splash.show()
+
 
     # Update splash message
     def update_splash(message):
         splash.showMessage(message, Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
 
+
     # Step 1: Initialize Database
     update_splash("Initializing database...")
-    apply_migrations()
+
+    db_handler = DatabaseHandler()
+    apply_migrations(db_handler)
 
 
     # Step 2: Load UI after a short delay (allowing splash to be visible)
     def start_main_app():
         global window  # Ensure window persists
         update_splash("Loading user interface...")
-        window = RunningDataApp()
+        window = RunningDataApp(db_handler)
 
         update_splash("Finalizing startup...")
         QTimer.singleShot(500, splash.close)  # Give 500ms for splash to fade
         window.showMaximized()
+
 
     # Start the main window **after** a short delay, allowing splash visibility
     QTimer.singleShot(1000, start_main_app)  # Delay startup slightly
