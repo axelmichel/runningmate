@@ -15,7 +15,9 @@ from processing.visualization import plot_track, plot_elevation, plot_activity_m
 
 from database.database_handler import DatabaseHandler
 from database.migrations import apply_migrations
+from ui.main_menu import MenuBar
 from ui.window_run_details import RunDetailsWindow
+from translations import _
 
 # Directories
 IMG_DIR = os.path.expanduser("~/RunningData/images")
@@ -59,9 +61,8 @@ class RunningDataApp(QWidget):
     def initUI(self):
         layout = QVBoxLayout()
 
-        self.uploadButton = QPushButton("Upload and Process TCX File")
-        self.uploadButton.clicked.connect(self.upload_tcx_file)
-        layout.addWidget(self.uploadButton)
+        menu_bar = MenuBar(self)
+        layout.addWidget(menu_bar)
 
         self.yearComboBox = QComboBox()
         self.monthComboBox = QComboBox()
@@ -248,7 +249,7 @@ if __name__ == "__main__":
 
 
     # Step 1: Initialize Database
-    update_splash("Initializing database...")
+    update_splash(_("Initializing database..."))
 
     db_handler = DatabaseHandler()
     apply_migrations(db_handler)
@@ -257,10 +258,10 @@ if __name__ == "__main__":
     # Step 2: Load UI after a short delay (allowing splash to be visible)
     def start_main_app():
         global window  # Ensure window persists
-        update_splash("Loading user interface...")
+        update_splash(_("Loading user interface..."))
         window = RunningDataApp(db_handler)
 
-        update_splash("Finalizing startup...")
+        update_splash(_("Finalizing startup..."))
         QTimer.singleShot(500, splash.close)  # Give 500ms for splash to fade
         window.showMaximized()
 

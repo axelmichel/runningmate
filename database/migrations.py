@@ -172,6 +172,10 @@ def apply_migrations(db: DatabaseHandler):
         (18, [
             "ALTER TABLE best_performances ADD COLUMN activity_type TEXT",
         ]),
+        (19, [
+            "ALTER TABLE activities ADD COLUMN duration",
+            "UPDATE activities SET duration = (SELECT total_time FROM runs WHERE runs.activity_id = activities.id)"
+        ]),
     ]
 
     for version, queries in migrations:
