@@ -30,7 +30,10 @@ def test_get_current_version(test_db):
     """Ensure that get_current_version correctly retrieves the schema version."""
     db = test_db
 
-    # ✅ Insert schema version manually
+    # ✅ Ensure the table is empty before inserting
+    db.cursor.execute("DELETE FROM schema_version")  # Clear previous entries
+
+    # ✅ Insert schema version safely
     db.cursor.execute("INSERT INTO schema_version (version) VALUES (3)")
     db.conn.commit()
 

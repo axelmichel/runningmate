@@ -41,7 +41,7 @@ class DatabaseHandler:
         """, (activity_id, segment_number, heart_rate, speed, pace, pause_time))
         self.conn.commit()
 
-    def insert_best_performance(self, activity_type, distance, best_time, date_time):
+    def insert_best_performance(self, activity_id, activity_type, distance, best_time, date_time):
         """Insert a new best performance record, keeping only the top 3 for each distance."""
         self.cursor.execute("""
             SELECT id FROM best_performances WHERE activity_type = ? AND distance = ?
@@ -52,9 +52,9 @@ class DatabaseHandler:
         if len(results) < 3:
             # Insert new best performance
             self.cursor.execute("""
-                INSERT INTO best_performances (activity_type, distance, best_time, date_time)
-                VALUES (?, ?, ?, ?)
-            """, (activity_type, distance, best_time, date_time))
+                INSERT INTO best_performances (activity_id, activity_type, distance, best_time, date_time)
+                VALUES (?, ?, ?, ?, ?)
+            """, (activity_id, activity_type, distance, best_time, date_time))
         else:
             # If the new time is better than the worst recorded time, update the record
             worst_id = results[-1][0]
