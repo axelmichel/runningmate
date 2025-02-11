@@ -4,7 +4,7 @@ from processing.compute_statistics import compute_run_db_data
 from processing.parse_tcx import parse_tcx
 from processing.data_processing import convert_to_utm, calculate_distance, calculate_pace, detect_pauses, calculate_steps
 from processing.visualization import plot_track, plot_elevation, plot_activity_map
-from processing.database_handler import insert_run, initialize_database
+from database.database_handler import insert_run, initialize_database
 
 # Set paths
 TCX_DIR = os.path.expanduser("~/RunningData/tcx")  # Directory containing TCX files
