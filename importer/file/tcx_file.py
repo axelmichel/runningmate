@@ -119,5 +119,5 @@ class TcxFileImporter:
             "elevation_gain": int(round(df["Elevation"].diff().clip(lower=0).sum(), 0)) if "Elevation" in df.columns else 0,
             "avg_heart_rate": int(round(df["HeartRate"].mean(), 0)) if not df["HeartRate"].isnull().all() else 0,
             "avg_speed": round(avg_speed, 2),
-            "avg_power": int(round(df["Power"].mean() , 0)) if not df["Power"].isnull().all() else 0,
+            "avg_power": int(round(df["Power"].mean() , 0)) if not df["Power"].isnull().all() else 0
         }

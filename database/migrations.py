@@ -13,10 +13,10 @@ def get_current_version(db: DatabaseHandler):
     return result[0] if result[0] is not None else 0
 
 
-def apply_migrations(db: DatabaseHandler):
+def apply_migrations(db: DatabaseHandler, custom_migrations=None):
     current_version = get_current_version(db)
 
-    migrations = [
+    migrations = custom_migrations if custom_migrations is not None else [
         (1, """
             CREATE TABLE IF NOT EXISTS runs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -19,6 +19,7 @@ def test_db():
     yield db  # ✅ Return test database handler
     db.close()  # ✅ Cleanup after test
 
+
 def generate_test_activity(test_db):
     types = ["Running", "Walking", "Cycling"]
     db = test_db
@@ -284,6 +285,248 @@ def test_delete_media_file_not_exist(test_db):
     assert len(media_files) == 0  # ✅ Ensure media is removed from DB
 
 
+def test_insert_cycling(test_db):
+    """Test inserting a cycling activity."""
+    db = test_db
+    activity_data = generate_test_activity(test_db)
+    db.insert_activity(activity_data)
+
+    cycling_data = {
+        "activity_id": activity_data["id"],
+        "elevation_gain": 250,
+        "avg_speed": 25.0,
+        "avg_power": 200,
+        "avg_heart_rate": 155,
+        "avg_pace": "04:30",
+        "fastest_pace": "03:50",
+        "slowest_pace": "05:15",
+        "pause": "00:45",
+        "map_html": "cycling_map.html",
+        "elevation_img": "cycling_elevation.svg",
+        "track_img": "cycling_track.svg",
+    }
+
+    db.insert_cycling(cycling_data)
+
+    db.cursor.execute("SELECT * FROM cycling WHERE activity_id = ?", (activity_data["id"],))
+    cycling = db.cursor.fetchone()
+    cycling = dict(cycling)
+
+    assert cycling is not None
+    assert cycling["avg_speed"] == cycling_data["avg_speed"]
+    assert cycling["avg_power"] == cycling_data["avg_power"]
+
+
+def test_insert_walk(test_db):
+    """Test inserting a walking activity."""
+    db = test_db
+    activity_data = generate_test_activity(test_db)
+    db.insert_activity(activity_data)
+
+    walk_data = {
+        "activity_id": activity_data["id"],
+        "elevation_gain": 50,
+        "avg_speed": 5.0,
+        "avg_steps": 120,
+        "total_steps": 8000,
+        "avg_power": 90,
+        "avg_heart_rate": 120,
+        "avg_pace": "12:00",
+        "fastest_pace": "10:30",
+        "slowest_pace": "15:00",
+        "pause": "00:20",
+        "map_html": "walk_map.html",
+        "elevation_img": "walk_elevation.svg",
+        "track_img": "walk_track.svg",
+    }
+
+    db.insert_walk(walk_data)
+
+    db.cursor.execute("SELECT * FROM walking WHERE activity_id = ?", (activity_data["id"],))
+    walk = db.cursor.fetchone()
+    walk = dict(walk)
+
+    assert walk is not None
+    assert walk["avg_speed"] == walk_data["avg_speed"]
+    assert walk["total_steps"] == walk_data["total_steps"]
+
+
+def test_fetch_run_by_activity_id(test_db):
+    """Test fetching a run by activity ID."""
+    db = test_db
+    activity_data = generate_test_activity(test_db)
+    db.insert_activity(activity_data)
+
+    run_data = {
+        "activity_id": activity_data["id"],
+        "elevation_gain": 120,
+        "avg_speed": 10.5,
+        "avg_heart_rate": 160,
+        "total_steps": 6000,
+        "avg_steps": 210,
+        "avg_power": 150,
+        "avg_pace": "06:15",
+        "fastest_pace": "05:30",
+        "slowest_pace": "07:00",
+        "pause": "00:50",
+        "map_html": "run_map.html",
+        "elevation_img": "run_elevation.svg",
+        "track_img": "run_track.svg",
+    }
+
+    db.insert_run(run_data)
+
+    run = db.fetch_run_by_activity_id(activity_data["id"])
+    assert run is not None
+    assert run["activity_type"] == activity_data["activity_type"]
+    assert run["avg_speed"] == run_data["avg_speed"]
+
+
+def test_fetch_walk_by_activity_id(test_db):
+    """Test fetching a walk by activity ID."""
+    db = test_db
+    activity_data = generate_test_activity(test_db)
+    db.insert_activity(activity_data)
+
+    walk_data = {
+        "activity_id": activity_data["id"],
+        "elevation_gain": 80,
+        "avg_speed": 4.5,
+        "avg_steps": 150,
+        "total_steps": 9000,
+        "avg_power": 100,
+        "avg_heart_rate": 130,
+        "avg_pace": "13:00",
+        "fastest_pace": "11:45",
+        "slowest_pace": "14:30",
+        "pause": "00:15",
+        "map_html": "walk_map.html",
+        "elevation_img": "walk_elevation.svg",
+        "track_img": "walk_track.svg",
+    }
+
+    db.insert_walk(walk_data)
+
+    walk = db.fetch_walk_by_activity_id(activity_data["id"])
+    assert walk is not None
+    assert walk["activity_type"] == activity_data["activity_type"]
+    assert walk["avg_steps"] == walk_data["avg_steps"]
+
+
+def test_fetch_ride_by_activity_id(test_db):
+    """Test fetching a cycling ride by activity ID."""
+    db = test_db
+    activity_data = generate_test_activity(test_db)
+    db.insert_activity(activity_data)
+
+    ride_data = {
+        "activity_id": activity_data["id"],
+        "elevation_gain": 500,
+        "avg_speed": 27.0,
+        "avg_power": 250,
+        "avg_heart_rate": 140,
+        "avg_pace": "03:50",
+        "fastest_pace": "03:20",
+        "slowest_pace": "04:30",
+        "pause": "00:30",
+        "map_html": "ride_map.html",
+        "elevation_img": "ride_elevation.svg",
+        "track_img": "ride_track.svg",
+    }
+
+    db.insert_cycling(ride_data)
+
+    ride = db.fetch_ride_by_activity_id(activity_data["id"])
+    assert ride is not None
+    assert ride["activity_type"] == activity_data["activity_type"]
+    assert ride["avg_power"] == ride_data["avg_power"]
+
+
+def test_fetch_all_activities(test_db):
+    """Test fetching all activities with pagination."""
+    db = test_db
+
+    for _ in range(5):
+        activity_data = generate_test_activity(test_db)
+        db.insert_activity(activity_data)
+
+    activities = db.fetch_activities(start=0, limit=5)
+    assert len(activities) == 5  # ✅ Ensure all activities are retrieved
+
+
+def test_fetch_all_runs(test_db):
+    """Test fetching all runs with pagination."""
+    db = test_db
+
+    for _ in range(3):
+        activity_data = generate_test_activity(test_db)
+        db.insert_activity(activity_data)
+
+        run_data = {
+            "activity_id": activity_data["id"],
+            "elevation_gain": 100,
+            "avg_speed": 10.0,
+            "avg_heart_rate": 170,
+            "total_steps": 4500,
+            "avg_steps": 200,
+            "avg_power": 140,
+            "avg_pace": "06:00",
+            "fastest_pace": "06:00",
+            "slowest_pace": "07:30",
+            "pause": "00:30",
+            "map_html": "map.html",
+            "elevation_img": "elevation.svg",
+            "track_img": "elevation.svg",
+        }
+
+        db.insert_run(run_data)
+
+    runs = db.fetch_runs(start=0, limit=3)
+    assert len(runs) == 3  # ✅ Ensure all runs are retrieved
+
+
+def test_fetch_all_rides(test_db):
+    """Test fetching all cycling rides with pagination."""
+    db = test_db
+
+    ride_entries = []
+    for _ in range(5):  # Insert 5 cycling activities
+        activity_data = generate_test_activity(test_db)
+        db.insert_activity(activity_data)
+
+        ride_data = {
+            "activity_id": activity_data["id"],
+            "elevation_gain": random.randint(200, 1000),
+            "avg_speed": round(random.uniform(20.0, 35.0), 2),
+            "avg_power": random.randint(180, 300),
+            "avg_heart_rate": random.randint(120, 160),
+            "avg_pace": f"{random.randint(3, 5)}:{random.randint(0, 59):02d}",
+            "fastest_pace": f"{random.randint(3, 5)}:{random.randint(0, 59):02d}",
+            "slowest_pace": f"{random.randint(5, 7)}:{random.randint(0, 59):02d}",
+            "pause": "00:30",
+            "map_html": "ride_map.html",
+            "elevation_img": "ride_elevation.svg",
+            "track_img": "ride_track.svg",
+        }
+
+        db.insert_cycling(ride_data)
+        ride_entries.append(ride_data)
+
+    # ✅ Fetch the rides
+    rides = db.fetch_rides(start=0, limit=5)
+
+    # ✅ Verify that we retrieved the correct number of rides
+    assert len(rides) == 5
+
+    # ✅ Check that the data matches what we inserted
+    for i, ride in enumerate(rides):
+        assert ride["activity_id"] == ride_entries[i]["activity_id"]
+        assert ride["avg_speed"] == ride_entries[i]["avg_speed"]
+        assert ride["avg_pace"] == ride_entries[i]["avg_pace"]
+        assert ride["fastest_pace"] == ride_entries[i]["fastest_pace"]
+        assert ride["slowest_pace"] == ride_entries[i]["slowest_pace"]
+
+
 def test_close_database(test_db):
     """Test closing the database connection."""
     db = test_db
@@ -323,4 +566,3 @@ def cleanup_test_files():
     for file in test_files:
         if os.path.exists(file):
             os.remove(file)
-

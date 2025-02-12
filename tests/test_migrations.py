@@ -38,3 +38,29 @@ def test_get_current_version(test_db):
     db.conn.commit()
 
     assert get_current_version(db) == 3, "get_current_version should return the latest version"
+
+def test_migration_failure_handling(test_db, capsys):
+    """Test that a failed migration stops further migrations and logs an error."""
+    db = test_db
+
+    # ✅ Define a faulty migration that will cause an OperationalError
+    faulty_migrations = [
+        (99, "ALTER TABLE non_existent_table ADD COLUMN fake_column TEXT"),
+        (100, "CREATE TABLE should_not_execute (id INTEGER)")  # This should NOT execute
+    ]
+
+    # ✅ Ensure previous migration version exists
+    db.cursor.execute("INSERT INTO schema_version (version) VALUES (98)")
+    db.conn.commit()
+
+    # ✅ Run migrations with the faulty one injected
+    apply_migrations(db, custom_migrations=faulty_migrations)
+
+    # ✅ Capture printed logs
+    captured = capsys.readouterr()
+    assert "❌ ERROR in Migration 99" in captured.out, "Migration failure should be logged."
+    assert "🛑 Stopping migrations due to error." in captured.out, "Migrations should stop after an error."
+
+    # ✅ Verify that migration 100 was NOT applied
+    db.cursor.execute("SELECT version FROM schema_version WHERE version = 100")
+    assert db.cursor.fetchone() is None, "Migration 100 should not be applied."

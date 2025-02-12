@@ -3,7 +3,7 @@ import locale
 import os
 
 # Get system default language
-default_lang, _ = locale.getdefaultlocale()
+default_lang, _ = locale.getlocale()
 
 # Define where translation files are stored
 LOCALE_DIR = os.path.join(os.path.dirname(__file__), "locales")
