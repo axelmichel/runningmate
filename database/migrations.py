@@ -176,6 +176,18 @@ def apply_migrations(db: DatabaseHandler):
             "ALTER TABLE activities ADD COLUMN duration",
             "UPDATE activities SET duration = (SELECT total_time FROM runs WHERE runs.activity_id = activities.id)"
         ]),
+        (20, [
+            "ALTER TABLE activities ADD COLUMN duration_new INTEGER",
+            "UPDATE activities SET duration_new = ((substr(total_time, 1, 2) * 3600) + (substr(total_time, 4, 2) * 60) + (substr(total_time, 7, 2))) FROM runs WHERE activities.id = runs.activity_id",
+            "ALTER TABLE activities DROP COLUMN duration",
+            "ALTER TABLE activities RENAME COLUMN duration_new TO duration"
+        ]),
+        (22, [
+            "ALTER TABLE activities ADD COLUMN date_time_new INTEGER",
+            "UPDATE activities SET date_time_new = (SELECT strftime('%s', substr(runs.date, 1, 4) || '-' || substr(runs.date, 6, 2) || '-' || substr(runs.date, 9, 2) || ' ' ||  runs.start_time || ':00') FROM runs WHERE runs.activity_id = activities.id)",
+            "ALTER TABLE activities DROP COLUMN date",
+            "ALTER TABLE activities RENAME COLUMN date_time_new TO date"
+        ]),
     ]
 
     for version, queries in migrations:

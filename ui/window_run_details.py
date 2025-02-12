@@ -8,6 +8,7 @@ from PyQt6.QtCore import Qt, QRect
 import os
 import webbrowser
 import cv2
+from translations import _
 
 from database.database_handler import DatabaseHandler
 
@@ -27,23 +28,22 @@ class RunDetailsWindow(QDialog):
         self.current_page = 0
         self.db = db_handler
         self.media_dir = media_dir
-        self.run_id = run_data[0]  # Run ID
-        self.activity_id = run_data[21]  # Activity ID (new field)
-        self.activity_type = run_data[17]  # Activity Type
-        self.date = run_data[1]  # Date
-        self.track_img_path = run_data[18] if len(run_data) > 18 else None  # Track image path
-        self.elevation_img_path = run_data[19] if len(run_data) > 19 else None  # Elevation image path
-        self.map_html = run_data[20] if len(run_data) > 20 else None  # Map HTML file
+        self.run_id = run_data['id']
+        self.activity_id = run_data['activity_id']
+        self.activity_type = run_data['activity_type']
+        self.comment = run_data['comment']
 
-        # ✅ Fetch comment from activities table
-        self.comment = self.db.get_comment(self.activity_id)
+        self.track_img_path = run_data['track_img'] if run_data['track_img'] else None  # Track image path
+        self.elevation_img_path = run_data['elevation_img'] if run_data['elevation_img'] else None  # Elevation image path
+        self.map_html = run_data['map_html'] if run_data['map_html'] else None  # Map HTML file
+
         self.current_index = 0
         self.media_files = self.db.get_media_files(self.activity_id)
-        self.initUI(run_data)
+        self.init_ui(run_data)
 
-    def initUI(self, run_data):
+    def init_ui(self, run_data):
         """Setup UI elements for displaying run details with a structured layout."""
-        self.setWindowTitle(f"Run Details - {self.activity_type} on {self.date}")
+        self.setWindowTitle(_("{type} on {date} ").format(type=_(run_data['activity_type']), date=run_data['date']))
         self.setGeometry(100, 100, 1200, 800)
 
         # ==== MAIN LAYOUT ====
@@ -54,9 +54,9 @@ class RunDetailsWindow(QDialog):
         menu_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         menu_layout.setSpacing(5)
 
-        show_map_btn = self.create_menu_button("Show Map", self.open_map_in_browser)
-        edit_comment_btn = self.create_menu_button("Edit Comment", self.edit_comment)
-        upload_media_btn = self.create_menu_button("Add Media", self.upload_media)
+        show_map_btn = self.create_menu_button(_("Show Map"), self.open_map_in_browser)
+        edit_comment_btn = self.create_menu_button(_("Edit Comment"), self.edit_comment)
+        upload_media_btn = self.create_menu_button(_("Add Media"), self.upload_media)
 
         # Add to layout with dividers
         menu_layout.addWidget(show_map_btn)
@@ -80,7 +80,7 @@ class RunDetailsWindow(QDialog):
         content_layout = QVBoxLayout()
 
         # ==== TITLE (Left-Aligned) ====
-        title_label = QLabel(f"{self.activity_type} - {self.date}")
+        title_label = QLabel(run_data['title'])
         title_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         title_label.setStyleSheet("""
             font-size: 20px; 
@@ -105,7 +105,7 @@ class RunDetailsWindow(QDialog):
 
         # ==== COMMENT (Left-Aligned) ====
         comment_layout = QHBoxLayout()
-        self.comment_label = QLabel(self.comment if self.comment else "")
+        self.comment_label = QLabel(run_data['comment'] if run_data['comment'] else "")
         self.comment_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self.comment_label.setWordWrap(True)
         self.comment_label.setStyleSheet("border: none; padding: 0")
@@ -124,9 +124,9 @@ class RunDetailsWindow(QDialog):
 
         # Navigation buttons
         nav_layout = QHBoxLayout()
-        self.prev_button = QPushButton("◀ Previous")
+        self.prev_button = QPushButton(_("◀ Previous"))
         self.prev_button.clicked.connect(self.prev_media)
-        self.next_button = QPushButton("Next ▶")
+        self.next_button = QPushButton(_("Next ▶"))
         self.next_button.clicked.connect(self.next_media)
         nav_layout.addWidget(self.prev_button)
         nav_layout.addWidget(self.next_button)
@@ -138,16 +138,14 @@ class RunDetailsWindow(QDialog):
         fourth_row_layout = QHBoxLayout()
         left_data_layout = QVBoxLayout()
 
-        headers = [
-            "Start Time", "Distance (km)", "Total Time", "Elevation Gain (m)",
-            "Avg Speed (km/h)", "Avg Steps (SPM)", "Total Steps", "Avg Power (Watts)",
-            "Avg Heart Rate (BPM)", "Avg Pace", "Fastest Pace", "Slowest Pace", "Pause"
-        ]
-        db_columns = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        fields = [
+            "time", "distance", "duration", "elevation_gain", "avg_speed", "avg_steps", "total_steps", "avg_power",
+            "avg_heart_rate", "avg_pace", "fastest_pace", "slowest_pace", "pause"]
 
-        for header, db_index in zip(headers, db_columns):
-            label = QLabel(f"<b>{header}:</b> {run_data[db_index]}")
-            left_data_layout.addWidget(label)
+        for field in fields:
+            if field in run_data and run_data[field]:
+                label = QLabel(f"<b>{_(field)}:</b> {run_data[field]}")
+                left_data_layout.addWidget(label)
 
         left_data_layout.addStretch()
         fourth_row_layout.addLayout(left_data_layout, 1)
@@ -182,7 +180,7 @@ class RunDetailsWindow(QDialog):
     def edit_comment(self):
         """Opens a dialog to edit the comment with multiline support, dynamically adjusting width."""
         dialog = QDialog(self)
-        dialog.setWindowTitle("Edit Comment")
+        dialog.setWindowTitle(_("Edit Comment"))
 
         # ✅ Set dialog width dynamically based on window size
         dialog_width = max(300, int(self.width() * 0.5))  # 50% of window width, min 300px
@@ -284,7 +282,7 @@ class RunDetailsWindow(QDialog):
             return
 
         dialog = QDialog(self)
-        dialog.setWindowTitle("Full Image View")
+        dialog.setWindowTitle("Full Image ViewMode")
         dialog.setGeometry(100, 100, 800, 600)  # Set window size
 
         layout = QVBoxLayout()
@@ -316,9 +314,8 @@ class RunDetailsWindow(QDialog):
                 widget.deleteLater()
 
         if not self.media_files:
-            empty_label = QLabel("No media available")
-            empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.carousel_layout.addWidget(empty_label)
+            self.prev_button.setVisible(False)
+            self.next_button.setVisible(False)
             return
 
         self.carousel_layout.setSpacing(10)  #

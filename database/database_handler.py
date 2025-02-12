@@ -1,9 +1,16 @@
 import sqlite3
 import os
+from translations import _
 
 
 class DatabaseHandler:
     """Database handler that allows injecting a connection for better testability and efficiency."""
+    SORT_MAP = {
+        "date_time": "activities.date",
+        "title": "activities.title",
+        "duration": "activities.duration",
+        "distance": "activities.distance",
+    }
 
     def __init__(self, db_path=None, conn=None):
         """Initialize the database connection."""
@@ -12,6 +19,7 @@ class DatabaseHandler:
         else:
             db_path = db_path or os.path.expanduser("~/RunningData/running_data.db")
             self.conn = sqlite3.connect(db_path, check_same_thread=False)
+        self.conn.row_factory = sqlite3.Row  # A
         self.cursor = self.conn.cursor()
 
     def insert_run(self, data, track_img, elevation_img, map_html):
@@ -113,6 +121,134 @@ class DatabaseHandler:
                WHERE activity_id = ?
            """, (activity_id,))
         return self.cursor.fetchall()
+
+    def fetch_run_by_activity_id(self, activity_id):
+        """
+        Fetch a run, joining the activities table to get some basic information.
+        :param activity_id: The activity ID to fetch
+        :return: dictionary
+        """
+        query = f"""
+                SELECT 
+                    runs.id,
+                    strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
+                    strftime('%H:%M', activities.date, 'unixepoch') AS time,
+                    printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,
+                    activities.distance,
+                    activities.title,
+                    activities.comment,
+                    activities.activity_type,
+                    runs.activity_id,
+                    runs.elevation_gain,
+                    runs.avg_speed,
+                    runs.avg_steps,
+                    runs.total_steps,
+                    runs.avg_power,
+                    runs.avg_heart_rate,
+                    runs.avg_pace,
+                    runs.fastest_pace,
+                    runs.slowest_pace,
+                    runs.pause,
+                    runs.track_img,
+                    runs.elevation_img,
+                    runs.map_html,
+                    shoes.name as shoe_name,
+                    shoes.distance as shoe_distance,
+                    shoes.status as shoe_status
+                FROM runs
+                JOIN activities ON activities.id = runs.activity_id
+                LEFT JOIN shoes ON shoes.id = runs.shoe_id AND runs.shoe_id IS NOT NULL 
+                WHERE runs.activity_id = ?;
+            """
+
+        self.cursor.execute(query, (activity_id,))
+        row = self.cursor.fetchone()
+        return dict(row)
+
+    def fetch_activities(self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"):
+        """
+        Fetch paginated entries from the activities table, sorting by date (most recent first).
+
+        :param start: Offset for pagination (default: 0)
+        :param limit: Number of records to fetch (default: 50)
+        :param sort_field: Column name to sort by (default "activities.date")
+        :param sort_direction: Sorting direction (ASC or DESC, default DESC)
+        :return: List of dictionaries
+        """
+
+        if sort_field in self.SORT_MAP:
+            sort_field = self.SORT_MAP[sort_field]
+
+        query = f"""
+            SELECT 
+                id as activity_id, 
+                strftime('{_("%d.%m.%Y")}', date, 'unixepoch') AS date_time,  -- YYYY.MM.DD format
+                strftime('%H:%M', date, 'unixepoch') AS time,  -- HH:MM format
+                printf('%02d:%02d:%02d', duration / 3600, (duration % 3600) / 60, duration % 60) AS duration,
+                activity_type, 
+                duration,
+                distance,
+                title 
+            FROM activities 
+            ORDER BY {sort_field} {sort_direction}
+            LIMIT ? OFFSET ?;
+            """
+
+        return self.fetch_all(query, start, limit)
+
+    def fetch_runs(self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"):
+        """
+        Fetch paginated entries from the runs table, sorting by date (most recent first).
+
+        :param start: Offset for pagination (default: 0)
+        :param limit: Number of records to fetch (default: 50)
+        :param sort_field: Column name to sort by (default "activities.date")
+        :param sort_direction: Sorting direction (ASC or DESC, default DESC)
+        :return: List of dictionaries
+        """
+
+        if sort_field in self.SORT_MAP:
+            sort_field = self.SORT_MAP[sort_field]
+
+        query = f"""
+               SELECT 
+                    runs.id,
+                    runs.activity_id,
+                    strftime('{_("%d.%m.%Y %H:%M")}', activities.date, 'unixepoch') AS date_time,
+                    printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,
+                    activities.distance,
+                    activities.title,
+                    activities.activity_type,
+                    runs.elevation_gain,
+                    runs.avg_speed,
+                    runs.avg_steps,
+                    runs.total_steps,
+                    runs.avg_power,
+                    runs.avg_heart_rate,
+                    runs.avg_pace,
+                    runs.fastest_pace,
+                    runs.slowest_pace,
+                    runs.pause
+                FROM runs
+                JOIN activities ON activities.id = runs.activity_id
+                ORDER BY {sort_field} {sort_direction}
+                LIMIT ? OFFSET ?;
+               """
+
+        return self.fetch_all(query, start, limit)
+
+
+    def fetch_all(self, query, start=0, limit=50):
+        """
+        Fetch paginated entries from the database using a custom query.
+        :param start: Offset for pagination (default: 0)
+        :param limit: Number of records to fetch (default: 50
+        :return: List of dictionaries
+        """
+        self.cursor.execute(query, (limit, start))
+        rows = self.cursor.fetchall()
+
+        return [dict(row) for row in rows]
 
     def delete_media(self, activity_id, file_path):
         """Deletes a media entry from the database and removes the file."""
