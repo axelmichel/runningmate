@@ -1,7 +1,11 @@
 import numpy as np
 import pandas as pd
+from translations import _
 
-def format_pace(pace):
+from processing.system_settings import ViewMode
+
+
+def format_hour_minute(pace):
     """Converts a pace value in min/km to MM:SS format."""
     if np.isnan(pace) or pace is None:
         return "00:00"
@@ -9,7 +13,9 @@ def format_pace(pace):
     seconds = int(round((pace - minutes) * 60))
     return f"{minutes:02d}:{seconds:02d}"
 
-def compute_run_statistics(df, base_name, avg_steps, total_steps, avg_pace, fastest_pace, slowest_pace, total_pause_time, activity_type):
+
+def compute_run_statistics(df, base_name, avg_steps, total_steps, avg_pace, fastest_pace, slowest_pace,
+                           total_pause_time, activity_type):
     """Computes various running statistics from the DataFrame and returns them as a dictionary."""
 
     # Compute core metrics
@@ -30,22 +36,55 @@ def compute_run_statistics(df, base_name, avg_steps, total_steps, avg_pace, fast
         "Total Steps": int(total_steps) if not np.isnan(total_steps) else 0,
         "Average Power (Watts)": int(round(avg_power, 0)) if not np.isnan(avg_power) else 0,
         "Average Heart Rate (BPM)": int(round(df["HeartRate"].mean(), 0)) if not df["HeartRate"].isnull().all() else 0,
-        "Average Pace (min/km)": format_pace(avg_pace),  # Convert to MM:SS format
-        "Fastest Kilometer (min/km)": format_pace(fastest_pace),  # Convert to MM:SS format
-        "Slowest Kilometer (min/km)": format_pace(slowest_pace),  # Convert to MM:SS format
-        "Pause": format_pace(total_pause_time),
+        "Average Pace (min/km)": format_hour_minute(avg_pace),  # Convert to MM:SS format
+        "Fastest Kilometer (min/km)": format_hour_minute(fastest_pace),  # Convert to MM:SS format
+        "Slowest Kilometer (min/km)": format_hour_minute(slowest_pace),  # Convert to MM:SS format
+        "Pause": format_hour_minute(total_pause_time),
         "Activity": activity_type
     }
 
     return data
 
 
-def compute_run_db_data(df, date, month, year, avg_steps, total_steps, avg_pace, fastest_pace, slowest_pace, total_pause_time, activity_type):
+def generate_activity_title(activity_type: ViewMode, timestamp: float) -> str:
+    """
+    Generate a title like "Run in the Afternoon" or "Cycling at Night" using pandas.
+
+    :param activity_type: The type of activity (e.g., "Running", "Cycling").
+    :param timestamp: Unix timestamp (seconds).
+    :return: Formatted activity title.
+    """
+    dt = pd.to_datetime(timestamp, unit="s", utc=True)
+    hour = dt.hour  # Extract the hour (0-23)
+
+    if 5 <= hour < 12:
+        time_of_day = _("in the Morning")
+    elif 12 <= hour < 17:
+        time_of_day = _("in the Afternoon")
+    elif 17 <= hour < 21:
+        time_of_day = _("in the Evening")
+    else:
+        time_of_day = _("at Night")
+
+    label = "Activity"
+    if(activity_type == ViewMode.CYCLE):
+        label = _("Ride")
+    elif(activity_type == ViewMode.WALK):
+        label = _("Walk")
+    elif(activity_type == ViewMode.RUN):
+        label = _("Run")
+
+    return f"{label} {time_of_day}"
+
+
+def compute_run_db_data(df, date, month, year, avg_steps, total_steps, avg_pace, fastest_pace, slowest_pace,
+                        total_pause_time, activity_type):
     """Computes running statistics and prepares them for database insertion."""
 
     # Compute core metrics
     total_distance = df["Distance"].iloc[-1] if "Distance" in df.columns else 0
-    total_time = pd.to_datetime(df["Time"].iloc[-1]) - pd.to_datetime(df["Time"].iloc[0]) if "Time" in df.columns else pd.Timedelta(0)
+    total_time = pd.to_datetime(df["Time"].iloc[-1]) - pd.to_datetime(
+        df["Time"].iloc[0]) if "Time" in df.columns else pd.Timedelta(0)
     avg_speed = total_distance / (total_time.total_seconds() / 3600) if total_time.total_seconds() > 0 else 0
     avg_power = df["Power"].mean() if "Power" in df.columns else 0
     avg_heart_rate = df["HeartRate"].mean() if "HeartRate" in df.columns else 0
@@ -67,10 +106,10 @@ def compute_run_db_data(df, date, month, year, avg_steps, total_steps, avg_pace,
         int(total_steps) if not np.isnan(total_steps) else 0,
         int(round(avg_power, 0)) if not np.isnan(avg_power) else 0,
         int(round(avg_heart_rate, 0)) if not np.isnan(avg_heart_rate) else 0,
-        format_pace(avg_pace),
-        format_pace(fastest_pace),
-        format_pace(slowest_pace),
-        format_pace(total_pause_time),
+        format_hour_minute(avg_pace),
+        format_hour_minute(fastest_pace),
+        format_hour_minute(slowest_pace),
+        format_hour_minute(total_pause_time),
         activity_type
     )
 

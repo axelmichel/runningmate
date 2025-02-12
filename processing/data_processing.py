@@ -2,6 +2,8 @@ from pyproj import Transformer
 import numpy as np
 import pandas as pd
 
+from processing.system_settings import ViewMode
+
 
 def convert_to_utm(df):
     """Converts GPS coordinates (Lat, Lon) into UTM coordinates for distortion removal."""
@@ -26,18 +28,18 @@ def convert_to_utm(df):
     return df
 
 
-def calculate_pace(df, activity_type):
+def calculate_pace(df, activity:ViewMode):
     """Calculates pace (min/km) for each segment and applies different filtering based on activity type."""
     df["Time"] = pd.to_datetime(df["Time"])
     df["TimeDiff"] = df["Time"].diff().dt.total_seconds()
     df["DistDiff"] = df["Distance"].diff()
 
     # Set pace thresholds based on activity type
-    if activity_type == "Running":
+    if activity == ViewMode.RUN:
         min_pace, max_pace, min_dist = 3, 12, 0.003  # 2-15 min/km, min distance 3m
-    elif activity_type == "Biking":
+    elif activity == ViewMode.CYCLE:
         min_pace, max_pace, min_dist = 0.5, 6, 0.01  # 30 sec - 6 min/km, min distance 10m
-    elif activity_type == "Walking":
+    elif activity == ViewMode.WALK:
         min_pace, max_pace, min_dist = 8, 25, 0.001  # 8-25 min/km, min distance 1m
     else:  # Unknown activity type
         min_pace, max_pace, min_dist = 2, 20, 0.001  # Default reasonable values
