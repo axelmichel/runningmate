@@ -12,8 +12,8 @@ def mapActivityTypes(activity_type: str) -> str:
 
     activity_map = {
         ViewMode.RUN: {"Running", "Trailrun", "Run", "Trackrun", "Track"},
-        ViewMode.WALK: {"Walking", "Hike", "Trekking"},
-        ViewMode.CYCLE: {"Cycling", "Bike", "MTB", "Roadbike", "Bicycle"}
+        ViewMode.WALK: {"Walking", "Hike", "Trekking", "Other", "Nordic Walking"},
+        ViewMode.CYCLE: {"Cycling", "Bike", "MTB", "Bicycle", "Biking", "E-Bike", "Gravelbike", "Mountainbike" }
     }
 
     for mode, valid_names in activity_map.items():

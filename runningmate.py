@@ -1,18 +1,15 @@
 import sys
 import os
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QPushButton, QFileDialog, QLabel,
-    QTableWidget, QTableWidgetItem, QComboBox, QMessageBox, QHeaderView, QSplashScreen, QHBoxLayout
+    QApplication, QWidget, QVBoxLayout, QPushButton,
+    QTableWidget, QTableWidgetItem, QSplashScreen, QHBoxLayout
 )
 from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtCore import Qt, QTimer
 
-from processing.compute_statistics import compute_run_db_data
-from processing.data_processing import convert_to_utm, calculate_distance, calculate_pace, detect_pauses, \
-    calculate_steps
-from processing.parse_tcx import parse_tcx
+from importer.file.tcx_file import TcxFileImporter
 from processing.system_settings import ViewMode, SortOrder, mapActivityTypes
-from processing.visualization import plot_track, plot_elevation, plot_activity_map
+
 
 from database.database_handler import DatabaseHandler
 from database.migrations import apply_migrations
@@ -20,6 +17,7 @@ from ui.main_menu import MenuBar
 from ui.table_builder import TableBuilder
 from ui.window_run_details import RunDetailsWindow
 from translations import _
+
 
 # Directories
 IMG_DIR = os.path.expanduser("~/RunningData/images")
@@ -30,6 +28,9 @@ MEDIA_DIR = os.path.expanduser("~/RunningData/media")
 if not os.path.exists(MEDIA_DIR):
     os.makedirs(MEDIA_DIR)
 
+FILE_DIR = os.path.expanduser("~/RunningData/imports")
+if not os.path.exists(FILE_DIR):
+    os.makedirs(FILE_DIR)
 
 class NumericTableWidgetItem(QTableWidgetItem):
     """Custom TableWidgetItem that ensures proper numeric sorting."""
@@ -99,12 +100,15 @@ class RunningDataApp(QWidget):
     def set_active_view(self, view_mode):
         """Switch the view and update button styles"""
         self.view_mode = view_mode
-        print(f"Switching to view: {view_mode}")
 
-        if view_mode == ViewMode.ALL:
-            self.load_activities()
-        elif view_mode == ViewMode.RUN:
+        if view_mode == ViewMode.RUN:
             self.load_runs()
+        elif view_mode == ViewMode.CYCLE:
+            self.load_rides()
+        elif view_mode == ViewMode.WALK:
+            self.load_walks()
+        else:
+            self.load_activities()
 
         self.update_button()
 
@@ -136,10 +140,31 @@ class RunningDataApp(QWidget):
         TableBuilder.setup_table(self.tableWidget, ViewMode.RUN, runs, self)
         TableBuilder.update_header_styles(self.tableWidget, ViewMode.RUN, sort_field, self.sort_direction)
 
+    def load_walks(self, sort_field="date_time"):
+        runs = self.db.fetch_walks(sort_field=sort_field)
+        TableBuilder.setup_table(self.tableWidget, ViewMode.WALK, runs, self)
+        TableBuilder.update_header_styles(self.tableWidget, ViewMode.WALK, sort_field, self.sort_direction)
+
+    def load_rides(self, sort_field="date_time"):
+        runs = self.db.fetch_rides(sort_field=sort_field)
+        TableBuilder.setup_table(self.tableWidget, ViewMode.CYCLE, runs, self)
+        TableBuilder.update_header_styles(self.tableWidget, ViewMode.CYCLE, sort_field, self.sort_direction)
+
     def load_detail(self, data):
-        if data['activity_type'] == 'Running':
-            run_data = self.db.fetch_run_by_activity_id(data['activity_id'])
-            self.details_window = RunDetailsWindow(run_data, MEDIA_DIR, self.db)
+        activity_type = mapActivityTypes(data['activity_type'])
+        if activity_type == ViewMode.RUN:
+            data = self.db.fetch_run_by_activity_id(data['activity_id'])
+            self.details_window = RunDetailsWindow(data, MEDIA_DIR, self.db)
+            self.details_window.exec()
+            self.details_window = None
+        elif activity_type == ViewMode.WALK:
+            data = self.db.fetch_walk_by_activity_id(data['activity_id'])
+            self.details_window = RunDetailsWindow(data, MEDIA_DIR, self.db)
+            self.details_window.exec()
+            self.details_window = None
+        elif activity_type == ViewMode.CYCLE:
+            data = self.db.fetch_ride_by_activity_id(data['activity_id'])
+            self.details_window = RunDetailsWindow(data, MEDIA_DIR, self.db)
             self.details_window.exec()
             self.details_window = None
 
@@ -159,69 +184,10 @@ class RunningDataApp(QWidget):
         elif activity_type == ViewMode.RUN:
             self.load_runs(sort_field=column)
 
-    def handle_cell_clicked(self, row, column):
-        """Opens the details window for the clicked run."""
-        try:
-            date = self.tableWidget.item(row, 0).text()
-            start_time = self.tableWidget.item(row, 1).text()
-
-            # Lookup run_id by (row, date, start_time)
-            run_id = self.run_id_mapping.get((row, date, start_time))
-
-            if not run_id:
-                print(f"Error: No matching run_id for Date: {date}, Start Time: {start_time}")
-                return
-
-            # Prevent opening multiple detail windows
-            if hasattr(self, "details_window") and self.details_window and self.details_window.isVisible():
-                return
-
-            # Fetch run details from the DB
-            run_data = self.db.get_run_by_id(run_id)
-
-            if run_data:
-                self.details_window = RunDetailsWindow(run_data, MEDIA_DIR, self.db)
-                self.details_window.exec()
-
-                # Ensure reference is cleared after closing
-                self.details_window = None
-
-        except Exception as e:
-            print(f"Error opening details window: {e}")
-
     def upload_tcx_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select TCX File", "", "TCX Files (*.tcx)")
-        if file_path:
-            self.process_tcx_file(file_path)
-            QMessageBox.information(self, "Processing Complete", "TCX file processed.")
-            self.load_years()
-
-    def process_tcx_file(self, file_path):
-        df, activity_type = parse_tcx(file_path)
-        df = convert_to_utm(df)
-        df = calculate_distance(df)
-        df, avg_pace, fastest_pace, slowest_pace = calculate_pace(df, activity_type)
-        pause_time = detect_pauses(df)
-        avg_steps, total_steps = calculate_steps(df)
-
-        base_name = os.path.basename(file_path).replace(".tcx", "")
-        date, time = base_name.split("_")[:2]  # Extract date and start time
-        track_img = os.path.join(IMG_DIR, f"{base_name}_track.png")
-        elevation_img = os.path.join(IMG_DIR, f"{base_name}_elevation.svg")
-        map_html = os.path.join(IMG_DIR, f"{base_name}_map.html")
-
-        if not os.path.exists(track_img):
-            plot_track(df, track_img)
-        if not os.path.exists(elevation_img):
-            plot_elevation(df, elevation_img)
-        if not os.path.exists(map_html):
-            plot_activity_map(df, map_html)
-
-        year, month = date.split("-")[:2]
-
-        run_data = compute_run_db_data(df, base_name, year, month, avg_steps, total_steps, avg_pace, fastest_pace,
-                                       slowest_pace, pause_time, activity_type)
-        self.db.insert_run(run_data, track_img, elevation_img, map_html)
+       importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db)
+       importer.upload()
+       self.set_active_view(self.view_mode)
 
 
 if __name__ == "__main__":

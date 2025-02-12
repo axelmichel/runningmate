@@ -9,7 +9,7 @@ class MenuBar(QMenuBar):
         super().__init__(parent)
 
         file_menu = QMenu(_("File"), self)
-        view_menu = QMenu(_("ViewMode"), self)
+        view_menu = QMenu(_("View"), self)
         tools_menu = QMenu(_("Tools"), self)
         help_menu = QMenu(_("Help"), self)
 
