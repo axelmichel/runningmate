@@ -42,11 +42,12 @@ class TcxFileImporter:
         df, activity_type = parse_tcx(file_path)
         df = convert_to_utm(df)
         df = calculate_distance(df)
-        df, avg_pace, fastest_pace, slowest_pace = calculate_pace(df, ViewMode.RUN)
+
+        target = mapActivityTypes(activity_type)
+        df, avg_pace, fastest_pace, slowest_pace = calculate_pace(df, target)
 
         name = os.path.basename(file_path).replace(".tcx", "")
 
-        target = mapActivityTypes(activity_type)
         next_id = self.db.get_next_activity_id()
 
         computed_data = self.compute_data(df)
