@@ -42,10 +42,12 @@ class MenuBar(QMenuBar):
 
         import_action = QAction("Import TCX", self)
         import_action.setShortcut(import_shortcut)
-        import_action.triggered.connect(
-            parent.upload_tcx_file
-        )  # Connect to parent function
+        import_action.triggered.connect(parent.upload_tcx_file)
         file_menu.addAction(import_action)
+
+        garmin_action = QAction("Garmin Connect", self)
+        garmin_action.triggered.connect(parent.garmin_connect)
+        file_menu.addAction(garmin_action)
 
         settings_action = QAction("Settings", self)
         settings_action.setShortcut(settings_shortcut)

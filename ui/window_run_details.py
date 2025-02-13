@@ -336,16 +336,16 @@ class RunDetailsWindow(QDialog):
         if os.path.exists(file_path):
             webbrowser.open(f"file://{os.path.abspath(file_path)}")
         else:
-            QMessageBox.warning(self, "Media Error", "Media file not found.")
+            QMessageBox.warning(self, _("Media Error"), _("Media file not found."))
 
     def show_full_image(self, file_path):
         """Opens the full-size image in a popup window instead of a browser."""
         if not os.path.exists(file_path):
-            QMessageBox.warning(self, "Image Error", "Image file not found.")
+            QMessageBox.warning(self, _("Image Error"), _("Image file not found."))
             return
 
         dialog = QDialog(self)
-        dialog.setWindowTitle("Full Image ViewMode")
+        dialog.setWindowTitle(_("Media Viewer"))
         dialog.setGeometry(100, 100, 800, 600)  # Set window size
 
         layout = QVBoxLayout()
@@ -370,7 +370,7 @@ class RunDetailsWindow(QDialog):
         if os.path.exists(file_path):
             webbrowser.open(f"file://{os.path.abspath(file_path)}")
         else:
-            QMessageBox.warning(self, "Video Error", "Video file not found.")
+            QMessageBox.warning(self, _("Video Error"), _("Video file not found."))
 
     def load_carousel_media(self):
         items_per_page = 5
@@ -469,8 +469,8 @@ class RunDetailsWindow(QDialog):
         """Deletes the media entry from the database and removes the file."""
         confirm = QMessageBox.question(
             self,
-            "Delete Media",
-            "Are you sure you want to delete this media?",
+            _("Delete Media"),
+            _("Are you sure you want to delete this media?"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 

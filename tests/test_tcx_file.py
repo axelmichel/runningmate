@@ -91,7 +91,7 @@ def test_compute_data(mock_tcx_data):
 @patch("importer.file.tcx_file.TcxFileImporter.archive_file")
 def test_upload(mock_archive, mock_process, mock_file_dialog, tcx_importer):
     """Test upload() ensures file selection and processing happens."""
-    result = tcx_importer.upload()
+    result = tcx_importer.by_upload()
 
     assert result is True, "Upload should return True when file is selected."
     mock_process.assert_called_once_with("test.tcx")
