@@ -1,16 +1,27 @@
-from PyQt6.QtSvgWidgets import QSvgWidget
-from PyQt6.QtWidgets import (
-    QDialog, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog, QMessageBox,
-    QWidget, QFrame, QStackedWidget, QInputDialog, QTextEdit, QDialogButtonBox
-)
-from PyQt6.QtGui import QPixmap, QImage, QTextOption
-from PyQt6.QtCore import Qt, QRect
 import os
 import webbrowser
+
 import cv2
-from translations import _
+from PyQt6.QtCore import QRect, Qt
+from PyQt6.QtGui import QImage, QPixmap, QTextOption
+from PyQt6.QtSvgWidgets import QSvgWidget
+from PyQt6.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
+    QFileDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QStackedWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 from database.database_handler import DatabaseHandler
+from utils.translations import _
 
 
 def create_separator():
@@ -28,14 +39,20 @@ class RunDetailsWindow(QDialog):
         self.current_page = 0
         self.db = db_handler
         self.media_dir = media_dir
-        self.run_id = run_data['id']
-        self.activity_id = run_data['activity_id']
-        self.activity_type = run_data['activity_type']
-        self.comment = run_data['comment']
+        self.run_id = run_data["id"]
+        self.activity_id = run_data["activity_id"]
+        self.activity_type = run_data["activity_type"]
+        self.comment = run_data["comment"]
 
-        self.track_img_path = run_data['track_img'] if run_data['track_img'] else None  # Track image path
-        self.elevation_img_path = run_data['elevation_img'] if run_data['elevation_img'] else None  # Elevation image path
-        self.map_html = run_data['map_html'] if run_data['map_html'] else None  # Map HTML file
+        self.track_img_path = (
+            run_data["track_img"] if run_data["track_img"] else None
+        )  # Track image path
+        self.elevation_img_path = (
+            run_data["elevation_img"] if run_data["elevation_img"] else None
+        )  # Elevation image path
+        self.map_html = (
+            run_data["map_html"] if run_data["map_html"] else None
+        )  # Map HTML file
 
         self.current_index = 0
         self.media_files = self.db.get_media_files(self.activity_id)
@@ -43,7 +60,11 @@ class RunDetailsWindow(QDialog):
 
     def init_ui(self, run_data):
         """Setup UI elements for displaying run details with a structured layout."""
-        self.setWindowTitle(_("{type} on {date} ").format(type=_(run_data['activity_type']), date=run_data['date']))
+        self.setWindowTitle(
+            _("{type} on {date} ").format(
+                type=_(run_data["activity_type"]), date=run_data["date"]
+            )
+        )
         self.setGeometry(100, 100, 1200, 800)
 
         # ==== MAIN LAYOUT ====
@@ -69,10 +90,12 @@ class RunDetailsWindow(QDialog):
         menu_frame = QFrame()
         menu_frame.setLayout(menu_layout)
         menu_frame.setFixedWidth(160)
-        menu_frame.setStyleSheet("""
-            border-right: 1px solid #555; 
+        menu_frame.setStyleSheet(
+            """
+            border-right: 1px solid #555;
             padding-right: 10px;
-        """)
+        """
+        )
 
         main_layout.addWidget(menu_frame)
 
@@ -80,14 +103,16 @@ class RunDetailsWindow(QDialog):
         content_layout = QVBoxLayout()
 
         # ==== TITLE (Left-Aligned) ====
-        title_label = QLabel(run_data['title'])
+        title_label = QLabel(run_data["title"])
         title_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        title_label.setStyleSheet("""
-            font-size: 20px; 
-            font-weight: bold; 
+        title_label.setStyleSheet(
+            """
+            font-size: 20px;
+            font-weight: bold;
             padding: 5px 0px;
             margin: 0px 0px 0px -5px;
-        """)
+        """
+        )
 
         # Create a horizontal line below the title
         title_separator = QFrame()
@@ -102,11 +127,12 @@ class RunDetailsWindow(QDialog):
 
         content_layout.addLayout(title_layout)
 
-
         # ==== COMMENT (Left-Aligned) ====
         comment_layout = QHBoxLayout()
-        self.comment_label = QLabel(run_data['comment'] if run_data['comment'] else "")
-        self.comment_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.comment_label = QLabel(run_data["comment"] if run_data["comment"] else "")
+        self.comment_label.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
+        )
         self.comment_label.setWordWrap(True)
         self.comment_label.setStyleSheet("border: none; padding: 0")
         comment_layout.addWidget(self.comment_label)
@@ -139,8 +165,20 @@ class RunDetailsWindow(QDialog):
         left_data_layout = QVBoxLayout()
 
         fields = [
-            "time", "distance", "duration", "elevation_gain", "avg_speed", "avg_steps", "total_steps", "avg_power",
-            "avg_heart_rate", "avg_pace", "fastest_pace", "slowest_pace", "pause"]
+            "time",
+            "distance",
+            "duration",
+            "elevation_gain",
+            "avg_speed",
+            "avg_steps",
+            "total_steps",
+            "avg_power",
+            "avg_heart_rate",
+            "avg_pace",
+            "fastest_pace",
+            "slowest_pace",
+            "pause",
+        ]
 
         for field in fields:
             if field in run_data and run_data[field]:
@@ -183,17 +221,23 @@ class RunDetailsWindow(QDialog):
         dialog.setWindowTitle(_("Edit Comment"))
 
         # ✅ Set dialog width dynamically based on window size
-        dialog_width = max(300, int(self.width() * 0.5))  # 50% of window width, min 300px
+        dialog_width = max(
+            300, int(self.width() * 0.5)
+        )  # 50% of window width, min 300px
         dialog.setFixedSize(dialog_width, 300)  # Fixed height, dynamic width
 
         layout = QVBoxLayout()
         text_edit = QTextEdit()
         text_edit.setText(self.comment)
-        text_edit.setWordWrapMode(QTextOption.WrapMode.WordWrap)  # ✅ Enable auto line breaks
+        text_edit.setWordWrapMode(
+            QTextOption.WrapMode.WordWrap
+        )  # ✅ Enable auto line breaks
         text_edit.setFixedSize(dialog_width - 40, 200)  # Keep within dialog bounds
 
         # Buttons
-        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         button_box.accepted.connect(dialog.accept)
         button_box.rejected.connect(dialog.reject)
 
@@ -210,12 +254,20 @@ class RunDetailsWindow(QDialog):
 
     def upload_media(self):
         """Allows the user to upload media files."""
-        file_paths, _ = QFileDialog.getOpenFileNames(self, "Select Media Files", "",
-                                                     "Images/Videos (*.png *.jpg *.jpeg *.mp4 *.avi)")
+        file_paths, _ = QFileDialog.getOpenFileNames(
+            self,
+            "Select Media Files",
+            "",
+            "Images/Videos (*.png *.jpg *.jpeg *.mp4 *.avi)",
+        )
         if file_paths:
             for file_path in file_paths:
                 file_name = os.path.basename(file_path)
-                media_type = "image" if file_name.lower().endswith((".png", ".jpg", ".jpeg")) else "video"
+                media_type = (
+                    "image"
+                    if file_name.lower().endswith((".png", ".jpg", ".jpeg"))
+                    else "video"
+                )
                 save_path = os.path.join(self.media_dir, file_name)
                 os.rename(file_path, save_path)
                 self.db.insert_media(self.activity_id, media_type, save_path)
@@ -232,26 +284,36 @@ class RunDetailsWindow(QDialog):
 
     def process_image_for_thumbnail(self, pixmap, width, height):
         original_size = pixmap.size()
-        aspect_ratio = original_size.width() / original_size.height()
 
         if original_size.width() > width and original_size.height() > height:
             crop_size = min(original_size.width(), original_size.height())
             x_offset = (original_size.width() - crop_size) // 2
             y_offset = (original_size.height() - crop_size) // 2
-            cropped_pixmap = pixmap.copy(QRect(x_offset, y_offset, crop_size, crop_size))
-            return cropped_pixmap.scaled(width, height, Qt.AspectRatioMode.IgnoreAspectRatio,
-                                         Qt.TransformationMode.SmoothTransformation)
+            cropped_pixmap = pixmap.copy(
+                QRect(x_offset, y_offset, crop_size, crop_size)
+            )
+            return cropped_pixmap.scaled(
+                width,
+                height,
+                Qt.AspectRatioMode.IgnoreAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
 
         else:
             # ✅ Scale up if smaller
-            return pixmap.scaled(width, height, Qt.AspectRatioMode.IgnoreAspectRatio,
-                                 Qt.TransformationMode.SmoothTransformation)
+            return pixmap.scaled(
+                width,
+                height,
+                Qt.AspectRatioMode.IgnoreAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
 
     def create_menu_button(self, text, callback):
         """Creates an invisible menu button with padding."""
         btn = QPushButton(text)
         btn.clicked.connect(callback)
-        btn.setStyleSheet("""
+        btn.setStyleSheet(
+            """
             QPushButton {
                 background: transparent;
                 border: none;
@@ -263,7 +325,8 @@ class RunDetailsWindow(QDialog):
             QPushButton:hover {
                 color: #cccccc;
             }
-        """)
+        """
+        )
         btn.setCursor(Qt.CursorShape.PointingHandCursor)  # ✅ Show hand cursor on hover
         return btn
 
@@ -290,8 +353,12 @@ class RunDetailsWindow(QDialog):
 
         pixmap = QPixmap(file_path)
         if not pixmap.isNull():
-            scaled_pixmap = pixmap.scaled(800, 600, Qt.AspectRatioMode.KeepAspectRatio,
-                                          Qt.TransformationMode.SmoothTransformation)
+            scaled_pixmap = pixmap.scaled(
+                800,
+                600,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
             image_label.setPixmap(scaled_pixmap)
 
         layout.addWidget(image_label)
@@ -330,7 +397,9 @@ class RunDetailsWindow(QDialog):
             # Create container for media (image/video + delete button)
             media_container = QFrame()
             media_container.setFixedSize(200, 200)
-            media_container.setStyleSheet("border: none; background-color: transparent; position: relative;")
+            media_container.setStyleSheet(
+                "border: none; background-color: transparent; position: relative;"
+            )
 
             # Stacked layout to hold media content
             stacked_layout = QStackedWidget(media_container)
@@ -344,12 +413,16 @@ class RunDetailsWindow(QDialog):
                 pixmap = QPixmap(file_path)
                 processed_pixmap = self.process_image_for_thumbnail(pixmap, 200, 200)
                 media_label.setPixmap(processed_pixmap)
-                media_label.mousePressEvent = lambda event, path=file_path: self.show_full_image(path)
+                media_label.mousePressEvent = (
+                    lambda event, path=file_path: self.show_full_image(path)
+                )
 
             elif media_type == "video":
                 thumbnail = self.get_video_thumbnail(file_path)
                 media_label.setPixmap(thumbnail)
-                media_label.mousePressEvent = lambda event, path=file_path: self.play_video(path)
+                media_label.mousePressEvent = (
+                    lambda event, path=file_path: self.play_video(path)
+                )
 
             media_label.setStyleSheet("border-radius: 5px;")  # Smooth edges
             stacked_layout.addWidget(media_label)  # Add media
@@ -361,7 +434,9 @@ class RunDetailsWindow(QDialog):
                 "background-color: black; color: white; border-radius: 12px; font-weight: bold;"
                 "font-size: 12px; border: none; position: absolute;"
             )
-            delete_btn.clicked.connect(lambda checked, path=file_path: self.delete_media(path))
+            delete_btn.clicked.connect(
+                lambda checked, path=file_path: self.delete_media(path)
+            )
 
             # Set absolute positioning of delete button inside media_container
             delete_btn.setParent(media_container)
@@ -369,8 +444,12 @@ class RunDetailsWindow(QDialog):
 
             # Ensure delete button is clickable
             delete_btn.raise_()  # ✅ Ensures it's on top
-            delete_btn.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
-            media_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
+            delete_btn.setAttribute(
+                Qt.WidgetAttribute.WA_TransparentForMouseEvents, False
+            )
+            media_label.setAttribute(
+                Qt.WidgetAttribute.WA_TransparentForMouseEvents, False
+            )
 
             # Final layout inside media container
             final_layout = QVBoxLayout(media_container)
@@ -388,8 +467,12 @@ class RunDetailsWindow(QDialog):
 
     def delete_media(self, file_path):
         """Deletes the media entry from the database and removes the file."""
-        confirm = QMessageBox.question(self, "Delete Media", "Are you sure you want to delete this media?",
-                                       QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        confirm = QMessageBox.question(
+            self,
+            "Delete Media",
+            "Are you sure you want to delete this media?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
 
         if confirm == QMessageBox.StandardButton.Yes:
             # Remove from database
@@ -401,7 +484,7 @@ class RunDetailsWindow(QDialog):
 
             # Refresh carousel
             self.media_files = self.db.get_media_files(self.activity_id)
-            self.current_page = 0;
+            self.current_page = 0
             self.load_carousel_media()
 
     def next_media(self):
@@ -428,7 +511,9 @@ class RunDetailsWindow(QDialog):
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             h, w, ch = frame.shape
             bytes_per_line = ch * w
-            qimage = QImage(frame.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
+            qimage = QImage(
+                frame.data, w, h, bytes_per_line, QImage.Format.Format_RGB888
+            )
             pixmap = QPixmap.fromImage(qimage)
 
             return self.process_image_for_thumbnail(pixmap, width, height)

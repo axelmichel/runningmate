@@ -1,10 +1,12 @@
-import sqlite3
 import os
-from translations import _
+import sqlite3
+
+from utils.translations import _
 
 
 class DatabaseHandler:
     """Database handler that allows injecting a connection for better testability and efficiency."""
+
     SORT_MAP = {
         "date_time": "activities.date",
         "title": "activities.title",
@@ -24,31 +26,62 @@ class DatabaseHandler:
 
     def insert_run(self, data: dict):
         columns = [
-            "activity_id", "elevation_gain", "avg_speed", "avg_steps", "total_steps",
-            "avg_power", "avg_heart_rate", "avg_pace", "fastest_pace", "slowest_pace",
-            "pause", "track_img", "elevation_img", "map_html"
+            "activity_id",
+            "elevation_gain",
+            "avg_speed",
+            "avg_steps",
+            "total_steps",
+            "avg_power",
+            "avg_heart_rate",
+            "avg_pace",
+            "fastest_pace",
+            "slowest_pace",
+            "pause",
+            "track_img",
+            "elevation_img",
+            "map_html",
         ]
-        self.insert_data('runs', columns, data)
+        self.insert_data("runs", columns, data)
 
     def insert_cycling(self, data: dict):
         columns = [
-            "activity_id", "elevation_gain", "avg_speed",
-            "avg_power", "avg_heart_rate", "avg_pace", "fastest_pace", "slowest_pace",
-            "pause", "track_img", "elevation_img", "map_html"
+            "activity_id",
+            "elevation_gain",
+            "avg_speed",
+            "avg_power",
+            "avg_heart_rate",
+            "avg_pace",
+            "fastest_pace",
+            "slowest_pace",
+            "pause",
+            "track_img",
+            "elevation_img",
+            "map_html",
         ]
-        self.insert_data('cycling', columns, data)
+        self.insert_data("cycling", columns, data)
 
     def insert_walk(self, data: dict):
         columns = [
-            "activity_id", "elevation_gain", "avg_speed", "avg_steps", "total_steps",
-            "avg_power", "avg_heart_rate", "avg_pace", "fastest_pace", "slowest_pace",
-            "pause", "track_img", "elevation_img", "map_html"
+            "activity_id",
+            "elevation_gain",
+            "avg_speed",
+            "avg_steps",
+            "total_steps",
+            "avg_power",
+            "avg_heart_rate",
+            "avg_pace",
+            "fastest_pace",
+            "slowest_pace",
+            "pause",
+            "track_img",
+            "elevation_img",
+            "map_html",
         ]
-        self.insert_data('walking', columns, data)
+        self.insert_data("walking", columns, data)
 
     def insert_activity(self, data: dict):
         columns = ["id", "distance", "activity_type", "duration", "date", "title"]
-        self.insert_data('activities', columns, data)
+        self.insert_data("activities", columns, data)
 
     def insert_data(self, table, columns, data: dict):
         values = [data.get(col, None) for col in columns]
@@ -61,60 +94,86 @@ class DatabaseHandler:
         self.cursor.execute(query, values)
         self.conn.commit()
 
-    def insert_run_details(self, activity_id, segment_number, heart_rate, speed, pace, pause_time):
+    def insert_run_details(
+        self, activity_id, segment_number, heart_rate, speed, pace, pause_time
+    ):
         """Insert run segment details."""
-        self.cursor.execute("""
+        self.cursor.execute(
+            """
             INSERT INTO run_details (activity_id, segment_number, heart_rate, speed, pace, pause_time)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (activity_id, segment_number, heart_rate, speed, pace, pause_time))
+        """,
+            (activity_id, segment_number, heart_rate, speed, pace, pause_time),
+        )
         self.conn.commit()
 
-    def insert_best_performance(self, activity_id, activity_type, distance, best_time, date_time):
+    def insert_best_performance(
+        self, activity_id, activity_type, distance, best_time, date_time
+    ):
         """Insert a new best performance record, keeping only the top 3 for each distance."""
-        self.cursor.execute("""
+        self.cursor.execute(
+            """
             SELECT id FROM best_performances WHERE activity_type = ? AND distance = ?
-            ORDER BY best_time ASC
-        """, (activity_type, distance))
+            ORDER BY best_time
+        """,
+            (activity_type, distance),
+        )
         results = self.cursor.fetchall()
 
         if len(results) < 3:
             # Insert new best performance
-            self.cursor.execute("""
+            self.cursor.execute(
+                """
                 INSERT INTO best_performances (activity_id, activity_type, distance, best_time, date_time)
                 VALUES (?, ?, ?, ?, ?)
-            """, (activity_id, activity_type, distance, best_time, date_time))
+            """,
+                (activity_id, activity_type, distance, best_time, date_time),
+            )
         else:
             # If the new time is better than the worst recorded time, update the record
             worst_id = results[-1][0]
-            self.cursor.execute("""
+            self.cursor.execute(
+                """
                 UPDATE best_performances
                 SET best_time = ?, date_time = ?
                 WHERE id = ?
-            """, (best_time, date_time, worst_id))
+            """,
+                (best_time, date_time, worst_id),
+            )
 
         self.conn.commit()
 
     def insert_media(self, activity_id, media_type, file_path):
-        self.cursor.execute("""
-            INSERT INTO media (activity_id, media_type, file_path) 
+        self.cursor.execute(
+            """
+            INSERT INTO media (activity_id, media_type, file_path)
             VALUES (?, ?, ?)
-        """, (activity_id, media_type, file_path))
+        """,
+            (activity_id, media_type, file_path),
+        )
         self.conn.commit()
 
     def update_comment(self, activity_id, comment):
-        self.cursor.execute("UPDATE activities SET comment = ? WHERE id = ?", (comment, activity_id))
+        self.cursor.execute(
+            "UPDATE activities SET comment = ? WHERE id = ?", (comment, activity_id)
+        )
         self.conn.commit()
 
     def get_comment(self, activity_id):
-        self.cursor.execute("SELECT comment FROM activities WHERE id = ?", (activity_id,))
+        self.cursor.execute(
+            "SELECT comment FROM activities WHERE id = ?", (activity_id,)
+        )
         result = self.cursor.fetchone()
         return result[0] if result else ""
 
     def get_media_files(self, activity_id):
-        self.cursor.execute("""
+        self.cursor.execute(
+            """
                SELECT id, media_type, file_path FROM media
                WHERE activity_id = ?
-           """, (activity_id,))
+           """,
+            (activity_id,),
+        )
         return self.cursor.fetchall()
 
     def fetch_run_by_activity_id(self, activity_id):
@@ -124,7 +183,7 @@ class DatabaseHandler:
         :return: dictionary
         """
         query = f"""
-                SELECT 
+                SELECT
                     runs.id,
                     strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
                     strftime('%H:%M', activities.date, 'unixepoch') AS time,
@@ -152,7 +211,7 @@ class DatabaseHandler:
                     shoes.status as shoe_status
                 FROM runs
                 JOIN activities ON activities.id = runs.activity_id
-                LEFT JOIN shoes ON shoes.id = runs.shoe_id AND runs.shoe_id IS NOT NULL 
+                LEFT JOIN shoes ON shoes.id = runs.shoe_id AND runs.shoe_id IS NOT NULL
                 WHERE runs.activity_id = ?;
             """
 
@@ -167,7 +226,7 @@ class DatabaseHandler:
         :return: dictionary
         """
         query = f"""
-                SELECT 
+                SELECT
                     walking.id,
                     strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
                     strftime('%H:%M', activities.date, 'unixepoch') AS time,
@@ -206,7 +265,7 @@ class DatabaseHandler:
         :return: dictionary
         """
         query = f"""
-                   SELECT 
+                   SELECT
                        cycling.id,
                        strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
                        strftime('%H:%M', activities.date, 'unixepoch') AS time,
@@ -242,7 +301,9 @@ class DatabaseHandler:
         highest_id = self.cursor.fetchone()[0]
         return highest_id + 1 if highest_id is not None else 1  #
 
-    def fetch_activities(self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"):
+    def fetch_activities(
+        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"
+    ):
         """
         Fetch paginated entries from the activities table, sorting by date (most recent first).
 
@@ -257,23 +318,25 @@ class DatabaseHandler:
             sort_field = self.SORT_MAP[sort_field]
 
         query = f"""
-            SELECT 
-                id as activity_id, 
+            SELECT
+                id as activity_id,
                 strftime('{_("%d.%m.%Y")}', date, 'unixepoch') AS date_time,  -- YYYY.MM.DD format
                 strftime('%H:%M', date, 'unixepoch') AS time,  -- HH:MM format
                 printf('%02d:%02d:%02d', duration / 3600, (duration % 3600) / 60, duration % 60) AS duration,
-                activity_type, 
+                activity_type,
                 duration,
                 distance,
-                title 
-            FROM activities 
+                title
+            FROM activities
             ORDER BY {sort_field} {sort_direction}
             LIMIT ? OFFSET ?;
             """
 
         return self.fetch_all(query, start, limit)
 
-    def fetch_runs(self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"):
+    def fetch_runs(
+        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"
+    ):
         """
         Fetch paginated entries from the runs table, sorting by date (most recent first).
 
@@ -288,7 +351,7 @@ class DatabaseHandler:
             sort_field = self.SORT_MAP[sort_field]
 
         query = f"""
-               SELECT 
+               SELECT
                     runs.id,
                     runs.activity_id,
                     strftime('{_("%d.%m.%Y %H:%M")}', activities.date, 'unixepoch') AS date_time,
@@ -314,7 +377,9 @@ class DatabaseHandler:
 
         return self.fetch_all(query, start, limit)
 
-    def fetch_walks(self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"):
+    def fetch_walks(
+        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"
+    ):
         """
         Fetch paginated entries from the walks table, sorting by date (most recent first).
 
@@ -329,7 +394,7 @@ class DatabaseHandler:
             sort_field = self.SORT_MAP[sort_field]
 
         query = f"""
-           SELECT 
+           SELECT
                 walking.id,
                 walking.activity_id,
                 strftime('{_("%d.%m.%Y %H:%M")}', activities.date, 'unixepoch') AS date_time,
@@ -355,7 +420,9 @@ class DatabaseHandler:
 
         return self.fetch_all(query, start, limit)
 
-    def fetch_rides(self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"):
+    def fetch_rides(
+        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"
+    ):
         """
         Fetch paginated entries from the cycling table, sorting by date (most recent first).
 
@@ -370,7 +437,7 @@ class DatabaseHandler:
             sort_field = self.SORT_MAP[sort_field]
 
         query = f"""
-              SELECT 
+              SELECT
                    cycling.id,
                    cycling.activity_id,
                    strftime('{_("%d.%m.%Y %H:%M")}', activities.date, 'unixepoch') AS date_time,

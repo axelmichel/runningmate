@@ -1,0 +1,8 @@
+[lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]
+extend-select = ["B", "C", "I"]
+
+[format]
+quote-style = "double"
+line-ending = "lf"

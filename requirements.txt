@@ -4,5 +4,3 @@ matplotlib
 numpy
 pandas
 pyproj
-pytest
-pytest-cov

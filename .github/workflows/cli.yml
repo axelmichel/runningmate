@@ -1,12 +1,14 @@
-name: CI - Run Tests
+name: CI - Run Tests & Linting
 
 on:
   push:
   pull_request:
+    branches:
+      - main
 
 jobs:
   test:
-    name: Run All Tests
+    name: Run Tests & Linting
     runs-on: ubuntu-latest
 
     steps:
@@ -16,17 +18,25 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.13.2'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install -r dev-requirements.txt
+
+      - name: Run Linting & Formatting Checks (Ruff, Black, isort)
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        run: |
+          ruff check . --output-format=github
+          black --check .
+          isort --check-only .
 
       - name: Run Tests
         run: |
           pytest --cov=. --cov-report=xml || echo "Tests failed, but will not fail pipeline on non-main branches"
 
-      - name: Fail if tests fail (only on main or PR)
-        if: failure() && (github.ref == 'refs/heads/main' || github.event_name == 'pull_request')
+      - name: Fail if tests or linting fail (only on main or PR)
+        if: failure() && (github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.base_ref == 'main')
         run: exit 1

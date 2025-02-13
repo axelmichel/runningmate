@@ -1,8 +1,8 @@
 import os
-
-import pytest
 import xml.etree.ElementTree as ET
+
 import pandas as pd
+import pytest
 
 from processing.parse_tcx import extract_activity_type, parse_tcx
 
@@ -81,14 +81,14 @@ def sample_tcx_no_heart_rate():
 def test_extract_activity_type(sample_tcx):
     """Test extracting the activity type from a TCX file."""
     root = ET.ElementTree(ET.fromstring(sample_tcx)).getroot()
-    namespaces = {'tcx': 'http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2'}
+    namespaces = {"tcx": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"}
     assert extract_activity_type(root, namespaces) == "Running"
 
 
 def test_extract_activity_type_missing(sample_tcx_no_activity):
     """Test fallback when activity type is missing in TCX file."""
     root = ET.ElementTree(ET.fromstring(sample_tcx_no_activity)).getroot()
-    namespaces = {'tcx': 'http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2'}
+    namespaces = {"tcx": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"}
     assert extract_activity_type(root, namespaces) == "Unknown"
 
 
@@ -118,7 +118,9 @@ def test_parse_tcx_missing_heart_rate(sample_tcx_no_heart_rate, tmp_path):
 
     assert activity_type == "Running"
     assert len(df) == 1  # ✅ Only one trackpoint in sample
-    assert df.iloc[0]["HeartRate"] is None or pd.isna(df.iloc[0]["HeartRate"])  # ✅ Should handle missing HR gracefully
+    assert df.iloc[0]["HeartRate"] is None or pd.isna(
+        df.iloc[0]["HeartRate"]
+    )  # ✅ Should handle missing HR gracefully
 
 
 def test_parse_tcx_no_data(tmp_path):

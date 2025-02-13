@@ -1,23 +1,27 @@
-import pytest
 import pandas as pd
+import pytest
+
 from processing.data_processing import (
-    convert_to_utm,
-    calculate_pace,
-    detect_pauses,
     calculate_distance,
-    calculate_steps
+    calculate_pace,
+    calculate_steps,
+    convert_to_utm,
+    detect_pauses,
 )
+from processing.system_settings import ViewMode
 
 
 @pytest.fixture
 def sample_df():
     """Creates a sample DataFrame with GPS coordinates, timestamps, and other required fields."""
     data = {
-        "Time": pd.to_datetime(["2024-02-20T10:00:00", "2024-02-20T10:01:00", "2024-02-20T10:02:00"]),
+        "Time": pd.to_datetime(
+            ["2024-02-20T10:00:00", "2024-02-20T10:01:00", "2024-02-20T10:02:00"]
+        ),
         "Latitude": [52.5200, 52.5201, 52.5202],
         "Longitude": [13.4050, 13.4051, 13.4052],
         "Elevation": [35, 36, 37],
-        "Steps": [80, 85, 90]
+        "Steps": [80, 85, 90],
     }
     return pd.DataFrame(data)
 
@@ -26,7 +30,9 @@ def test_convert_to_utm(sample_df):
     """Test converting GPS coordinates to UTM and ensuring correct data transformation."""
     df = convert_to_utm(sample_df.copy())
     assert "X" in df and "Y" in df, "UTM conversion should add X and Y columns"
-    assert df["X"].isna().sum() == 0 and df["Y"].isna().sum() == 0, "UTM coordinates should not be NaN"
+    assert (
+        df["X"].isna().sum() == 0 and df["Y"].isna().sum() == 0
+    ), "UTM coordinates should not be NaN"
 
 
 def test_convert_to_utm_missing_columns():
@@ -38,13 +44,19 @@ def test_convert_to_utm_missing_columns():
 
 def test_calculate_pace_with_invalid_data():
     """Ensure invalid pace values are correctly filtered out."""
-    df = pd.DataFrame({"Time": pd.to_datetime(["2024-02-20T10:00:00", "2024-02-20T10:01:00"]),
-                       "Distance": [0, 0]})  # Zero distance movement
+    df = pd.DataFrame(
+        {
+            "Time": pd.to_datetime(["2024-02-20T10:00:00", "2024-02-20T10:01:00"]),
+            "Distance": [0, 0],
+        }
+    )  # Zero distance movement
 
-    df, avg_pace, fastest_pace, slowest_pace = calculate_pace(df, "Running")
+    df, avg_pace, fastest_pace, slowest_pace = calculate_pace(df, ViewMode.RUN)
 
     assert pd.isna(df["Pace"]).all(), "Pace should be NaN for zero distance movement"
-    assert pd.isna(avg_pace) and pd.isna(fastest_pace) and pd.isna(slowest_pace), "Pace stats should be NaN"
+    assert (
+        pd.isna(avg_pace) and pd.isna(fastest_pace) and pd.isna(slowest_pace)
+    ), "Pace stats should be NaN"
 
 
 def test_detect_pauses(sample_df):

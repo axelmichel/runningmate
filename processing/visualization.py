@@ -8,7 +8,7 @@ def plot_track(df, output_path):
     ax.plot(df["X"], df["Y"], color="white", linewidth=2)
 
     # Ensure equal aspect ratio to prevent distortion
-    ax.set_aspect('equal', adjustable='datalim')
+    ax.set_aspect("equal", adjustable="datalim")
 
     # Remove axis labels and ticks for a clean look
     ax.set_xticks([])
@@ -20,7 +20,9 @@ def plot_track(df, output_path):
     ax.patch.set_alpha(0)
 
     # Save with tight bounding box and high resolution
-    plt.savefig(output_path, dpi=300, transparent=True, bbox_inches='tight', pad_inches=0)
+    plt.savefig(
+        output_path, dpi=300, transparent=True, bbox_inches="tight", pad_inches=0
+    )
     plt.close(fig)
 
 
@@ -31,7 +33,9 @@ def plot_activity_map(df, output_path):
     start_lat, start_lon = df.iloc[0]["Latitude"], df.iloc[0]["Longitude"]
 
     # Create a folium map centered around the starting point
-    activity_map = folium.Map(location=[start_lat, start_lon], zoom_start=14, tiles="cartodbpositron")
+    activity_map = folium.Map(
+        location=[start_lat, start_lon], zoom_start=14, tiles="cartodbpositron"
+    )
 
     # Extract route coordinates
     route = list(zip(df["Latitude"], df["Longitude"]))
@@ -60,17 +64,19 @@ def plot_elevation(df, output_path):
     ax.set_ylabel("Height (m)", color="white")
 
     # Remove unnecessary spines
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
 
     # Set remaining spines to white
-    ax.spines['left'].set_color("white")
-    ax.spines['bottom'].set_color("white")
+    ax.spines["left"].set_color("white")
+    ax.spines["bottom"].set_color("white")
 
     # Set tick labels to white
-    ax.tick_params(axis='x', colors="white")
-    ax.tick_params(axis='y', colors="white")
+    ax.tick_params(axis="x", colors="white")
+    ax.tick_params(axis="y", colors="white")
 
     # Save with transparent background
-    plt.savefig(output_path, format="svg", bbox_inches='tight', pad_inches=0, transparent=True)
+    plt.savefig(
+        output_path, format="svg", bbox_inches="tight", pad_inches=0, transparent=True
+    )
     plt.close(fig)
