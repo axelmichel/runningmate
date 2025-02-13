@@ -70,7 +70,19 @@ black . && isort . &&  ruff check .
 # or in case you want to fix what is fixable
 black . && isort . &&  ruff format .
 ```
-
+### Documentation
+The documentation is written in markdown and can be found in the `docs` folder. The documentation is built using [MkDocs](https://www.mkdocs.org/). To build and run the documentation you need to install the following dependencies:
+```sh
+pip install mkdocs mkdocs-material https://github.com/mitya57/python-markdown-math/archive/master.zip  
+```
+To build the documentation run:
+```sh
+mkdocs build
+```
+To run the documentation locally run:
+```sh
+mkdocs serve
+```
 
 ## Future Enhancements
 - Integration of weather data
