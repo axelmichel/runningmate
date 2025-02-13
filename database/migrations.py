@@ -156,7 +156,7 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
             ),
             (
                 11,
-                """ 
+                """
                  INSERT INTO cycling (activity_id, date, month, year, start_time, distance, total_time, elevation_gain, avg_speed, avg_power, avg_heart_rate, avg_pace, fastest_pace, slowest_pace, pause, activity, track_img, elevation_img, map_html)
                     SELECT activity_id, date, strftime('%m', date), strftime('%Y', date), start_time, distance, total_time,
                     elevation_gain, avg_speed, avg_power, avg_heart_rate, avg_pace, fastest_pace, slowest_pace, pause,
@@ -207,7 +207,7 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
                 """
             CREATE TABLE IF NOT EXISTS bikes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,  
+                name TEXT NOT NULL,
                 weight REAL CHECK (weight > 0),
                 distance REAL CHECK (distance >= 0),
                 status TEXT,

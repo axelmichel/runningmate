@@ -114,7 +114,7 @@ class DatabaseHandler:
         self.cursor.execute(
             """
             SELECT id FROM best_performances WHERE activity_type = ? AND distance = ?
-            ORDER BY best_time ASC
+            ORDER BY best_time
         """,
             (activity_type, distance),
         )
@@ -146,7 +146,7 @@ class DatabaseHandler:
     def insert_media(self, activity_id, media_type, file_path):
         self.cursor.execute(
             """
-            INSERT INTO media (activity_id, media_type, file_path) 
+            INSERT INTO media (activity_id, media_type, file_path)
             VALUES (?, ?, ?)
         """,
             (activity_id, media_type, file_path),
@@ -183,7 +183,7 @@ class DatabaseHandler:
         :return: dictionary
         """
         query = f"""
-                SELECT 
+                SELECT
                     runs.id,
                     strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
                     strftime('%H:%M', activities.date, 'unixepoch') AS time,
@@ -211,7 +211,7 @@ class DatabaseHandler:
                     shoes.status as shoe_status
                 FROM runs
                 JOIN activities ON activities.id = runs.activity_id
-                LEFT JOIN shoes ON shoes.id = runs.shoe_id AND runs.shoe_id IS NOT NULL 
+                LEFT JOIN shoes ON shoes.id = runs.shoe_id AND runs.shoe_id IS NOT NULL
                 WHERE runs.activity_id = ?;
             """
 
@@ -226,7 +226,7 @@ class DatabaseHandler:
         :return: dictionary
         """
         query = f"""
-                SELECT 
+                SELECT
                     walking.id,
                     strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
                     strftime('%H:%M', activities.date, 'unixepoch') AS time,
@@ -265,7 +265,7 @@ class DatabaseHandler:
         :return: dictionary
         """
         query = f"""
-                   SELECT 
+                   SELECT
                        cycling.id,
                        strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
                        strftime('%H:%M', activities.date, 'unixepoch') AS time,
@@ -318,16 +318,16 @@ class DatabaseHandler:
             sort_field = self.SORT_MAP[sort_field]
 
         query = f"""
-            SELECT 
-                id as activity_id, 
+            SELECT
+                id as activity_id,
                 strftime('{_("%d.%m.%Y")}', date, 'unixepoch') AS date_time,  -- YYYY.MM.DD format
                 strftime('%H:%M', date, 'unixepoch') AS time,  -- HH:MM format
                 printf('%02d:%02d:%02d', duration / 3600, (duration % 3600) / 60, duration % 60) AS duration,
-                activity_type, 
+                activity_type,
                 duration,
                 distance,
-                title 
-            FROM activities 
+                title
+            FROM activities
             ORDER BY {sort_field} {sort_direction}
             LIMIT ? OFFSET ?;
             """
@@ -351,7 +351,7 @@ class DatabaseHandler:
             sort_field = self.SORT_MAP[sort_field]
 
         query = f"""
-               SELECT 
+               SELECT
                     runs.id,
                     runs.activity_id,
                     strftime('{_("%d.%m.%Y %H:%M")}', activities.date, 'unixepoch') AS date_time,
@@ -394,7 +394,7 @@ class DatabaseHandler:
             sort_field = self.SORT_MAP[sort_field]
 
         query = f"""
-           SELECT 
+           SELECT
                 walking.id,
                 walking.activity_id,
                 strftime('{_("%d.%m.%Y %H:%M")}', activities.date, 'unixepoch') AS date_time,
@@ -437,7 +437,7 @@ class DatabaseHandler:
             sort_field = self.SORT_MAP[sort_field]
 
         query = f"""
-              SELECT 
+              SELECT
                    cycling.id,
                    cycling.activity_id,
                    strftime('{_("%d.%m.%Y %H:%M")}', activities.date, 'unixepoch') AS date_time,

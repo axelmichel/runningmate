@@ -92,7 +92,7 @@ class RunDetailsWindow(QDialog):
         menu_frame.setFixedWidth(160)
         menu_frame.setStyleSheet(
             """
-            border-right: 1px solid #555; 
+            border-right: 1px solid #555;
             padding-right: 10px;
         """
         )
@@ -107,8 +107,8 @@ class RunDetailsWindow(QDialog):
         title_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         title_label.setStyleSheet(
             """
-            font-size: 20px; 
-            font-weight: bold; 
+            font-size: 20px;
+            font-weight: bold;
             padding: 5px 0px;
             margin: 0px 0px 0px -5px;
         """
@@ -284,7 +284,6 @@ class RunDetailsWindow(QDialog):
 
     def process_image_for_thumbnail(self, pixmap, width, height):
         original_size = pixmap.size()
-        aspect_ratio = original_size.width() / original_size.height()
 
         if original_size.width() > width and original_size.height() > height:
             crop_size = min(original_size.width(), original_size.height())

@@ -6,9 +6,8 @@ import time
 import pytest
 
 from database.database_handler import DatabaseHandler
-from database.migrations import apply_migrations, get_current_version
+from database.migrations import apply_migrations
 from processing.compute_statistics import generate_activity_title
-from processing.system_settings import ViewMode
 
 
 @pytest.fixture()

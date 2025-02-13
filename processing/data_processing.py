@@ -14,7 +14,6 @@ def convert_to_utm(df):
     df = df.dropna(subset=["Latitude", "Longitude"])
 
     # Compute UTM Zone dynamically based on mean longitude
-    lat_mean = df["Latitude"].mean()
     lon_mean = df["Longitude"].mean()
     utm_zone = int((lon_mean + 180) / 6) + 1
     proj_string = f"+proj=utm +zone={utm_zone} +datum=WGS84 +units=m +no_defs"

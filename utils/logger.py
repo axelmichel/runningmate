@@ -2,7 +2,7 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 
-from PyQt6.QtWidgets import QApplication, QMessageBox
+from PyQt6.QtWidgets import QMessageBox
 
 
 class Logger:
@@ -64,7 +64,6 @@ class Logger:
 
     @staticmethod
     def show_error_popup(message):
-        app = QApplication.instance() or QApplication([])
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Icon.Critical)
         msg_box.setWindowTitle("Application Error")
