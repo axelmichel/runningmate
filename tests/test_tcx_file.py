@@ -74,16 +74,16 @@ def test_compute_data(mock_tcx_data):
     expected_power = int(round(mock_tcx_data["Power"].dropna().mean(), 0))
     assert computed["distance"] == 5.0, "Distance should be calculated correctly."
     assert computed["duration"] == 540, "Duration should be 9 minutes (540 seconds)."
-    assert (
-        computed["elevation_gain"] == 50
-    ), "Elevation gain should be calculated correctly."
+    assert computed["elevation_gain"] == 50, (
+        "Elevation gain should be calculated correctly."
+    )
     assert computed["avg_speed"] > 0, "Average speed should be positive."
-    assert (
-        computed["avg_heart_rate"] == expected_heart_rate
-    ), f"Expected {expected_heart_rate}, but got {computed['avg_heart_rate']}"
-    assert (
-        computed["avg_power"] == expected_power
-    ), f"Expected {expected_power}, but got {computed['avg_power']}"
+    assert computed["avg_heart_rate"] == expected_heart_rate, (
+        f"Expected {expected_heart_rate}, but got {computed['avg_heart_rate']}"
+    )
+    assert computed["avg_power"] == expected_power, (
+        f"Expected {expected_power}, but got {computed['avg_power']}"
+    )
 
 
 @patch("PyQt6.QtWidgets.QFileDialog.getOpenFileName", return_value=("test.tcx", None))
@@ -91,7 +91,7 @@ def test_compute_data(mock_tcx_data):
 @patch("importer.file.tcx_file.TcxFileImporter.archive_file")
 def test_upload(mock_archive, mock_process, mock_file_dialog, tcx_importer):
     """Test upload() ensures file selection and processing happens."""
-    result = tcx_importer.upload()
+    result = tcx_importer.by_upload()
 
     assert result is True, "Upload should return True when file is selected."
     mock_process.assert_called_once_with("test.tcx")
@@ -192,9 +192,9 @@ def test_archive_file(tcx_importer):
 
     # Verify archive contents
     with tarfile.open(archive_path, "r:gz") as tar:
-        assert (
-            "test.tcx" in tar.getnames()
-        ), "Archive should contain the original TCX file."
+        assert "test.tcx" in tar.getnames(), (
+            "Archive should contain the original TCX file."
+        )
 
 
 def test_generate_activity_title():

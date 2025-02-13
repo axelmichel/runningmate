@@ -3,6 +3,7 @@ import tarfile
 
 import numpy as np
 import pandas as pd
+from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtWidgets import QFileDialog
 
 from database.database_handler import DatabaseHandler
@@ -17,7 +18,7 @@ from processing.data_processing import (
 from processing.parse_tcx import parse_tcx
 from processing.system_settings import ViewMode, mapActivityTypes
 from processing.visualization import plot_activity_map, plot_elevation, plot_track
-from utils import logger
+from utils.logger import logger
 
 
 class TcxFileImporter:
@@ -27,7 +28,7 @@ class TcxFileImporter:
         self.image_path = image_path
         self.db = db_handler
 
-    def upload(self):
+    def by_upload(self):
         file_path, _ = QFileDialog.getOpenFileName(
             None, "Select TCX File", "", "TCX Files (*.tcx)"
         )
@@ -37,6 +38,14 @@ class TcxFileImporter:
             self.archive_file(file_path)
             return True
         return False
+
+    def by_file(self, file_path):
+        if file_path:
+            self.process_file(file_path)
+            self.archive_file(file_path)
+            os.remove(file_path)
+            return True
+        return
 
     def process_file(self, file_path):
         df, activity_type = parse_tcx(file_path)
@@ -171,3 +180,27 @@ class TcxFileImporter:
                 else 0
             ),
         }
+
+
+class TcxImportThread(QThread):
+    log = pyqtSignal(str)
+    finished = pyqtSignal()
+
+    def __init__(self, file_dir, image_path, db_handler: DatabaseHandler):
+        super().__init__()
+        self.file_dir = file_dir
+        self.image_path = image_path
+        self.db = db_handler
+
+    def run(self):
+        importer = TcxFileImporter(self.file_dir, self.image_path, self.db)
+        for filename in os.listdir(self.file_dir):
+            if filename.endswith(".tcx"):
+                file_path = os.path.join(self.file_dir, filename)
+                try:
+                    importer.by_file(file_path)
+                    self.log.emit(f"Successfully imported {filename}")
+                except Exception as e:
+                    self.log.emit(f"Failed to import {filename}: {e}")
+
+        self.finished.emit()

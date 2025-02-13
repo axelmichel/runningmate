@@ -1,6 +1,7 @@
 import os
 import sqlite3
 
+from processing.system_settings import ViewMode
 from utils.translations import _
 
 
@@ -472,6 +473,20 @@ class DatabaseHandler:
         rows = self.cursor.fetchall()
 
         return [dict(row) for row in rows]
+
+    def get_total_activity_count(self, view_mode: ViewMode):
+        """Get the total number of activities for a given view mode."""
+        if view_mode == ViewMode.RUN:
+            table = "runs"
+        elif view_mode == ViewMode.WALK:
+            table = "walking"
+        elif view_mode == ViewMode.CYCLE:
+            table = "cycling"
+        else:
+            table = "activities"
+
+        self.cursor.execute(f"SELECT COUNT(*) FROM {table}")
+        return self.cursor.fetchone()[0]
 
     def delete_media(self, activity_id, file_path):
         """Deletes a media entry from the database and removes the file."""

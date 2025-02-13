@@ -30,9 +30,9 @@ def test_convert_to_utm(sample_df):
     """Test converting GPS coordinates to UTM and ensuring correct data transformation."""
     df = convert_to_utm(sample_df.copy())
     assert "X" in df and "Y" in df, "UTM conversion should add X and Y columns"
-    assert (
-        df["X"].isna().sum() == 0 and df["Y"].isna().sum() == 0
-    ), "UTM coordinates should not be NaN"
+    assert df["X"].isna().sum() == 0 and df["Y"].isna().sum() == 0, (
+        "UTM coordinates should not be NaN"
+    )
 
 
 def test_convert_to_utm_missing_columns():
@@ -54,9 +54,9 @@ def test_calculate_pace_with_invalid_data():
     df, avg_pace, fastest_pace, slowest_pace = calculate_pace(df, ViewMode.RUN)
 
     assert pd.isna(df["Pace"]).all(), "Pace should be NaN for zero distance movement"
-    assert (
-        pd.isna(avg_pace) and pd.isna(fastest_pace) and pd.isna(slowest_pace)
-    ), "Pace stats should be NaN"
+    assert pd.isna(avg_pace) and pd.isna(fastest_pace) and pd.isna(slowest_pace), (
+        "Pace stats should be NaN"
+    )
 
 
 def test_detect_pauses(sample_df):

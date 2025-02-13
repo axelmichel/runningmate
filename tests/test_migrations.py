@@ -47,9 +47,9 @@ def test_get_current_version(test_db):
     db.cursor.execute("INSERT INTO schema_version (version) VALUES (3)")
     db.conn.commit()
 
-    assert (
-        get_current_version(db) == 3
-    ), "get_current_version should return the latest version"
+    assert get_current_version(db) == 3, (
+        "get_current_version should return the latest version"
+    )
 
 
 def test_migration_failure_handling(test_db, caplog):

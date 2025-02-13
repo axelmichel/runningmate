@@ -6,6 +6,7 @@ from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
     QHBoxLayout,
+    QLabel,
     QPushButton,
     QSplashScreen,
     QTableWidget,
@@ -17,9 +18,11 @@ from PyQt6.QtWidgets import (
 from database.database_handler import DatabaseHandler
 from database.migrations import apply_migrations
 from importer.file.tcx_file import TcxFileImporter
+from importer.garmin.garmin import garmin_connect_login
 from processing.system_settings import SortOrder, ViewMode, mapActivityTypes
 from ui.main_menu import MenuBar
 from ui.table_builder import TableBuilder
+from ui.window_garmin_sync import GarminSyncWindow
 from ui.window_run_details import RunDetailsWindow
 from utils.translations import _
 
@@ -59,6 +62,7 @@ class NumericTableWidgetItem(QTableWidgetItem):
 class RunningDataApp(QWidget):
     def __init__(self, db_handler: DatabaseHandler):
         super().__init__()
+        self.sync_window = None
         self.details_window = None
         self.tableWidget = None
         self.db = db_handler
@@ -67,6 +71,9 @@ class RunningDataApp(QWidget):
         self.sort_field = "date_time"
         self.sort_direction = SortOrder.DESC
         self.view_buttons = {}
+        self.current_page = 0
+        self.page_size = 25
+        self.offset = 0
         self.init_ui()
 
     def init_ui(self):
@@ -105,25 +112,47 @@ class RunningDataApp(QWidget):
         self.tableWidget = QTableWidget()
         layout.addWidget(self.tableWidget)
 
+        pagination_layout = QHBoxLayout()
+        self.prev_button = QPushButton("Previous")
+        self.next_button = QPushButton("Next")
+        self.page_label = QLabel("Page 1")
+
+        self.prev_button.clicked.connect(self.previous_page)
+        self.next_button.clicked.connect(self.next_page)
+
+        pagination_layout.addWidget(self.prev_button)
+        pagination_layout.addWidget(
+            self.page_label, alignment=Qt.AlignmentFlag.AlignCenter
+        )
+        pagination_layout.addWidget(self.next_button)
+
+        layout.addLayout(pagination_layout)
+
         self.setLayout(layout)
         self.setWindowTitle("Running Mate")
         self.load_activities()
         self.update_button()
+        self.update_pagination()
 
     def set_active_view(self, view_mode):
         """Switch the view and update button styles"""
         self.view_mode = view_mode
+        self.offset = 0
+        self.current_page = 0
 
-        if view_mode == ViewMode.RUN:
+        self.trigger_load()
+        self.update_button()
+        self.update_pagination()
+
+    def trigger_load(self):
+        if self.view_mode == ViewMode.RUN:
             self.load_runs()
-        elif view_mode == ViewMode.CYCLE:
+        elif self.view_mode == ViewMode.CYCLE:
             self.load_rides()
-        elif view_mode == ViewMode.WALK:
+        elif self.view_mode == ViewMode.WALK:
             self.load_walks()
         else:
             self.load_activities()
-
-        self.update_button()
 
     def update_button(self):
         """Update button styles to highlight the active one"""
@@ -139,38 +168,77 @@ class RunningDataApp(QWidget):
 
         self.move(x, y)
 
-    def load_activities(self, sort_field="date_time"):
-        """
-        Fetch activities from the database and display them in the table.
-        :param sort_field: Column name to sort by (default "activities.date")
-        """
+    def update_pagination(self):
+        total_rows = self.db.get_total_activity_count(self.view_mode)
+        total_pages = max(1, (total_rows + self.page_size - 1) // self.page_size)
+
+        self.prev_button.setEnabled(self.current_page > 0)
+        self.next_button.setEnabled(self.current_page < total_pages - 1)
+        self.page_label.setText(f"Page {self.current_page + 1} / {total_pages}")
+
+    def previous_page(self):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.update_view()
+
+    def next_page(self):
+        total_rows = self.db.get_total_activity_count(self.view_mode)
+        total_pages = max(1, (total_rows + self.page_size - 1) // self.page_size)
+        if self.current_page < total_pages - 1:
+            self.current_page += 1
+            self.update_view()
+
+    def update_view(self):
+        self.offset = self.current_page * self.page_size
+        self.trigger_load()
+        self.update_pagination()
+
+    def load_activities(self):
         activities = self.db.fetch_activities(
-            sort_field=sort_field, sort_direction=self.sort_direction
+            start=self.offset,
+            sort_field=self.sort_field,
+            limit=self.page_size,
+            sort_direction=self.sort_direction,
         )
         TableBuilder.setup_table(self.tableWidget, ViewMode.ALL, activities, self)
         TableBuilder.update_header_styles(
-            self.tableWidget, ViewMode.ALL, sort_field, self.sort_direction
+            self.tableWidget, ViewMode.ALL, self.sort_field, self.sort_direction
         )
 
-    def load_runs(self, sort_field="date_time"):
-        runs = self.db.fetch_runs(sort_field=sort_field)
+    def load_runs(self):
+        runs = self.db.fetch_runs(
+            start=self.offset,
+            sort_field=self.sort_field,
+            limit=self.page_size,
+            sort_direction=self.sort_direction,
+        )
         TableBuilder.setup_table(self.tableWidget, ViewMode.RUN, runs, self)
         TableBuilder.update_header_styles(
-            self.tableWidget, ViewMode.RUN, sort_field, self.sort_direction
+            self.tableWidget, ViewMode.RUN, self.sort_field, self.sort_direction
         )
 
-    def load_walks(self, sort_field="date_time"):
-        runs = self.db.fetch_walks(sort_field=sort_field)
+    def load_walks(self):
+        runs = self.db.fetch_walks(
+            start=self.offset,
+            sort_field=self.sort_field,
+            limit=self.page_size,
+            sort_direction=self.sort_direction,
+        )
         TableBuilder.setup_table(self.tableWidget, ViewMode.WALK, runs, self)
         TableBuilder.update_header_styles(
-            self.tableWidget, ViewMode.WALK, sort_field, self.sort_direction
+            self.tableWidget, ViewMode.WALK, self.sort_field, self.sort_direction
         )
 
-    def load_rides(self, sort_field="date_time"):
-        runs = self.db.fetch_rides(sort_field=sort_field)
+    def load_rides(self):
+        runs = self.db.fetch_rides(
+            start=self.offset,
+            sort_field=self.sort_field,
+            limit=self.page_size,
+            sort_direction=self.sort_direction,
+        )
         TableBuilder.setup_table(self.tableWidget, ViewMode.CYCLE, runs, self)
         TableBuilder.update_header_styles(
-            self.tableWidget, ViewMode.CYCLE, sort_field, self.sort_direction
+            self.tableWidget, ViewMode.CYCLE, self.sort_field, self.sort_direction
         )
 
     def load_detail(self, data):
@@ -200,16 +268,24 @@ class RunningDataApp(QWidget):
         return SortOrder.ASC
 
     def sort_by_column(self, activity_type, column):
+        self.offset = 0
+        self.current_page = 0
         activity_type = mapActivityTypes(activity_type)
         self.sort_direction = self.get_sorting_direction(activity_type)
-        if activity_type == ViewMode.ALL:
-            self.load_activities(sort_field=column)
-        elif activity_type == ViewMode.RUN:
-            self.load_runs(sort_field=column)
+        self.sort_field = column
+        self.trigger_load()
+        self.update_pagination()
+
+    def garmin_connect(self):
+        client = garmin_connect_login()
+        if client:
+            self.sync_window = GarminSyncWindow(client, FILE_DIR, IMG_DIR, self.db)
+            self.sync_window.exec()
+            self.sync_window = None
 
     def upload_tcx_file(self):
         importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db)
-        importer.upload()
+        importer.by_upload()
         self.set_active_view(self.view_mode)
 
 

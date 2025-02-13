@@ -100,9 +100,9 @@ def test_prevent_duplicate_handlers():
     initial_handler_count = len(logger1.logger.handlers)
 
     logger2 = Logger()
-    assert (
-        len(logger2.logger.handlers) == initial_handler_count
-    ), "Logger should not add duplicate handlers"
+    assert len(logger2.logger.handlers) == initial_handler_count, (
+        "Logger should not add duplicate handlers"
+    )
 
 
 @patch.object(QMessageBox, "exec", return_value=None)
