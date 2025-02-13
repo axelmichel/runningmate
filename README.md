@@ -22,7 +22,7 @@ The app supports the import of `tcx` files. The files are stored in the `running
 ### Garmin Connect Synchronization
 To sync your garmin activity data, you need to provide the username and password of your garmin account. The app uses the [garminconnect](https://pypi.org/project/garminconnect/) library to fetch the data. 
 The data itself is stored in the same way as the imported `tcx` files. Your credentials are stored via [keyring](https://pypi.org/project/keyring/). 
-The keyring library interfaces with the operating system's credential storage mechanisms, such as Keychain on macOS, Windows Credential Locker on Windo
+The keyring library interfaces with the operating system's credential storage mechanisms, such as Keychain on macOS, Windows Credential Locker on Windows.
 
 Be aware that the initial sync can take a while, depending on the number of activities you have. The app will only fetch new activities, so the sync time will decrease over time.
 ## Installation
