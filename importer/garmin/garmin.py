@@ -14,6 +14,9 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
 )
 
+from utils.logger import logger
+from utils.translations import _
+
 
 def save_sync_date(date):
     with open("sync_metadata.json", "w") as f:
@@ -38,11 +41,10 @@ def get_first_activity_date(client):
             activities = client.get_activities(start=total_activities - 1, limit=1)
             if activities:
                 first_activity = activities[0]
-                print(f"First activity: {first_activity}")
                 first_date = first_activity["startTimeLocal"].split("T")[0]
                 return first_date
     except Exception as e:
-        print(f"Error retrieving first activity date: {e}")
+        logger.warning(f"Failed to retrieve first activity date: {e}")
     return None
 
 
@@ -61,7 +63,7 @@ def garmin_connect_login():
                 keyring.set_password("garmin", "password", password)
                 return client
             except Exception as e:
-                QMessageBox.critical(None, "Login Failed", f"Login failed: {e}")
+                QMessageBox.critical(None, _("Login Failed"), f"{e}")
                 return None
         else:
             return None
@@ -79,18 +81,18 @@ def garmin_connect_login():
 class LoginWindow(QDialog):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Garmin Login")
+        self.setWindowTitle(_("Garmin Connect Login"))
         self.setGeometry(100, 100, 300, 200)
 
         self.layout = QVBoxLayout()
-        self.label = QLabel("Enter Garmin Credentials")
+        self.label = QLabel(_("Enter Garmin Credentials"))
         self.username_input = QLineEdit()
-        self.username_input.setPlaceholderText("Username")
+        self.username_input.setPlaceholderText(_("Username"))
         self.password_input = QLineEdit()
-        self.password_input.setPlaceholderText("Password")
+        self.password_input.setPlaceholderText(_("Password"))
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
 
-        self.login_button = QPushButton("Login")
+        self.login_button = QPushButton(_("Login"))
         self.login_button.clicked.connect(self.store_credentials)
 
         self.layout.addWidget(self.label)
@@ -107,7 +109,7 @@ class LoginWindow(QDialog):
             self.credentials = (self.username_input.text(), self.password_input.text())
             self.accept()  # Close the dialog with success
         else:
-            QMessageBox.warning(self, "Input Error", "Both fields are required.")
+            QMessageBox.warning(self, _("Input Error"), _("Both fields are required."))
 
     def get_credentials(self):
         return self.credentials

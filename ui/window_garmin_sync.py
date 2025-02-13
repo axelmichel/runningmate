@@ -9,6 +9,7 @@ from importer.garmin.garmin import (
     get_first_activity_date,
     load_sync_date,
 )
+from utils.translations import _
 
 
 class GarminSyncWindow(QDialog):
@@ -27,14 +28,14 @@ class GarminSyncWindow(QDialog):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle("Garmin Sync")
+        self.setWindowTitle(_("Garmin Sync"))
         self.setGeometry(100, 100, 400, 300)
 
         self.layout = QVBoxLayout()
         self.progress_bar = QProgressBar()
         self.log_output = QTextEdit()
         self.log_output.setReadOnly(True)
-        self.start_button = QPushButton("Start Sync")
+        self.start_button = QPushButton(_("Start Sync"))
         self.start_button.clicked.connect(self.start_sync)
 
         self.layout.addWidget(self.progress_bar)
@@ -43,12 +44,10 @@ class GarminSyncWindow(QDialog):
         self.setLayout(self.layout)
 
     def start_sync(self):
-        print("Starting sync")
-        # min_date_str = load_sync_date()
-        # if not min_date_str:
-        min_date_str = get_first_activity_date(self.client)
+        min_date_str = load_sync_date()
+        if not min_date_str:
+            min_date_str = get_first_activity_date(self.client)
 
-        print(f"Sync from {min_date_str} to today?")
         start_date = (
             datetime.strptime(min_date_str.split(" ")[0], "%Y-%m-%d")
             if min_date_str
@@ -64,14 +63,13 @@ class GarminSyncWindow(QDialog):
         self.sync_thread.start()
 
     def on_sync_complete(self):
-        self.log_output.append("Sync Completed!")  # Log completion
+        self.log_output.append(_("Sync Completed!"))  # Log completion
         self.start_import()  # Start import process
 
     def start_import(self):
-        print("Starting import")
         self.import_thread = TcxImportThread(self.file_dir, self.img_dir, self.db)
         self.import_thread.log.connect(self.log_output.append)
         self.import_thread.finished.connect(
-            lambda: self.log_output.append("Import Completed!")
+            lambda: self.log_output.append(_("Import Completed!"))
         )
         self.import_thread.start()

@@ -62,6 +62,7 @@ class NumericTableWidgetItem(QTableWidgetItem):
 class RunningDataApp(QWidget):
     def __init__(self, db_handler: DatabaseHandler):
         super().__init__()
+        self.page_label = None
         self.sync_window = None
         self.details_window = None
         self.tableWidget = None
@@ -113,9 +114,9 @@ class RunningDataApp(QWidget):
         layout.addWidget(self.tableWidget)
 
         pagination_layout = QHBoxLayout()
-        self.prev_button = QPushButton("Previous")
-        self.next_button = QPushButton("Next")
-        self.page_label = QLabel("Page 1")
+        self.prev_button = QPushButton(_("Previous"))
+        self.next_button = QPushButton(_("Next"))
+        self.page_label = QLabel(f"{_('Page')} 1")
 
         self.prev_button.clicked.connect(self.previous_page)
         self.next_button.clicked.connect(self.next_page)
@@ -129,7 +130,7 @@ class RunningDataApp(QWidget):
         layout.addLayout(pagination_layout)
 
         self.setLayout(layout)
-        self.setWindowTitle("Running Mate")
+        self.setWindowTitle(_("RunningMate"))
         self.load_activities()
         self.update_button()
         self.update_pagination()
@@ -174,7 +175,7 @@ class RunningDataApp(QWidget):
 
         self.prev_button.setEnabled(self.current_page > 0)
         self.next_button.setEnabled(self.current_page < total_pages - 1)
-        self.page_label.setText(f"Page {self.current_page + 1} / {total_pages}")
+        self.page_label.setText(f"{_('Page')} {self.current_page + 1} / {total_pages}")
 
     def previous_page(self):
         if self.current_page > 0:

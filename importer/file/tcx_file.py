@@ -94,8 +94,6 @@ class TcxFileImporter:
             int(total_steps) if not np.isnan(total_steps) else 0
         )
 
-        print(f"Computed Data Before Insert: {computed_data}")
-
         self.db.insert_run(computed_data)
 
     def process_walk(self, df, computed_data):
