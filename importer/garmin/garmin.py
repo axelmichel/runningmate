@@ -17,17 +17,22 @@ from PyQt6.QtWidgets import (
 from utils.logger import logger
 from utils.translations import _
 
+APPDATA_DIR = os.path.expanduser("~/RunningData/appdata")
+if not os.path.exists(APPDATA_DIR):
+    os.makedirs(APPDATA_DIR)
 
 def save_sync_date(date):
-    with open("sync_metadata.json", "w") as f:
-        json.dump({"last_sync": date}, f)
+    sync_file = os.path.join(APPDATA_DIR, "sync.json")
+    with open(sync_file, "w") as f:
+        json.dump({"last_garmin_sync": date}, f)
 
 
 def load_sync_date():
-    if os.path.exists("sync_metadata.json"):
-        with open("sync_metadata.json") as f:
+    sync_file = os.path.join(APPDATA_DIR, "sync.json")
+    if os.path.exists(sync_file):
+        with open(sync_file) as f:
             data = json.load(f)
-            return data.get("last_sync")
+            return data.get("last_garmin_sync")
     return None
 
 
