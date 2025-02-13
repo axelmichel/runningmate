@@ -1,14 +1,15 @@
 # RunningMate
 
-RunningMate is a Python-based application designed to process, analyze, and visualize activity data. Currently, it supports TCX files.
+RunningMate is a Python-based application designed to process, analyze, and visualize activity data. The current release supports cycling, running and walking activity data in form of `tcx` files. The application is built using the [PyQt6](https://pypi.org/project/PyQt6/) library for the GUI, Pandas for data processing, and [folium](https://python-visualization.github.io/folium/latest/) for visualization.
+
+The app does not store any of your data outside of your local machine. All collected data can be found in the `runningData` folder within your home directory. The imported `tcx` files are zipped, and the extracted data is stored in a SQLite database. Uploaded media files are stored in the `media` folder. Generated images like track maps or elevation charts are located in the `images` folder. In the current Version this app does not support multiple users.
 
 ## Features
-- **Parse TCX Files**: Extract running data from TCX files.
-- **Data Processing**: Clean and structure activity data for analysis.
-- **Statistical Computation**: Generate key metrics such as distance, pace, heart rate, and elevation gain.
-- **Visualization**: Create interactive graphs to analyze running performance (Abstract Map, Elevation)
-- **Database Management**: Store and retrieve running records efficiently.
-- **Excel Integration**: Export the data into Excel files.
+- Map of each track.
+- Elevation graph.
+- Abstract map image of the track to share or use as overlay for images.
+- Calculation and visualization of key metrics such as distance, pace, speed, heart rate, power,and elevation gain.
+
 
 ## Installation
 
@@ -26,23 +27,49 @@ pip install -r requirements.txt
 
 Run the application with:
    ```sh
-   python runningmate.py
+   python main.py
    ```
 
 ## Contributing
 Feel free to contribute by submitting issues or pull requests on GitHub. Make sure to follow best practices and include documentation for any new features.
 
-## License
-This project is licensed under the MIT License. See the LICENSE file for details.
+### Development
+```sh
+pip install -r requirements.txt -r dev-requirements.txt
+```
+
+#### Debugging
+Copy the env.example file to .env and adjust the values to your needs. Set `DEBUG_MODE` to True to enable logging and debugging features.
+
+#### Testing
+Run the tests with:
+
+```sh 
+pytest
+```
+
+#### Linting
+Lint the code with:
+
+```sh
+black . && isort . &&  ruff check .
+# or in case you want to fix automatically
+black . && isort . &&  ruff format .
+```
+
 
 ## Future Enhancements
-- Integration of weather data: Enhance activity analysis by correlating runs with weather conditions.
-- Search and filter activities: Implement functionality to search and filter running records easily.
-- Calendar with activities: Add a calendar view to visualize running sessions over time.
-- Weekly, monthly, and yearly statistics with comparisons: Provide deeper insights and track progress over different timeframes.
+- Integration of weather data
+- Search and filter activities
+- Calendar with activities
+- Weekly, monthly, and yearly statistics with comparisons
+- Heatmaps
+- Integration of other activity data formats (e.g., GPX)
+- Integration of other activity data sources (e.g., Garmin Connect)
+- Heart-rate zone analysis
+- Activity details (e.g., splits, laps)
+- Tools to clean and repair data (e.g., remove outliers)
 
-## Contact
-For questions or support, reach out via [michel.axel@gmail.com](mailto:michel.axel@gmail.com) or open an issue on GitHub.
 
 ---
 

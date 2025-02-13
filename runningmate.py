@@ -1,23 +1,27 @@
-import sys
 import os
-from PyQt6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QPushButton,
-    QTableWidget, QTableWidgetItem, QSplashScreen, QHBoxLayout
-)
-from PyQt6.QtGui import QPixmap, QIcon
+import sys
+
 from PyQt6.QtCore import Qt, QTimer
-
-from importer.file.tcx_file import TcxFileImporter
-from processing.system_settings import ViewMode, SortOrder, mapActivityTypes
-
+from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtWidgets import (
+    QApplication,
+    QHBoxLayout,
+    QPushButton,
+    QSplashScreen,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from database.database_handler import DatabaseHandler
 from database.migrations import apply_migrations
+from importer.file.tcx_file import TcxFileImporter
+from processing.system_settings import SortOrder, ViewMode, mapActivityTypes
 from ui.main_menu import MenuBar
 from ui.table_builder import TableBuilder
 from ui.window_run_details import RunDetailsWindow
-from translations import _
-
+from utils.translations import _
 
 # Directories
 IMG_DIR = os.path.expanduser("~/RunningData/images")
@@ -31,6 +35,7 @@ if not os.path.exists(MEDIA_DIR):
 FILE_DIR = os.path.expanduser("~/RunningData/imports")
 if not os.path.exists(FILE_DIR):
     os.makedirs(FILE_DIR)
+
 
 class NumericTableWidgetItem(QTableWidgetItem):
     """Custom TableWidgetItem that ensures proper numeric sorting."""
@@ -77,10 +82,18 @@ class RunningDataApp(QWidget):
         self.view_buttons[ViewMode.CYCLE] = QPushButton(_("Rides"))
         self.view_buttons[ViewMode.WALK] = QPushButton(_("Walks"))
 
-        self.view_buttons[ViewMode.ALL].clicked.connect(lambda: self.set_active_view(ViewMode.ALL))
-        self.view_buttons[ViewMode.RUN].clicked.connect(lambda: self.set_active_view(ViewMode.RUN))
-        self.view_buttons[ViewMode.CYCLE].clicked.connect(lambda: self.set_active_view(ViewMode.CYCLE))
-        self.view_buttons[ViewMode.WALK].clicked.connect(lambda: self.set_active_view(ViewMode.WALK))
+        self.view_buttons[ViewMode.ALL].clicked.connect(
+            lambda: self.set_active_view(ViewMode.ALL)
+        )
+        self.view_buttons[ViewMode.RUN].clicked.connect(
+            lambda: self.set_active_view(ViewMode.RUN)
+        )
+        self.view_buttons[ViewMode.CYCLE].clicked.connect(
+            lambda: self.set_active_view(ViewMode.CYCLE)
+        )
+        self.view_buttons[ViewMode.WALK].clicked.connect(
+            lambda: self.set_active_view(ViewMode.WALK)
+        )
 
         for button in self.view_buttons.values():
             button.setCheckable(True)
@@ -88,7 +101,7 @@ class RunningDataApp(QWidget):
             view_mode_layout.addWidget(button)
 
         layout.addLayout(view_mode_layout)
-        
+
         self.tableWidget = QTableWidget()
         layout.addWidget(self.tableWidget)
 
@@ -131,39 +144,49 @@ class RunningDataApp(QWidget):
         Fetch activities from the database and display them in the table.
         :param sort_field: Column name to sort by (default "activities.date")
         """
-        activities = self.db.fetch_activities(sort_field=sort_field, sort_direction=self.sort_direction)
+        activities = self.db.fetch_activities(
+            sort_field=sort_field, sort_direction=self.sort_direction
+        )
         TableBuilder.setup_table(self.tableWidget, ViewMode.ALL, activities, self)
-        TableBuilder.update_header_styles(self.tableWidget, ViewMode.ALL, sort_field, self.sort_direction)
+        TableBuilder.update_header_styles(
+            self.tableWidget, ViewMode.ALL, sort_field, self.sort_direction
+        )
 
     def load_runs(self, sort_field="date_time"):
         runs = self.db.fetch_runs(sort_field=sort_field)
         TableBuilder.setup_table(self.tableWidget, ViewMode.RUN, runs, self)
-        TableBuilder.update_header_styles(self.tableWidget, ViewMode.RUN, sort_field, self.sort_direction)
+        TableBuilder.update_header_styles(
+            self.tableWidget, ViewMode.RUN, sort_field, self.sort_direction
+        )
 
     def load_walks(self, sort_field="date_time"):
         runs = self.db.fetch_walks(sort_field=sort_field)
         TableBuilder.setup_table(self.tableWidget, ViewMode.WALK, runs, self)
-        TableBuilder.update_header_styles(self.tableWidget, ViewMode.WALK, sort_field, self.sort_direction)
+        TableBuilder.update_header_styles(
+            self.tableWidget, ViewMode.WALK, sort_field, self.sort_direction
+        )
 
     def load_rides(self, sort_field="date_time"):
         runs = self.db.fetch_rides(sort_field=sort_field)
         TableBuilder.setup_table(self.tableWidget, ViewMode.CYCLE, runs, self)
-        TableBuilder.update_header_styles(self.tableWidget, ViewMode.CYCLE, sort_field, self.sort_direction)
+        TableBuilder.update_header_styles(
+            self.tableWidget, ViewMode.CYCLE, sort_field, self.sort_direction
+        )
 
     def load_detail(self, data):
-        activity_type = mapActivityTypes(data['activity_type'])
+        activity_type = mapActivityTypes(data["activity_type"])
         if activity_type == ViewMode.RUN:
-            data = self.db.fetch_run_by_activity_id(data['activity_id'])
+            data = self.db.fetch_run_by_activity_id(data["activity_id"])
             self.details_window = RunDetailsWindow(data, MEDIA_DIR, self.db)
             self.details_window.exec()
             self.details_window = None
         elif activity_type == ViewMode.WALK:
-            data = self.db.fetch_walk_by_activity_id(data['activity_id'])
+            data = self.db.fetch_walk_by_activity_id(data["activity_id"])
             self.details_window = RunDetailsWindow(data, MEDIA_DIR, self.db)
             self.details_window.exec()
             self.details_window = None
         elif activity_type == ViewMode.CYCLE:
-            data = self.db.fetch_ride_by_activity_id(data['activity_id'])
+            data = self.db.fetch_ride_by_activity_id(data["activity_id"])
             self.details_window = RunDetailsWindow(data, MEDIA_DIR, self.db)
             self.details_window.exec()
             self.details_window = None
@@ -185,9 +208,9 @@ class RunningDataApp(QWidget):
             self.load_runs(sort_field=column)
 
     def upload_tcx_file(self):
-       importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db)
-       importer.upload()
-       self.set_active_view(self.view_mode)
+        importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db)
+        importer.upload()
+        self.set_active_view(self.view_mode)
 
 
 if __name__ == "__main__":
@@ -198,18 +221,17 @@ if __name__ == "__main__":
     splash = QSplashScreen(splash_pixmap)
     splash.show()
 
-
     # Update splash message
     def update_splash(message):
-        splash.showMessage(message, Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
-
+        splash.showMessage(
+            message, Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter
+        )
 
     # Step 1: Initialize Database
     update_splash(_("Initializing database..."))
 
     db_handler = DatabaseHandler()
     apply_migrations(db_handler)
-
 
     # Step 2: Load UI after a short delay (allowing splash to be visible)
     def start_main_app():
@@ -220,7 +242,6 @@ if __name__ == "__main__":
         update_splash(_("Finalizing startup..."))
         QTimer.singleShot(500, splash.close)  # Give 500ms for splash to fade
         window.showMaximized()
-
 
     # Start the main window **after** a short delay, allowing splash visibility
     QTimer.singleShot(1000, start_main_app)  # Delay startup slightly

@@ -1,11 +1,12 @@
+import os
 import random
 import sqlite3
-import os
 import time
 
 import pytest
-from database.migrations import apply_migrations, get_current_version
+
 from database.database_handler import DatabaseHandler
+from database.migrations import apply_migrations, get_current_version
 from processing.compute_statistics import generate_activity_title
 from processing.system_settings import ViewMode
 
@@ -39,13 +40,14 @@ def generate_test_activity(test_db):
         "activity_type": activity_type,
         "duration": duration,
         "date": timestamp,
-        "title": title
+        "title": title,
     }
 
     return test_data
 
 
 ### --- DatabaseHandler Unit Tests ---
+
 
 def test_insert_activity(test_db):
     """Test inserting a new activity."""
@@ -88,7 +90,9 @@ def test_insert_run(test_db):
 
     db.insert_run(run_data)
 
-    db.cursor.execute("SELECT * FROM runs WHERE activity_id = ?", (activity_data["id"],))
+    db.cursor.execute(
+        "SELECT * FROM runs WHERE activity_id = ?", (activity_data["id"],)
+    )
     run = db.cursor.fetchone()
     run = dict(run)
 
@@ -180,8 +184,12 @@ def test_best_performance_insert(test_db):
     activity_data = generate_test_activity(test_db)
     db.insert_activity(activity_data)
 
-    db.insert_best_performance(activity_data["id"], "Running", 5.0, "25:30", "2024-02-20 10:00:00")
-    db.cursor.execute("SELECT * FROM best_performances WHERE activity_type = 'Running' AND distance = 5.0")
+    db.insert_best_performance(
+        activity_data["id"], "Running", 5.0, "25:30", "2024-02-20 10:00:00"
+    )
+    db.cursor.execute(
+        "SELECT * FROM best_performances WHERE activity_type = 'Running' AND distance = 5.0"
+    )
 
     results = db.cursor.fetchall()
     assert len(results) == 1
@@ -190,7 +198,9 @@ def test_best_performance_insert(test_db):
 
 def test_database_handler_init_no_conn():
     """Test that DatabaseHandler initializes correctly without a provided connection."""
-    db_handler = DatabaseHandler(db_path=":memory:")  # ✅ Should create a new SQLite connection
+    db_handler = DatabaseHandler(
+        db_path=":memory:"
+    )  # ✅ Should create a new SQLite connection
     assert db_handler.conn is not None
     db_handler.close()
 
@@ -212,12 +222,14 @@ def test_insert_run_without_images(test_db):
         "avg_pace": "06:00",
         "fastest_pace": "06:00",
         "slowest_pace": "07:30",
-        "pause": "00:30"
+        "pause": "00:30",
     }
 
     db.insert_run(run_data)
 
-    db.cursor.execute("SELECT * FROM runs WHERE activity_id = ?", (activity_data["id"],))
+    db.cursor.execute(
+        "SELECT * FROM runs WHERE activity_id = ?", (activity_data["id"],)
+    )
     run = db.cursor.fetchone()
     run = dict(run)
 
@@ -232,7 +244,9 @@ def test_insert_run_details(test_db):
 
     db.insert_run_details(activity_data["id"], 1, 140, 10.5, "05:45", "00:05")
 
-    db.cursor.execute("SELECT * FROM run_details WHERE activity_id = ?", (activity_data["id"],))
+    db.cursor.execute(
+        "SELECT * FROM run_details WHERE activity_id = ?", (activity_data["id"],)
+    )
     details = db.cursor.fetchone()
 
     assert details is not None
@@ -308,7 +322,9 @@ def test_insert_cycling(test_db):
 
     db.insert_cycling(cycling_data)
 
-    db.cursor.execute("SELECT * FROM cycling WHERE activity_id = ?", (activity_data["id"],))
+    db.cursor.execute(
+        "SELECT * FROM cycling WHERE activity_id = ?", (activity_data["id"],)
+    )
     cycling = db.cursor.fetchone()
     cycling = dict(cycling)
 
@@ -342,7 +358,9 @@ def test_insert_walk(test_db):
 
     db.insert_walk(walk_data)
 
-    db.cursor.execute("SELECT * FROM walking WHERE activity_id = ?", (activity_data["id"],))
+    db.cursor.execute(
+        "SELECT * FROM walking WHERE activity_id = ?", (activity_data["id"],)
+    )
     walk = db.cursor.fetchone()
     walk = dict(walk)
 
@@ -544,7 +562,9 @@ def reset_database(test_db):
     db.cursor.execute("PRAGMA foreign_keys = OFF;")
 
     # ✅ Drop all tables to completely reset IDs and data
-    db.cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+    db.cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+    )
     tables = db.cursor.fetchall()
 
     for (table_name,) in tables:
@@ -555,7 +575,9 @@ def reset_database(test_db):
     # ✅ Re-run migrations to recreate tables
     apply_migrations(db)
 
-    db.cursor.execute("PRAGMA foreign_keys = ON;")  # ✅ Re-enable foreign key constraints
+    db.cursor.execute(
+        "PRAGMA foreign_keys = ON;"
+    )  # ✅ Re-enable foreign key constraints
 
 
 @pytest.fixture(scope="module", autouse=True)
