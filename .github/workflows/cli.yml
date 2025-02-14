@@ -70,4 +70,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdocs gh-deploy --force --remote-branch gh-pages --remote-name origin --verbose
+          mkdocs gh-deploy --force --remote-branch gh-pages
