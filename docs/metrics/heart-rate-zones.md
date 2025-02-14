@@ -12,16 +12,14 @@ Heart rate zones are a way to categorize the intensity of your training based on
 
 ## Calculation
 In the Karvonen method the thresholds are calculated as a percentage of the difference between resting HR and max HR (termed heart rate reserve HHR). 
-$$
-HRR = HR_{\text{max}} - HR_{\text{min}}
-$$
+> \($HRR = HR_{\text{max}} - HR_{\text{min}}\)
+>
+
 And with the heart rate reserve (HRR) the zones can be calculated:
-$$
-THR_{\text{min}} = HRR * Intensity-{\text{min}} + HR_{\text{min}}
-$$
-$$
-THR_{\text{max}} = HRR * Intensity_{\text{max}} + HR_{\text{min}}
-$$
+> 
+> \($THR_{\text{min}} = HRR * Intensity-{\text{min}} + HR_{\text{min}}\)
+> 
+> \($THR_{\text{max}} = HRR * Intensity_{\text{max}} + HR_{\text{min}}\)
 
 The *HRmax* may be calculated by a maximal exercise test or by using an age predicted formula. There are two formulae currently favoured:
 

@@ -5,7 +5,6 @@ nav:
   - Metrics :
       - Heart Rate Zones: metrics/heart-rate-zones.md
       - Pace: metrics/pace.md
-      - Power (Watts): metrics/power.md
       - Trainings Effect: metrics/trainings-effect.md
 
 extra_javascript:
