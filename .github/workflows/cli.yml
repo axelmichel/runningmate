@@ -68,6 +68,6 @@ jobs:
 
       - name: Deploy MkDocs to GitHub Pages
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdocs gh-deploy --force --remote-branch gh-pages --remote-name origin --verbose
