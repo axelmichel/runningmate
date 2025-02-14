@@ -21,6 +21,7 @@ APPDATA_DIR = os.path.expanduser("~/RunningData/appdata")
 if not os.path.exists(APPDATA_DIR):
     os.makedirs(APPDATA_DIR)
 
+
 def save_sync_date(date):
     sync_file = os.path.join(APPDATA_DIR, "sync.json")
     with open(sync_file, "w") as f:
