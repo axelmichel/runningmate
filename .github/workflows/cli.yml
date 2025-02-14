@@ -1,4 +1,4 @@
-name: CI - Run Tests & Linting
+name: CI - Run Tests & Linting & Deploy MkDocs
 
 on:
   push:
@@ -40,3 +40,26 @@ jobs:
       - name: Fail if tests or linting fail (only on main or PR)
         if: failure() && (github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.base_ref == 'main')
         run: exit 1
+
+  deploy:
+    name: Deploy MkDocs
+    if: github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install MkDocs and Dependencies
+        run: |
+          pip install mkdocs mkdocs-material
+          pip install https://github.com/mitya57/python-markdown-math/archive/master.zip
+
+      - name: Deploy MkDocs to GitHub Pages
+        run: mkdocs gh-deploy --force
