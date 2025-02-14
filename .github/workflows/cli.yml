@@ -61,5 +61,13 @@ jobs:
           pip install mkdocs mkdocs-material
           pip install https://github.com/mitya57/python-markdown-math/archive/master.zip
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Deploy MkDocs to GitHub Pages
-        run: mkdocs gh-deploy --force
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          mkdocs gh-deploy --force --remote-branch gh-pages --remote-name origin --verbose
