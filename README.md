@@ -7,6 +7,9 @@ RunningMate is a Python-based application designed to process, analyze, and visu
 The app does not store any of your data outside of your local machine. All collected data can be found in the `runningData` folder within your home directory. The app uses a [SQLite database](https://www.sqlite.org/) for imported activity data.
 Uploaded media files and generated images are stored in the `media` and generated images/charts in the `images` folder. In the current Version this app does not support multiple users.
 
+## Documentation
+The documentation can be found [here](https://axelmichel.github.io/runningmate).
+
 ## Features
 - Import activity data from `tcx` files.
 - Import activity data from garmin connect.
