@@ -331,6 +331,63 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
             )
         """,
             ),
+            (
+                30,
+                [
+                    "ALTER TABLE activities ADD COLUMN file_id TEXT",
+                ],
+            ),
+            (
+                32,
+                """
+           UPDATE activities
+            SET file_id = CASE 
+                WHEN runs.track_img IS NULL OR runs.track_img = '' THEN NULL
+                ELSE substr(
+                    runs.track_img,
+                    instr(runs.track_img, 'images/') + 7,
+                    instr(runs.track_img, '_track.png') - (instr(runs.track_img, 'images/') + 7)
+                )
+            END
+            FROM runs  -- Join with runs table
+            WHERE runs.activity_id = activities.id
+            AND runs.track_img LIKE '%/images/%_track.png%'
+         """,
+            ),
+            (
+                33,
+                """
+           UPDATE activities
+            SET file_id = CASE 
+                WHEN cycling.track_img IS NULL OR cycling.track_img = '' THEN NULL
+                ELSE substr(
+                    cycling.track_img,
+                    instr(cycling.track_img, 'images/') + 7,
+                    instr(cycling.track_img, '_track.png') - (instr(cycling.track_img, 'images/') + 7)
+                )
+            END
+            FROM cycling  -- Join with runs table
+            WHERE cycling.activity_id = activities.id
+            AND cycling.track_img LIKE '%/images/%_track.png%'
+         """,
+            ),
+            (
+                34,
+                """
+           UPDATE activities
+            SET file_id = CASE 
+                WHEN walking.track_img IS NULL OR walking.track_img = '' THEN NULL
+                ELSE substr(
+                    walking.track_img,
+                    instr(walking.track_img, 'images/') + 7,
+                    instr(walking.track_img, '_track.png') - (instr(walking.track_img, 'images/') + 7)
+                )
+            END
+            FROM walking  -- Join with runs table
+            WHERE walking.activity_id = activities.id
+            AND walking.track_img LIKE '%/images/%_track.png%'
+         """,
+            ),
         ]
     )
 

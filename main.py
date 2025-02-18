@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
-    QWidget,
+    QWidget, QMessageBox,
 )
 
 from database.database_handler import DatabaseHandler
@@ -288,6 +288,24 @@ class RunningDataApp(QWidget):
         importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db)
         importer.by_upload()
         self.set_active_view(self.view_mode)
+
+    def refresh_entry(self, activity_id):
+        """Trigger re-processing calculations for the given row."""
+        print(f"Refreshing activity {activity_id}")
+        # Call the necessary function to recalculate the activity
+
+    def delete_entry(self, activity_id):
+        """Delete the selected activity after confirmation."""
+
+        reply = QMessageBox.question(
+            self, "Delete Confirmation",
+            f"Are you sure you want to delete activity {activity_id}?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            print(f"Deleting activity {activity_id}")
 
 
 if __name__ == "__main__":
