@@ -201,6 +201,9 @@ class DatabaseHandler:
         self.cursor.execute(
             "DELETE FROM activity_details WHERE activity_id = ?", (activity_id,)
         )
+        self.cursor.execute(
+            "DELETE FROM weather WHERE weather.activity_id = ?", (activity_id,)
+        )
         self.conn.commit()
 
     def insert_best_performance(

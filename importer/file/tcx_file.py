@@ -18,7 +18,7 @@ from processing.data_processing import (
 from processing.parse_tcx import parse_segments, parse_tcx
 from processing.system_settings import ViewMode, mapActivityTypes
 from processing.visualization import plot_activity_map, plot_elevation, plot_track
-from processing.weather import get_weather
+from processing.weather import WeatherService
 from utils.logger import logger
 
 
@@ -134,7 +134,7 @@ class TcxFileImporter:
 
         details = parse_segments(df, computed_data["activity_type"])
         segment = get_weather_segment(details)
-        weather_data = get_weather(
+        weather_data = WeatherService.get_weather(
             segment["latitude"], segment["longitude"], segment["time"]
         )
 
