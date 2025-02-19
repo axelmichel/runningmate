@@ -32,7 +32,7 @@ def get_weather_segment(details):
     return {
         "latitude": middle_segment["seg_latitude"],
         "longitude": middle_segment["seg_longitude"],
-        "time": middle_segment["seg_time_start"].split(" ")[0]
+        "time": middle_segment["seg_time_start"].split(" ")[0],
     }
 
 
@@ -44,7 +44,7 @@ class TcxFileImporter:
         self.db = db_handler
         self.parent = parent
 
-    def by_upload(self, activity_id = None):
+    def by_upload(self, activity_id=None):
         file_path, _ = QFileDialog.getOpenFileName(
             None, "Select TCX File", "", "TCX Files (*.tcx)"
         )
@@ -55,7 +55,7 @@ class TcxFileImporter:
             return True
         return False
 
-    def by_file(self, file_path, activity_id = None):
+    def by_file(self, file_path, activity_id=None):
         if file_path:
             self.process_file(file_path, activity_id)
             self.archive_file(file_path)
@@ -98,7 +98,7 @@ class TcxFileImporter:
             "File Not Found",
             "The expected file is missing. Do you want to upload a new file?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:
@@ -106,7 +106,7 @@ class TcxFileImporter:
             return True
         return False
 
-    def process_file(self, file_path, activity_id = None):
+    def process_file(self, file_path, activity_id=None):
         df, activity_type = parse_tcx(file_path)
         df = convert_to_utm(df)
         df = calculate_distance(df)
@@ -134,7 +134,9 @@ class TcxFileImporter:
 
         details = parse_segments(df, computed_data["activity_type"])
         segment = get_weather_segment(details)
-        weather_data = get_weather(segment["latitude"], segment["longitude"], segment["time"])
+        weather_data = get_weather(
+            segment["latitude"], segment["longitude"], segment["time"]
+        )
 
         if weather_data:
             identifier = {"activity_id": computed_data["activity_id"]}
@@ -165,7 +167,7 @@ class TcxFileImporter:
             if weather_data:
                 self.db.insert_weather(weather_data)
 
-    def process_run(self, df, computed_data, activity_id = None):
+    def process_run(self, df, computed_data, activity_id=None):
         avg_steps, total_steps = calculate_steps(df)
         computed_data["avg_steps"] = (
             int(round(avg_steps, 0)) if not np.isnan(avg_steps) else 0
@@ -179,7 +181,7 @@ class TcxFileImporter:
         else:
             self.db.update_run(computed_data)
 
-    def process_walk(self, df, computed_data,  activity_id = None):
+    def process_walk(self, df, computed_data, activity_id=None):
         avg_steps, total_steps = calculate_steps(df)
         computed_data["avg_steps"] = (
             int(round(avg_steps, 0)) if not np.isnan(avg_steps) else 0
@@ -192,7 +194,7 @@ class TcxFileImporter:
         else:
             self.db.update_walking(computed_data)
 
-    def process_cycle(self, df, computed_data,  activity_id = None):
+    def process_cycle(self, df, computed_data, activity_id=None):
         if not activity_id:
             self.db.insert_cycling(computed_data)
         else:

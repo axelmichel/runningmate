@@ -1,5 +1,12 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QHeaderView, QTableWidget, QTableWidgetItem, QPushButton, QHBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QHBoxLayout,
+    QHeaderView,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QWidget,
+)
 
 from processing.system_settings import SortOrder, ViewMode
 from utils.translations import _  # Import translation function
@@ -100,7 +107,9 @@ class TableBuilder:
         table_widget.clearContents()
         table_widget.setRowCount(len(data))
         table_widget.setColumnCount(len(headers) + 2)
-        table_widget.setHorizontalHeaderLabels(translated_headers + ["_id", _("Actions")])
+        table_widget.setHorizontalHeaderLabels(
+            translated_headers + ["_id", _("Actions")]
+        )
         table_widget.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.ResizeToContents
         )
@@ -125,7 +134,7 @@ class TableBuilder:
 
             # Add actions column
             actions_widget = TableBuilder.getActions(table_widget, row_index, parent)
-            table_widget.setCellWidget(row_index, len(headers) + 1 , actions_widget)
+            table_widget.setCellWidget(row_index, len(headers) + 1, actions_widget)
 
             id_item = QTableWidgetItem(
                 str(row_data.get("activity_id", row_index))
@@ -180,23 +189,32 @@ class TableBuilder:
         header.setSortIndicator(column_index, order)
         header.setSortIndicatorShown(True)
 
-
     @staticmethod
     def getActions(table_widget, row_index, parent):
         # Actions Column (Buttons)
         actions_widget = QWidget()
         layout = QHBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)  # Remove margins for better button alignment
+        layout.setContentsMargins(
+            0, 0, 0, 0
+        )  # Remove margins for better button alignment
 
         # Refresh Button
         refresh_button = QPushButton(_("Refresh"))
         refresh_button.setStyleSheet("padding: 2px; font-size: 12px;")
-        refresh_button.clicked.connect(lambda _, row=row_index: TableBuilder.handle_action_click(table_widget, row, parent, 'refresh'))
+        refresh_button.clicked.connect(
+            lambda _, row=row_index: TableBuilder.handle_action_click(
+                table_widget, row, parent, "refresh"
+            )
+        )
 
         # Delete Button
         delete_button = QPushButton(_("Delete"))
         delete_button.setStyleSheet("color: red; padding: 2px; font-size: 12px;")
-        delete_button.clicked.connect(lambda _, row=row_index: TableBuilder.handle_action_click(table_widget, row, parent, 'delete'))
+        delete_button.clicked.connect(
+            lambda _, row=row_index: TableBuilder.handle_action_click(
+                table_widget, row, parent, "delete"
+            )
+        )
 
         layout.addWidget(refresh_button)
         layout.addWidget(delete_button)
@@ -215,7 +233,6 @@ class TableBuilder:
                 parent.delete_entry(row_id)
             elif action == "refresh":
                 parent.refresh_entry(row_id)
-
 
     @staticmethod
     def handle_row_click(table_widget, row, parent):

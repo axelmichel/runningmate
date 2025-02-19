@@ -62,14 +62,7 @@ class DatabaseHandler:
             "elevation_img",
             "map_html",
         ],
-        "activities": [
-            "id",
-            "distance",
-            "activity_type",
-            "duration",
-            "date",
-            "title"
-        ],
+        "activities": ["id", "distance", "activity_type", "duration", "date", "title"],
         "activity_details": [
             "activity_id",
             "segment_id",
@@ -89,7 +82,7 @@ class DatabaseHandler:
             "max_temp",
             "min_temp",
             "precipitation",
-            "max_wind_speed"
+            "max_wind_speed",
         ],
     }
 
@@ -103,18 +96,20 @@ class DatabaseHandler:
         self.conn.row_factory = sqlite3.Row  # A
         self.cursor = self.conn.cursor()
 
-    def insert_activity(self, data: dict, segment_df = None):
+    def insert_activity(self, data: dict, segment_df=None):
         self.insert("activities", data)
         if segment_df is not None:
             for segment_id, row in segment_df.iterrows():
-                self.insert_activity_details(data['id'], segment_id, row)
+                self.insert_activity_details(data["id"], segment_id, row)
 
-    def update_activity(self, data: dict, segment_df = None):
+    def update_activity(self, data: dict, segment_df=None):
         self.update("activities", data, "id")
-        self.cursor.execute("DELETE FROM activity_details WHERE activity_id = ?", (data['id'],))
+        self.cursor.execute(
+            "DELETE FROM activity_details WHERE activity_id = ?", (data["id"],)
+        )
         if segment_df is not None:
             for segment_id, row in segment_df.iterrows():
-                self.insert_activity_details(data['id'], segment_id, row)
+                self.insert_activity_details(data["id"], segment_id, row)
 
     def insert_activity_details(self, activity_id, segment_id, data: dict):
         columns = self.TABLE_COLUMNS["activity_details"]
@@ -190,14 +185,22 @@ class DatabaseHandler:
         target = mapActivityTypes(activity["activity_type"])
 
         if target == ViewMode.RUN:
-            self.cursor.execute("DELETE FROM runs WHERE activity_id = ?", (activity_id,))
+            self.cursor.execute(
+                "DELETE FROM runs WHERE activity_id = ?", (activity_id,)
+            )
         elif target == ViewMode.WALK:
-            self.cursor.execute("DELETE FROM walking WHERE activity_id = ?", (activity_id,))
+            self.cursor.execute(
+                "DELETE FROM walking WHERE activity_id = ?", (activity_id,)
+            )
         elif target == ViewMode.CYCLE:
-            self.cursor.execute("DELETE FROM cycling WHERE activity_id = ?", (activity_id,))
+            self.cursor.execute(
+                "DELETE FROM cycling WHERE activity_id = ?", (activity_id,)
+            )
 
         self.cursor.execute("DELETE FROM activities WHERE id = ?", (activity_id,))
-        self.cursor.execute("DELETE FROM activity_details WHERE activity_id = ?", (activity_id,))
+        self.cursor.execute(
+            "DELETE FROM activity_details WHERE activity_id = ?", (activity_id,)
+        )
         self.conn.commit()
 
     def insert_best_performance(

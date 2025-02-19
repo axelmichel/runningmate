@@ -234,6 +234,7 @@ def test_insert_run_without_images(test_db):
 
     assert run is not None
 
+
 def test_get_comment(test_db):
     """Test retrieving an activity comment."""
     db = test_db

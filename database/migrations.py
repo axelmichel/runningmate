@@ -341,7 +341,7 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
                 32,
                 """
            UPDATE activities
-            SET file_id = CASE 
+            SET file_id = CASE
                 WHEN runs.track_img IS NULL OR runs.track_img = '' THEN NULL
                 ELSE substr(
                     runs.track_img,
@@ -358,7 +358,7 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
                 33,
                 """
            UPDATE activities
-            SET file_id = CASE 
+            SET file_id = CASE
                 WHEN cycling.track_img IS NULL OR cycling.track_img = '' THEN NULL
                 ELSE substr(
                     cycling.track_img,
@@ -375,7 +375,7 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
                 34,
                 """
            UPDATE activities
-            SET file_id = CASE 
+            SET file_id = CASE
                 WHEN walking.track_img IS NULL OR walking.track_img = '' THEN NULL
                 ELSE substr(
                     walking.track_img,

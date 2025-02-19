@@ -305,10 +305,11 @@ class RunningDataApp(QWidget):
         """Delete the selected activity after confirmation."""
 
         reply = QMessageBox.question(
-            self, "Delete Confirmation",
+            self,
+            "Delete Confirmation",
             f"Are you sure you want to delete activity {activity_id}?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:
