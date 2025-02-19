@@ -4,7 +4,7 @@ import tarfile
 import numpy as np
 import pandas as pd
 from PyQt6.QtCore import QThread, pyqtSignal
-from PyQt6.QtWidgets import QFileDialog
+from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
 from database.database_handler import DatabaseHandler
 from processing.compute_statistics import format_hour_minute, generate_activity_title
@@ -22,13 +22,14 @@ from utils.logger import logger
 
 
 class TcxFileImporter:
-    def __init__(self, file_path, image_path, db_handler: DatabaseHandler):
+    def __init__(self, file_path, image_path, db_handler: DatabaseHandler, parent=None):
         super().__init__()
         self.file_path = file_path
         self.image_path = image_path
         self.db = db_handler
+        self.parent = parent
 
-    def by_upload(self):
+    def by_upload(self, activity_id = None):
         file_path, _ = QFileDialog.getOpenFileName(
             None, "Select TCX File", "", "TCX Files (*.tcx)"
         )
@@ -47,7 +48,46 @@ class TcxFileImporter:
             return True
         return
 
-    def process_file(self, file_path):
+    def by_activity(self, activity_id):
+        proceed = False
+        file_path = None
+        activity = self.db.fetch_run_by_activity_id(activity_id)
+        if activity:
+            file_id = activity.get("file_id")
+            if activity & file_id:
+                file_path = os.path.join(self.file_path, f"{file_id}.tar.gz")
+                if os.path.exists(file_path):
+                    proceed = self.unpack_tar(file_path)
+        if proceed:
+            self.process_file(file_path)
+        if not proceed:
+            self.prompt_for_upload(activity_id)
+
+    def unpack_tar(self, file_path):
+        extract_dir = os.path.dirname(file_path)  # Extract in the same directory
+        try:
+            with tarfile.open(file_path, "r:gz") as tar:
+                tar.extractall(path=extract_dir)
+                return True
+
+        except Exception as e:
+            logger.critical(f"Failed to extract tar.gz: {e}")
+            return False
+
+    def prompt_for_upload(self, activity_id):
+        """Prompts the user for file upload if the tar.gz is missing."""
+        reply = QMessageBox.question(
+            self.parent,
+            "File Not Found",
+            "The expected file is missing. Do you want to upload a new file?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.by_upload(activity_id)
+
+    def process_file(self, file_path, activity_id = None):
         df, activity_type = parse_tcx(file_path)
         df = convert_to_utm(df)
         df = calculate_distance(df)
@@ -57,7 +97,10 @@ class TcxFileImporter:
 
         name = os.path.basename(file_path).replace(".tcx", "")
 
-        next_id = self.db.get_next_activity_id()
+        if not activity_id:
+            next_id = self.db.get_next_activity_id()
+        else:
+            next_id = activity_id
 
         computed_data = self.compute_data(df)
         computed_data["title"] = generate_activity_title(
@@ -83,9 +126,13 @@ class TcxFileImporter:
             return False
 
         computed_data["id"] = computed_data["activity_id"]
-        self.db.insert_activity(computed_data)
+        if activity_id:
+            computed_data["activity_id"] = activity_id
+            self.db.update_activity(computed_data)
+        else:
+            self.db.insert_activity(computed_data)
 
-    def process_run(self, df, computed_data):
+    def process_run(self, df, computed_data, activity_id = None):
         avg_steps, total_steps = calculate_steps(df)
         computed_data["avg_steps"] = (
             int(round(avg_steps, 0)) if not np.isnan(avg_steps) else 0
@@ -93,10 +140,12 @@ class TcxFileImporter:
         computed_data["total_steps"] = (
             int(total_steps) if not np.isnan(total_steps) else 0
         )
+        if not activity_id:
+            self.db.insert_run(computed_data)
+        else:
+            self.db.update_run(computed_data)
 
-        self.db.insert_run(computed_data)
-
-    def process_walk(self, df, computed_data):
+    def process_walk(self, df, computed_data,  activity_id = None):
         avg_steps, total_steps = calculate_steps(df)
         computed_data["avg_steps"] = (
             int(round(avg_steps, 0)) if not np.isnan(avg_steps) else 0
@@ -104,10 +153,16 @@ class TcxFileImporter:
         computed_data["total_steps"] = (
             int(total_steps) if not np.isnan(total_steps) else 0
         )
-        self.db.insert_walk(computed_data)
+        if not activity_id:
+            self.db.insert_walking(computed_data)
+        else:
+            self.db.update_walking(computed_data)
 
-    def process_cycle(self, df, computed_data):
-        self.db.insert_cycling(computed_data)
+    def process_cycle(self, df, computed_data,  activity_id = None):
+        if not activity_id:
+            self.db.insert_cycling(computed_data)
+        else:
+            self.db.update_cycling(computed_data)
 
     def plot_stats(self, name, df, computed_data):
         track_img = os.path.join(self.image_path, f"{name}_track.png")

@@ -7,12 +7,13 @@ from PyQt6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QPushButton,
     QSplashScreen,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
-    QWidget, QMessageBox,
+    QWidget,
 )
 
 from database.database_handler import DatabaseHandler
@@ -285,13 +286,15 @@ class RunningDataApp(QWidget):
             self.sync_window = None
 
     def upload_tcx_file(self):
-        importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db)
+        importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db, self)
         importer.by_upload()
         self.set_active_view(self.view_mode)
 
     def refresh_entry(self, activity_id):
         """Trigger re-processing calculations for the given row."""
         print(f"Refreshing activity {activity_id}")
+        importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db, self)
+        importer.by_activity(activity_id)
         # Call the necessary function to recalculate the activity
 
     def delete_entry(self, activity_id):
@@ -305,7 +308,7 @@ class RunningDataApp(QWidget):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            print(f"Deleting activity {activity_id}")
+            self.db.delete_activity(activity_id)
 
 
 if __name__ == "__main__":

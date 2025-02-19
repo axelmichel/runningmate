@@ -1,7 +1,7 @@
 import os
 import sqlite3
 
-from processing.system_settings import ViewMode
+from processing.system_settings import ViewMode, mapActivityTypes
 from utils.translations import _
 
 
@@ -15,6 +15,63 @@ class DatabaseHandler:
         "distance": "activities.distance",
     }
 
+    TABLE_COLUMNS = {
+        "runs": [
+            "activity_id",
+            "elevation_gain",
+            "avg_speed",
+            "avg_steps",
+            "total_steps",
+            "avg_power",
+            "avg_heart_rate",
+            "avg_pace",
+            "fastest_pace",
+            "slowest_pace",
+            "pause",
+            "track_img",
+            "elevation_img",
+            "map_html",
+        ],
+        "cycling": [
+            "activity_id",
+            "elevation_gain",
+            "avg_speed",
+            "avg_power",
+            "avg_heart_rate",
+            "avg_pace",
+            "fastest_pace",
+            "slowest_pace",
+            "pause",
+            "track_img",
+            "elevation_img",
+            "map_html",
+        ],
+        "walking": [
+            "activity_id",
+            "elevation_gain",
+            "avg_speed",
+            "avg_steps",
+            "total_steps",
+            "avg_power",
+            "avg_heart_rate",
+            "avg_pace",
+            "fastest_pace",
+            "slowest_pace",
+            "pause",
+            "track_img",
+            "elevation_img",
+            "map_html",
+        ],
+        "activities": [
+            "id",
+            "distance",
+            "activity_type",
+            "duration",
+            "date",
+            "title"
+        ]
+    }
+
     def __init__(self, db_path=None, conn=None):
         """Initialize the database connection."""
         if conn:
@@ -25,64 +82,37 @@ class DatabaseHandler:
         self.conn.row_factory = sqlite3.Row  # A
         self.cursor = self.conn.cursor()
 
+    def insert_activity(self, data: dict):
+        self.insert("activities", data)
+
+    def update_activity(self, data: dict):
+        self.update("activities", data)
+
     def insert_run(self, data: dict):
-        columns = [
-            "activity_id",
-            "elevation_gain",
-            "avg_speed",
-            "avg_steps",
-            "total_steps",
-            "avg_power",
-            "avg_heart_rate",
-            "avg_pace",
-            "fastest_pace",
-            "slowest_pace",
-            "pause",
-            "track_img",
-            "elevation_img",
-            "map_html",
-        ]
-        self.insert_data("runs", columns, data)
+        self.insert("runs", data)
+
+    def update_run(self, data: dict):
+        self.update("runs", data)
 
     def insert_cycling(self, data: dict):
-        columns = [
-            "activity_id",
-            "elevation_gain",
-            "avg_speed",
-            "avg_power",
-            "avg_heart_rate",
-            "avg_pace",
-            "fastest_pace",
-            "slowest_pace",
-            "pause",
-            "track_img",
-            "elevation_img",
-            "map_html",
-        ]
-        self.insert_data("cycling", columns, data)
+        self.insert("cycling", data)
 
-    def insert_walk(self, data: dict):
-        columns = [
-            "activity_id",
-            "elevation_gain",
-            "avg_speed",
-            "avg_steps",
-            "total_steps",
-            "avg_power",
-            "avg_heart_rate",
-            "avg_pace",
-            "fastest_pace",
-            "slowest_pace",
-            "pause",
-            "track_img",
-            "elevation_img",
-            "map_html",
-        ]
-        self.insert_data("walking", columns, data)
+    def update_cycling(self, data: dict):
+        self.update("cycling", data)
 
-    def insert_activity(self, data: dict):
-        columns = ["id", "distance", "activity_type", "duration", "date", "title"]
-        self.insert_data("activities", columns, data)
+    def insert_walking(self, data: dict):
+        self.insert("walking", data)
+
+    def update_walking(self, data: dict):
+        self.update("walking", data)
+
+    def update(self, table, data):
+        columns = self.TABLE_COLUMNS[table]
+        self.update_data(table, columns, data)
+
+    def insert(self, table, data):
+        columns = self.TABLE_COLUMNS[table]
+        self.update_data(table, columns, data)
 
     def insert_data(self, table, columns, data: dict):
         values = [data.get(col, None) for col in columns]
@@ -93,6 +123,42 @@ class DatabaseHandler:
               """
 
         self.cursor.execute(query, values)
+        self.conn.commit()
+
+    def update_data(self, table, columns, data: dict):
+        if "activity_id" not in data:
+            raise ValueError("activity_id is required for updates.")
+
+        set_clause = ", ".join([f"{col} = ?" for col in columns])
+        values = [data.get(col, None) for col in columns]
+        values.append(data["activity_id"])  # Add activity_id for WHERE clause
+
+        query = f"""
+            UPDATE {table}
+            SET {set_clause}
+            WHERE activity_id = ?
+        """
+
+        self.cursor.execute(query, values)
+        self.conn.commit()
+
+    def delete_activity(self, activity_id):
+        activity = self.fetch_activity(activity_id)
+        if not activity:
+            return
+
+        target = mapActivityTypes(activity["activity_type"])
+
+        if target == ViewMode.RUN:
+            self.cursor.execute("DELETE FROM runs WHERE activity_id = ?", (activity_id,))
+            self.cursor.execute("DELETE FROM run_details WHERE activity_id = ?", (activity_id,))
+        elif target == ViewMode.WALK:
+            self.cursor.execute("DELETE FROM walking WHERE activity_id = ?", (activity_id,))
+        elif target == ViewMode.CYCLE:
+            self.cursor.execute("DELETE FROM cycling WHERE activity_id = ?", (activity_id,))
+            self.cursor.execute("DELETE FROM cycling_details WHERE activity_id = ?", (activity_id,))
+
+        self.cursor.execute("DELETE FROM activities WHERE id = ?", (activity_id,))
         self.conn.commit()
 
     def insert_run_details(
@@ -177,6 +243,16 @@ class DatabaseHandler:
         )
         return self.cursor.fetchall()
 
+    def fetch_activity(self, activity_id):
+        """
+        :param activity_id: The activity ID to fetch
+        :return: dictionary
+        """
+        query = "SELECT * FROM activities WHERE id = ?"
+        self.cursor.execute(query, (activity_id,))
+        row = self.cursor.fetchone()
+        return dict(row)
+
     def fetch_run_by_activity_id(self, activity_id):
         """
         Fetch a run, joining the activities table to get some basic information.
@@ -193,6 +269,7 @@ class DatabaseHandler:
                     activities.title,
                     activities.comment,
                     activities.activity_type,
+                    activities.file_id,
                     runs.activity_id,
                     runs.elevation_gain,
                     runs.avg_speed,
