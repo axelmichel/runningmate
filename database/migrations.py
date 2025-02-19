@@ -388,6 +388,45 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
             AND walking.track_img LIKE '%/images/%_track.png%'
          """,
             ),
+            (
+                35,
+                [
+                    "DROP TABLE IF EXISTS run_details",
+                    "DROP TABLE IF EXISTS cycling_details",
+                ],
+            ),
+            (
+                36,
+                """
+                CREATE TABLE IF NOT EXISTS activity_details (
+                    activity_id TEXT,
+                    segment_id INTEGER,
+                    seg_latitude REAL,
+                    seg_longitude REAL,
+                    seg_avg_heart_rate REAL,
+                    seg_avg_power REAL,
+                    seg_avg_speed REAL,
+                    seg_avg_pace REAL,
+                    seg_avg_steps REAL,
+                    seg_distance REAL,
+                    seg_time_start TEXT,
+                    seg_time_end TEXT,
+                    PRIMARY KEY (activity_id, segment_id)
+                )
+            """,
+            ),
+            (
+                37,
+                """
+                CREATE TABLE IF NOT EXISTS weather (
+                    activity_id TEXT PRIMARY KEY,
+                    max_temp REAL,
+                    min_temp REAL,
+                    precipitation REAL,
+                    max_wind_speed REAL
+                )
+            """,
+            ),
         ]
     )
 

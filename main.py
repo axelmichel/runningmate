@@ -291,11 +291,15 @@ class RunningDataApp(QWidget):
         self.set_active_view(self.view_mode)
 
     def refresh_entry(self, activity_id):
-        """Trigger re-processing calculations for the given row."""
-        print(f"Refreshing activity {activity_id}")
         importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db, self)
-        importer.by_activity(activity_id)
-        # Call the necessary function to recalculate the activity
+        imported = importer.by_activity(activity_id)
+        if imported:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Information)
+            msg.setWindowTitle("Success")
+            msg.setText(f"Activity {activity_id} was successfully processed!")
+            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg.exec()
 
     def delete_entry(self, activity_id):
         """Delete the selected activity after confirmation."""

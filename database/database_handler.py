@@ -69,7 +69,28 @@ class DatabaseHandler:
             "duration",
             "date",
             "title"
-        ]
+        ],
+        "activity_details": [
+            "activity_id",
+            "segment_id",
+            "seg_latitude",
+            "seg_longitude",
+            "seg_avg_heart_rate",
+            "seg_avg_power",
+            "seg_avg_speed",
+            "seg_avg_pace",
+            "seg_avg_steps",
+            "seg_distance",
+            "seg_time_start",
+            "seg_time_end",
+        ],
+        "weather": [
+            "activity_id",
+            "max_temp",
+            "min_temp",
+            "precipitation",
+            "max_wind_speed"
+        ],
     }
 
     def __init__(self, db_path=None, conn=None):
@@ -82,11 +103,24 @@ class DatabaseHandler:
         self.conn.row_factory = sqlite3.Row  # A
         self.cursor = self.conn.cursor()
 
-    def insert_activity(self, data: dict):
+    def insert_activity(self, data: dict, segment_df = None):
         self.insert("activities", data)
+        if segment_df is not None:
+            for segment_id, row in segment_df.iterrows():
+                self.insert_activity_details(data['id'], segment_id, row)
 
-    def update_activity(self, data: dict):
-        self.update("activities", data)
+    def update_activity(self, data: dict, segment_df = None):
+        self.update("activities", data, "id")
+        self.cursor.execute("DELETE FROM activity_details WHERE activity_id = ?", (data['id'],))
+        if segment_df is not None:
+            for segment_id, row in segment_df.iterrows():
+                self.insert_activity_details(data['id'], segment_id, row)
+
+    def insert_activity_details(self, activity_id, segment_id, data: dict):
+        columns = self.TABLE_COLUMNS["activity_details"]
+        identifier = {"activity_id": activity_id, "segment_id": segment_id}
+        data = {**data, **identifier}
+        self.insert_data("activity_details", columns, data)
 
     def insert_run(self, data: dict):
         self.insert("runs", data)
@@ -106,13 +140,19 @@ class DatabaseHandler:
     def update_walking(self, data: dict):
         self.update("walking", data)
 
-    def update(self, table, data):
+    def insert_weather(self, data: dict):
+        self.insert("weather", data)
+
+    def update_weather(self, data: dict):
+        self.update("weather", data)
+
+    def update(self, table, data, id_field="activity_id"):
         columns = self.TABLE_COLUMNS[table]
-        self.update_data(table, columns, data)
+        self.update_data(table, columns, data, id_field)
 
     def insert(self, table, data):
         columns = self.TABLE_COLUMNS[table]
-        self.update_data(table, columns, data)
+        self.insert_data(table, columns, data)
 
     def insert_data(self, table, columns, data: dict):
         values = [data.get(col, None) for col in columns]
@@ -125,18 +165,18 @@ class DatabaseHandler:
         self.cursor.execute(query, values)
         self.conn.commit()
 
-    def update_data(self, table, columns, data: dict):
-        if "activity_id" not in data:
+    def update_data(self, table, columns, data: dict, id_field="activity_id"):
+        if id_field not in data:
             raise ValueError("activity_id is required for updates.")
 
         set_clause = ", ".join([f"{col} = ?" for col in columns])
         values = [data.get(col, None) for col in columns]
-        values.append(data["activity_id"])  # Add activity_id for WHERE clause
+        values.append(data[id_field])  # Add activity_id for WHERE clause
 
         query = f"""
             UPDATE {table}
             SET {set_clause}
-            WHERE activity_id = ?
+            WHERE {id_field} = ?
         """
 
         self.cursor.execute(query, values)
@@ -151,27 +191,13 @@ class DatabaseHandler:
 
         if target == ViewMode.RUN:
             self.cursor.execute("DELETE FROM runs WHERE activity_id = ?", (activity_id,))
-            self.cursor.execute("DELETE FROM run_details WHERE activity_id = ?", (activity_id,))
         elif target == ViewMode.WALK:
             self.cursor.execute("DELETE FROM walking WHERE activity_id = ?", (activity_id,))
         elif target == ViewMode.CYCLE:
             self.cursor.execute("DELETE FROM cycling WHERE activity_id = ?", (activity_id,))
-            self.cursor.execute("DELETE FROM cycling_details WHERE activity_id = ?", (activity_id,))
 
         self.cursor.execute("DELETE FROM activities WHERE id = ?", (activity_id,))
-        self.conn.commit()
-
-    def insert_run_details(
-        self, activity_id, segment_number, heart_rate, speed, pace, pause_time
-    ):
-        """Insert run segment details."""
-        self.cursor.execute(
-            """
-            INSERT INTO run_details (activity_id, segment_number, heart_rate, speed, pace, pause_time)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """,
-            (activity_id, segment_number, heart_rate, speed, pace, pause_time),
-        )
+        self.cursor.execute("DELETE FROM activity_details WHERE activity_id = ?", (activity_id,))
         self.conn.commit()
 
     def insert_best_performance(

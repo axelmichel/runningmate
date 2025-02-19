@@ -15,10 +15,25 @@ from processing.data_processing import (
     convert_to_utm,
     detect_pauses,
 )
-from processing.parse_tcx import parse_tcx
+from processing.parse_tcx import parse_segments, parse_tcx
 from processing.system_settings import ViewMode, mapActivityTypes
 from processing.visualization import plot_activity_map, plot_elevation, plot_track
+from processing.weather import get_weather
 from utils.logger import logger
+
+
+def get_weather_segment(details):
+    if details.empty:
+        return None  # Handle empty list case
+
+    middle_index = len(details) // 2
+    middle_segment = details.iloc[middle_index]
+
+    return {
+        "latitude": middle_segment["seg_latitude"],
+        "longitude": middle_segment["seg_longitude"],
+        "time": middle_segment["seg_time_start"].split(" ")[0]
+    }
 
 
 class TcxFileImporter:
@@ -35,14 +50,14 @@ class TcxFileImporter:
         )
 
         if file_path:
-            self.process_file(file_path)
+            self.process_file(file_path, activity_id)
             self.archive_file(file_path)
             return True
         return False
 
-    def by_file(self, file_path):
+    def by_file(self, file_path, activity_id = None):
         if file_path:
-            self.process_file(file_path)
+            self.process_file(file_path, activity_id)
             self.archive_file(file_path)
             os.remove(file_path)
             return True
@@ -50,18 +65,20 @@ class TcxFileImporter:
 
     def by_activity(self, activity_id):
         proceed = False
-        file_path = None
+        tcx_path = None
         activity = self.db.fetch_run_by_activity_id(activity_id)
         if activity:
             file_id = activity.get("file_id")
-            if activity & file_id:
-                file_path = os.path.join(self.file_path, f"{file_id}.tar.gz")
+            if file_id:
+                file_path = os.path.join(self.file_path, f"{file_id}.tcx.tar.gz")
+                tcx_path = os.path.join(self.file_path, f"{file_id}.tcx")
                 if os.path.exists(file_path):
                     proceed = self.unpack_tar(file_path)
         if proceed:
-            self.process_file(file_path)
+            self.by_file(tcx_path, activity_id)
+            return True
         if not proceed:
-            self.prompt_for_upload(activity_id)
+            return self.prompt_for_upload(activity_id)
 
     def unpack_tar(self, file_path):
         extract_dir = os.path.dirname(file_path)  # Extract in the same directory
@@ -86,6 +103,8 @@ class TcxFileImporter:
 
         if reply == QMessageBox.StandardButton.Yes:
             self.by_upload(activity_id)
+            return True
+        return False
 
     def process_file(self, file_path, activity_id = None):
         df, activity_type = parse_tcx(file_path)
@@ -113,8 +132,17 @@ class TcxFileImporter:
         computed_data["slowest_pace"] = format_hour_minute(slowest_pace)
         computed_data["pause"] = format_hour_minute(detect_pauses(df))
 
+        details = parse_segments(df, computed_data["activity_type"])
+        segment = get_weather_segment(details)
+        weather_data = get_weather(segment["latitude"], segment["longitude"], segment["time"])
+
+        if weather_data:
+            identifier = {"activity_id": computed_data["activity_id"]}
+            weather_data = {**weather_data, **identifier}
+
         if target == ViewMode.RUN:
             computed_data = self.plot_stats(name, df, computed_data)
+
             self.process_run(df, computed_data)
         elif target == ViewMode.WALK:
             computed_data = self.plot_stats(name, df, computed_data)
@@ -126,11 +154,16 @@ class TcxFileImporter:
             return False
 
         computed_data["id"] = computed_data["activity_id"]
+
         if activity_id:
             computed_data["activity_id"] = activity_id
-            self.db.update_activity(computed_data)
+            self.db.update_activity(computed_data, details)
+            if weather_data:
+                self.db.update_weather(weather_data)
         else:
-            self.db.insert_activity(computed_data)
+            self.db.insert_activity(computed_data, details)
+            if weather_data:
+                self.db.insert_weather(weather_data)
 
     def process_run(self, df, computed_data, activity_id = None):
         avg_steps, total_steps = calculate_steps(df)
@@ -140,6 +173,7 @@ class TcxFileImporter:
         computed_data["total_steps"] = (
             int(total_steps) if not np.isnan(total_steps) else 0
         )
+
         if not activity_id:
             self.db.insert_run(computed_data)
         else:
