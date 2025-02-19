@@ -235,27 +235,6 @@ def test_insert_run_without_images(test_db):
     assert run is not None
 
 
-def test_insert_run_details(test_db):
-    """Test inserting run segment details."""
-    db = test_db
-    activity_data = generate_test_activity(test_db)
-    db.insert_activity(activity_data)
-
-    db.insert_run_details(activity_data["id"], 1, 140, 10.5, "05:45", "00:05")
-
-    db.cursor.execute(
-        "SELECT * FROM run_details WHERE activity_id = ?", (activity_data["id"],)
-    )
-    details = db.cursor.fetchone()
-
-    assert details is not None
-    assert details[2] == 1  # ✅ Corrected: segment_number
-    assert details[3] == 140  # ✅ Corrected: heart_rate
-    assert details[4] == 10.5  # ✅ Corrected: speed
-    assert details[5] == "05:45"  # ✅ Corrected: pace
-    assert details[6] == "00:05"  # ✅ Corrected: pause_time
-
-
 def test_get_comment(test_db):
     """Test retrieving an activity comment."""
     db = test_db
@@ -355,7 +334,7 @@ def test_insert_walk(test_db):
         "track_img": "walk_track.svg",
     }
 
-    db.insert_walk(walk_data)
+    db.insert_walking(walk_data)
 
     db.cursor.execute(
         "SELECT * FROM walking WHERE activity_id = ?", (activity_data["id"],)
@@ -422,7 +401,7 @@ def test_fetch_walk_by_activity_id(test_db):
         "track_img": "walk_track.svg",
     }
 
-    db.insert_walk(walk_data)
+    db.insert_walking(walk_data)
 
     walk = db.fetch_walk_by_activity_id(activity_data["id"])
     assert walk is not None

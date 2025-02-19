@@ -331,6 +331,102 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
             )
         """,
             ),
+            (
+                30,
+                [
+                    "ALTER TABLE activities ADD COLUMN file_id TEXT",
+                ],
+            ),
+            (
+                32,
+                """
+           UPDATE activities
+            SET file_id = CASE
+                WHEN runs.track_img IS NULL OR runs.track_img = '' THEN NULL
+                ELSE substr(
+                    runs.track_img,
+                    instr(runs.track_img, 'images/') + 7,
+                    instr(runs.track_img, '_track.png') - (instr(runs.track_img, 'images/') + 7)
+                )
+            END
+            FROM runs  -- Join with runs table
+            WHERE runs.activity_id = activities.id
+            AND runs.track_img LIKE '%/images/%_track.png%'
+         """,
+            ),
+            (
+                33,
+                """
+           UPDATE activities
+            SET file_id = CASE
+                WHEN cycling.track_img IS NULL OR cycling.track_img = '' THEN NULL
+                ELSE substr(
+                    cycling.track_img,
+                    instr(cycling.track_img, 'images/') + 7,
+                    instr(cycling.track_img, '_track.png') - (instr(cycling.track_img, 'images/') + 7)
+                )
+            END
+            FROM cycling  -- Join with runs table
+            WHERE cycling.activity_id = activities.id
+            AND cycling.track_img LIKE '%/images/%_track.png%'
+         """,
+            ),
+            (
+                34,
+                """
+           UPDATE activities
+            SET file_id = CASE
+                WHEN walking.track_img IS NULL OR walking.track_img = '' THEN NULL
+                ELSE substr(
+                    walking.track_img,
+                    instr(walking.track_img, 'images/') + 7,
+                    instr(walking.track_img, '_track.png') - (instr(walking.track_img, 'images/') + 7)
+                )
+            END
+            FROM walking  -- Join with runs table
+            WHERE walking.activity_id = activities.id
+            AND walking.track_img LIKE '%/images/%_track.png%'
+         """,
+            ),
+            (
+                35,
+                [
+                    "DROP TABLE IF EXISTS run_details",
+                    "DROP TABLE IF EXISTS cycling_details",
+                ],
+            ),
+            (
+                36,
+                """
+                CREATE TABLE IF NOT EXISTS activity_details (
+                    activity_id TEXT,
+                    segment_id INTEGER,
+                    seg_latitude REAL,
+                    seg_longitude REAL,
+                    seg_avg_heart_rate REAL,
+                    seg_avg_power REAL,
+                    seg_avg_speed REAL,
+                    seg_avg_pace REAL,
+                    seg_avg_steps REAL,
+                    seg_distance REAL,
+                    seg_time_start TEXT,
+                    seg_time_end TEXT,
+                    PRIMARY KEY (activity_id, segment_id)
+                )
+            """,
+            ),
+            (
+                37,
+                """
+                CREATE TABLE IF NOT EXISTS weather (
+                    activity_id TEXT PRIMARY KEY,
+                    max_temp REAL,
+                    min_temp REAL,
+                    precipitation REAL,
+                    max_wind_speed REAL
+                )
+            """,
+            ),
         ]
     )
 

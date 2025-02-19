@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QPushButton,
     QSplashScreen,
     QTableWidget,
@@ -285,9 +286,34 @@ class RunningDataApp(QWidget):
             self.sync_window = None
 
     def upload_tcx_file(self):
-        importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db)
+        importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db, self)
         importer.by_upload()
         self.set_active_view(self.view_mode)
+
+    def refresh_entry(self, activity_id):
+        importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db, self)
+        imported = importer.by_activity(activity_id)
+        if imported:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Information)
+            msg.setWindowTitle("Success")
+            msg.setText(f"Activity {activity_id} was successfully processed!")
+            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg.exec()
+
+    def delete_entry(self, activity_id):
+        """Delete the selected activity after confirmation."""
+
+        reply = QMessageBox.question(
+            self,
+            "Delete Confirmation",
+            f"Are you sure you want to delete activity {activity_id}?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.db.delete_activity(activity_id)
 
 
 if __name__ == "__main__":

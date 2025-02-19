@@ -94,7 +94,7 @@ def test_upload(mock_archive, mock_process, mock_file_dialog, tcx_importer):
     result = tcx_importer.by_upload()
 
     assert result is True, "Upload should return True when file is selected."
-    mock_process.assert_called_once_with("test.tcx")
+    mock_process.assert_called_once_with("test.tcx", None)
     mock_archive.assert_called_once_with("test.tcx")
 
 
