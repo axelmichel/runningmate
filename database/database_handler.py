@@ -2,6 +2,7 @@ import os
 import sqlite3
 
 from processing.system_settings import ViewMode, mapActivityTypes
+from utils.logger import logger
 from utils.translations import _
 
 
@@ -99,7 +100,7 @@ class DatabaseHandler:
     def __init__(self, db_path=None, conn=None):
         """Initialize the database connection."""
         if conn:
-            self.conn = conn  # ✅ Use injected connection (for tests)
+            self.conn = conn
         else:
             db_path = db_path or os.path.expanduser("~/RunningData/running_data.db")
             self.conn = sqlite3.connect(db_path, check_same_thread=False)
@@ -335,8 +336,6 @@ class DatabaseHandler:
                 WHERE runs.activity_id = ?;
             """
 
-        print(query)
-        print(f"activity_id: {activity_id}")
         self.cursor.execute(query, (activity_id,))
         row = self.cursor.fetchone()
         return dict(row)
@@ -421,7 +420,7 @@ class DatabaseHandler:
         query = "SELECT MAX(id) FROM activities;"
         self.cursor.execute(query)
         highest_id = self.cursor.fetchone()[0]
-        return highest_id + 1 if highest_id is not None else 1  #
+        return highest_id + 1 if highest_id is not None else 1
 
     def fetch_activities(
         self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"
@@ -619,12 +618,12 @@ class DatabaseHandler:
             # Remove the actual file if it exists
             if os.path.exists(file_path):
                 os.remove(file_path)
-                print(f"Deleted file: {file_path}")
+                logger.debug(f"Deleted file: {file_path}")
             else:
-                print(f"File not found: {file_path}")
+                logger.warning(f"File not found: {file_path}")
 
         except Exception as e:
-            print(f"Error deleting media: {e}")
+            logger.error(f"Error deleting media: {e}")
 
     def close(self):
         """Close the database connection."""

@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
+    QSizePolicy,
     QSplashScreen,
     QTableWidget,
     QTableWidgetItem,
@@ -20,6 +21,7 @@ from database.database_handler import DatabaseHandler
 from database.migrations import apply_migrations
 from importer.file.tcx_file import TcxFileImporter
 from importer.garmin.garmin import garmin_connect_login
+from processing.plot_heatmap import PlotHeatmap
 from processing.system_settings import SortOrder, ViewMode, mapActivityTypes
 from ui.main_menu import MenuBar
 from ui.table_builder import TableBuilder
@@ -111,6 +113,18 @@ class RunningDataApp(QWidget):
 
         layout.addLayout(view_mode_layout)
 
+        # Heatmap layout (Above table)
+        self.heatmap_widget = QWidget()
+        self.heatmap_layout = QVBoxLayout(self.heatmap_widget)
+
+        self.heatmap_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        self.heatmap_widget.setFixedHeight(150)
+        self.heatmap_widget.setStyleSheet("background: transparent;")
+
+        layout.addWidget(self.heatmap_widget)  #
+
         self.tableWidget = QTableWidget()
         layout.addWidget(self.tableWidget)
 
@@ -132,6 +146,11 @@ class RunningDataApp(QWidget):
 
         self.setLayout(layout)
         self.setWindowTitle(_("RunningMate"))
+
+        # Initialize Heatmap
+        self.heatmap = PlotHeatmap(self.db, self.heatmap_layout)
+        self.heatmap.get_heatmap()  # Load initial heatmap
+
         self.load_activities()
         self.update_button()
         self.update_pagination()
@@ -145,6 +164,8 @@ class RunningDataApp(QWidget):
         self.trigger_load()
         self.update_button()
         self.update_pagination()
+
+        self.heatmap.get_heatmap(activity_type=view_mode)
 
     def trigger_load(self):
         if self.view_mode == ViewMode.RUN:
@@ -288,18 +309,15 @@ class RunningDataApp(QWidget):
     def upload_tcx_file(self):
         importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db, self)
         importer.by_upload()
+        self.processed_msg()
         self.set_active_view(self.view_mode)
 
     def refresh_entry(self, activity_id):
         importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db, self)
         imported = importer.by_activity(activity_id)
         if imported:
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Icon.Information)
-            msg.setWindowTitle("Success")
-            msg.setText(f"Activity {activity_id} was successfully processed!")
-            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
-            msg.exec()
+            self.processed_msg(activity_id)
+            self.set_active_view(self.view_mode)
 
     def delete_entry(self, activity_id):
         """Delete the selected activity after confirmation."""
@@ -315,6 +333,17 @@ class RunningDataApp(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             self.db.delete_activity(activity_id)
             self.set_active_view(self.view_mode)
+
+    def processed_msg(self, activity_id=None):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Icon.Information)
+        msg.setWindowTitle("Success")
+        if activity_id:
+            msg.setText(f"Activity {activity_id} has been processed.")
+        else:
+            msg.setText("The file has been imported.")
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg.exec()
 
 
 if __name__ == "__main__":

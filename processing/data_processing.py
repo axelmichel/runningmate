@@ -79,14 +79,19 @@ def detect_pauses(df, threshold=10):
 
 
 def calculate_distance(df):
-    """Calculates the cumulative distance in kilometers along the route."""
-    df["Distance"] = (
-        np.sqrt(
-            np.diff(df["X"], prepend=df["X"].iloc[0]) ** 2
-            + np.diff(df["Y"], prepend=df["Y"].iloc[0]) ** 2
-        ).cumsum()
-        / 1000
-    )  # Umwandlung in km
+    """Calculates the cumulative distance in kilometers with decimal precision."""
+
+    df["X"] = df["X"].astype(float)
+    df["Y"] = df["Y"].astype(float)
+
+    diffs_x = np.diff(df["X"], prepend=df["X"].iloc[0])
+    diffs_y = np.diff(df["Y"], prepend=df["Y"].iloc[0])
+
+    distances = np.sqrt(diffs_x**2 + diffs_y**2) / 1000  # Convert meters to km
+    cumulative_distance = distances.cumsum().astype(float)  # ✅ Force float type
+
+    df["Distance"] = cumulative_distance
+
     return df
 
 
