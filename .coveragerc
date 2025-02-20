@@ -1,0 +1,6 @@
+[run]
+omit =
+    ui/*
+    */ui/*
+    main.py
+    tests/*

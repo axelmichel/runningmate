@@ -15,11 +15,13 @@ from processing.data_processing import (
     convert_to_utm,
     detect_pauses,
 )
-from processing.parse_tcx import parse_segments, parse_tcx
 from processing.system_settings import ViewMode, mapActivityTypes
+from processing.tcx_file_parser import TcxFileParser
+from processing.tcx_segment_parser import TcxSegmentParser
 from processing.visualization import plot_activity_map, plot_elevation, plot_track
-from processing.weather import get_weather
+from processing.weather import WeatherService
 from utils.logger import logger
+from utils.save_round import safe_round
 
 
 def get_weather_segment(details):
@@ -66,7 +68,8 @@ class TcxFileImporter:
     def by_activity(self, activity_id):
         proceed = False
         tcx_path = None
-        activity = self.db.fetch_run_by_activity_id(activity_id)
+        activity = self.db.fetch_activity(activity_id)
+        logger.debug(f"activity: {activity}")
         if activity:
             file_id = activity.get("file_id")
             if file_id:
@@ -75,6 +78,7 @@ class TcxFileImporter:
                 if os.path.exists(file_path):
                     proceed = self.unpack_tar(file_path)
         if proceed:
+            logger.debug(f"activity found, using file: {tcx_path}")
             self.by_file(tcx_path, activity_id)
             return True
         if not proceed:
@@ -107,7 +111,9 @@ class TcxFileImporter:
         return False
 
     def process_file(self, file_path, activity_id=None):
-        df, activity_type = parse_tcx(file_path)
+        parser = TcxFileParser()
+        df, activity_type = parser.parse_tcx(file_path)
+        details = TcxSegmentParser.parse_segments(df, activity_type)
         df = convert_to_utm(df)
         df = calculate_distance(df)
 
@@ -121,7 +127,8 @@ class TcxFileImporter:
         else:
             next_id = activity_id
 
-        computed_data = self.compute_data(df)
+        computed_data = self.compute_data(df, name)
+        logger.debug(f"computed_data: {computed_data}")
         computed_data["title"] = generate_activity_title(
             mapActivityTypes(activity_type), computed_data["date"]
         )
@@ -132,9 +139,8 @@ class TcxFileImporter:
         computed_data["slowest_pace"] = format_hour_minute(slowest_pace)
         computed_data["pause"] = format_hour_minute(detect_pauses(df))
 
-        details = parse_segments(df, computed_data["activity_type"])
         segment = get_weather_segment(details)
-        weather_data = get_weather(
+        weather_data = WeatherService.get_weather(
             segment["latitude"], segment["longitude"], segment["time"]
         )
 
@@ -237,7 +243,7 @@ class TcxFileImporter:
             )  # Store file inside archive without full path
 
     @staticmethod
-    def compute_data(df):
+    def compute_data(df, name=None):
         total_distance = df["Distance"].iloc[-1] if "Distance" in df.columns else 0
         total_time = (
             (
@@ -248,10 +254,14 @@ class TcxFileImporter:
         )
         avg_speed = total_distance / (total_time / 3600) if total_time > 0 else 0
 
+        total_calories = df["Calories"].sum() if "Calories" in df.columns else 0
+
         return {
             "date": pd.to_datetime(df["Time"].iloc[0], utc=True).timestamp(),
-            "distance": round(total_distance, 2),
+            "file_id": name,
+            "distance": safe_round(total_distance, 2),
             "duration": total_time,
+            "calories": safe_round(total_calories),
             "elevation_gain": (
                 int(round(df["Elevation"].diff().clip(lower=0).sum(), 0))
                 if "Elevation" in df.columns

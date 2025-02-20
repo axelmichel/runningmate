@@ -99,7 +99,8 @@ def test_upload(mock_archive, mock_process, mock_file_dialog, tcx_importer):
 
 
 @patch(
-    "importer.file.tcx_file.parse_tcx", return_value=(mock_file_data(), "Running")
+    "importer.file.tcx_file.TcxFileParser.parse_tcx",
+    return_value=(mock_file_data(), "Running"),
 )  # ✅ Fixed mock
 @patch(
     "importer.file.tcx_file.TcxFileImporter.compute_data",

@@ -1,10 +1,11 @@
 import os
+import sys
 import xml.etree.ElementTree as ET
 
 import pandas as pd
 import pytest
 
-from processing.parse_tcx import extract_activity_type, parse_tcx
+from processing.tcx_file_parser import TcxFileParser
 
 
 @pytest.fixture
@@ -82,22 +83,22 @@ def test_extract_activity_type(sample_tcx):
     """Test extracting the activity type from a TCX file."""
     root = ET.ElementTree(ET.fromstring(sample_tcx)).getroot()
     namespaces = {"tcx": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"}
-    assert extract_activity_type(root, namespaces) == "Running"
+    assert TcxFileParser.extract_activity_type(root, namespaces) == "Running"
 
 
 def test_extract_activity_type_missing(sample_tcx_no_activity):
     """Test fallback when activity type is missing in TCX file."""
     root = ET.ElementTree(ET.fromstring(sample_tcx_no_activity)).getroot()
     namespaces = {"tcx": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"}
-    assert extract_activity_type(root, namespaces) == "Unknown"
+    assert TcxFileParser.extract_activity_type(root, namespaces) == "Unknown"
 
 
 def test_parse_tcx(sample_tcx, tmp_path):
     """Test parsing a TCX file and extracting data correctly."""
     tcx_file = tmp_path / "test.tcx"
     tcx_file.write_text(sample_tcx)
-
-    df, activity_type = parse_tcx(str(tcx_file))
+    parser = TcxFileParser()
+    df, activity_type = parser.parse_tcx(str(tcx_file))
 
     assert activity_type == "Running"
     assert len(df) == 1  # ✅ Only one trackpoint in sample
@@ -113,8 +114,10 @@ def test_parse_tcx_missing_heart_rate(sample_tcx_no_heart_rate, tmp_path):
     """Test parsing a TCX file where heart rate data is missing."""
     tcx_file = tmp_path / "test_no_hr.tcx"
     tcx_file.write_text(sample_tcx_no_heart_rate)
-
-    df, activity_type = parse_tcx(str(tcx_file))
+    parser = TcxFileParser()
+    print("I am here")
+    sys.stdout.write("\n\n🔥 DEBUGGING: PRINT OUTPUT BELOW 🔥\n\n")
+    df, activity_type = parser.parse_tcx(str(tcx_file))
 
     assert activity_type == "Running"
     assert len(df) == 1  # ✅ Only one trackpoint in sample
@@ -127,8 +130,8 @@ def test_parse_tcx_no_data(tmp_path):
     """Test parsing an empty TCX file."""
     tcx_file = tmp_path / "empty.tcx"
     tcx_file.write_text("<TrainingCenterDatabase></TrainingCenterDatabase>")
-
-    df, activity_type = parse_tcx(str(tcx_file))
+    parser = TcxFileParser()
+    df, activity_type = parser.parse_tcx(str(tcx_file))
 
     assert activity_type == "Unknown"
     assert df.empty  # ✅ DataFrame should be empty
