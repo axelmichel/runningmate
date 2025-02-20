@@ -32,15 +32,6 @@ def convert_to_utm(df):
 
 def calculate_pace(df, activity: ViewMode):
     """Calculates pace (min/km) for each segment and applies different filtering based on activity type."""
-    # df["Time"] = pd.to_datetime(df["Time"])
-    # df["TimeDiff"] = df["Time"].diff().dt.total_seconds()
-    # df["DistDiff"] = df["Distance"].diff()
-    print(df["TimeDiff"].describe())  # Check min, max, mean values
-    print(df["TimeDiff"].head(10))  #
-
-    print(df["DistDiff"].describe())  # Check min, max, mean values
-    print(df["DistDiff"].head(10))
-
     # Set pace thresholds based on activity type
     if activity == ViewMode.RUN:
         min_pace, max_pace, min_dist = 3, 12, 0.5
@@ -57,7 +48,7 @@ def calculate_pace(df, activity: ViewMode):
     df["Pace"] = np.where(
         df["DistDiff"].notna() & (df["DistDiff"] > min_dist),
         (df["TimeDiff"] / df["DistDiff"]) * 16.6667,  # ✅ Correct conversion factor
-        np.nan
+        np.nan,
     )
 
     df["Pace"] = df["Pace"].where(
@@ -66,14 +57,11 @@ def calculate_pace(df, activity: ViewMode):
 
     df["Pace"] = df["Pace"].replace([np.inf, -np.inf], np.nan)
 
-
-
     # Compute valid average, fastest, and slowest pace
     avg_pace = df["Pace"].mean(skipna=True)
     fastest_pace = df["Pace"].quantile(0.05, interpolation="nearest")  # 5th percentile
     slowest_pace = df["Pace"].quantile(0.95, interpolation="nearest")  # 95th percentile
 
-    print(df[["TimeDiff", "DistDiff", "Pace"]].head(10))
     return df, avg_pace, fastest_pace, slowest_pace
 
 

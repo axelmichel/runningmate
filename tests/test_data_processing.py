@@ -48,6 +48,8 @@ def test_calculate_pace_with_invalid_data():
         {
             "Time": pd.to_datetime(["2024-02-20T10:00:00", "2024-02-20T10:01:00"]),
             "Distance": [0, 0],
+            "TimeDiff": [0, 60],
+            "DistDiff": [0, 0],
         }
     )  # Zero distance movement
 
