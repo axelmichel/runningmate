@@ -32,42 +32,48 @@ def convert_to_utm(df):
 
 def calculate_pace(df, activity: ViewMode):
     """Calculates pace (min/km) for each segment and applies different filtering based on activity type."""
-    df["Time"] = pd.to_datetime(df["Time"])
-    df["TimeDiff"] = df["Time"].diff().dt.total_seconds()
-    df["DistDiff"] = df["Distance"].diff()
+    # df["Time"] = pd.to_datetime(df["Time"])
+    # df["TimeDiff"] = df["Time"].diff().dt.total_seconds()
+    # df["DistDiff"] = df["Distance"].diff()
+    print(df["TimeDiff"].describe())  # Check min, max, mean values
+    print(df["TimeDiff"].head(10))  #
+
+    print(df["DistDiff"].describe())  # Check min, max, mean values
+    print(df["DistDiff"].head(10))
 
     # Set pace thresholds based on activity type
     if activity == ViewMode.RUN:
-        min_pace, max_pace, min_dist = 3, 12, 0.003  # 2-15 min/km, min distance 3m
+        min_pace, max_pace, min_dist = 3, 12, 0.5
     elif activity == ViewMode.CYCLE:
-        min_pace, max_pace, min_dist = (
-            0.5,
-            6,
-            0.01,
-        )  # 30 sec - 6 min/km, min distance 10m
+        min_pace, max_pace, min_dist = 0.5, 6, 5
     elif activity == ViewMode.WALK:
-        min_pace, max_pace, min_dist = 8, 25, 0.001  # 8-25 min/km, min distance 1m
-    else:  # Unknown activity type
-        min_pace, max_pace, min_dist = 2, 20, 0.001  # Default reasonable values
+        min_pace, max_pace, min_dist = 8, 25, 0.2
+    else:
+        min_pace, max_pace, min_dist = 2, 20, 0.5
 
     # Avoid extreme values by filtering based on min distance
+    df["DistDiff"] = df["DistDiff"].replace(0, np.nan)
+
     df["Pace"] = np.where(
-        df["DistDiff"] > min_dist, (df["TimeDiff"] / 60) / df["DistDiff"], np.nan
+        df["DistDiff"].notna() & (df["DistDiff"] > min_dist),
+        (df["TimeDiff"] / df["DistDiff"]) * 16.6667,  # ✅ Correct conversion factor
+        np.nan
     )
 
-    # Replace infinite values with NaN
-    df["Pace"] = df["Pace"].replace([np.inf, -np.inf], np.nan)
-
-    # Apply pace limits based on activity type
     df["Pace"] = df["Pace"].where(
         (df["Pace"] >= min_pace) & (df["Pace"] <= max_pace), np.nan
     )
 
+    df["Pace"] = df["Pace"].replace([np.inf, -np.inf], np.nan)
+
+
+
     # Compute valid average, fastest, and slowest pace
     avg_pace = df["Pace"].mean(skipna=True)
-    fastest_pace = df["Pace"].min(skipna=True)
-    slowest_pace = df["Pace"].max(skipna=True)
+    fastest_pace = df["Pace"].quantile(0.05, interpolation="nearest")  # 5th percentile
+    slowest_pace = df["Pace"].quantile(0.95, interpolation="nearest")  # 95th percentile
 
+    print(df[["TimeDiff", "DistDiff", "Pace"]].head(10))
     return df, avg_pace, fastest_pace, slowest_pace
 
 

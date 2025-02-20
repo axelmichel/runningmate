@@ -122,9 +122,16 @@ class TcxFileParser:
         df["HeartRate"] = (
             pd.Series(heart_rates) if heart_rates else pd.Series(dtype="float")
         )
-        df["Time"] = pd.to_datetime(df["Time"])
+        df["Time"] = pd.to_datetime(df["Time"], utc=True)  # ✅ Ensure proper timestamps
         df["TimeDiff"] = df["Time"].diff().dt.total_seconds()
+
+        if (df["TimeDiff"] == 1.0).sum() > len(df) * 0.8:
+            df["TimeDiff"] = df["TimeDiff"].rolling(5, min_periods=1).mean()
+
         df["DistDiff"] = df.apply(self.calculate_distance, axis=1, df=df)
+        df["DistDiff"] = df["DistDiff"].replace(0, np.nan)  # ✅ Replace 0s with NaN
+        df["DistDiff"] = df["DistDiff"].interpolate()
+
         df["Speed"] = df["DistDiff"] / df["TimeDiff"]
 
         activity_type = self.extract_activity_type(root, namespaces)
