@@ -45,15 +45,23 @@ class Logger:
 
     def debug(self, message):
         self.logger.debug(message)
+        if os.getenv("DEBUG_MODE"):
+            print(f"DEBUG: {message}")  # ✅ Ensures visible terminal output
 
     def info(self, message):
         self.logger.info(message)
+        if os.getenv("DEBUG_MODE"):
+            print(f"INFO: {message}")  # ✅ Ensures visible terminal output
 
     def warning(self, message):
         self.logger.warning(message)
+        if os.getenv("DEBUG_MODE"):
+            print(f"WARNING: {message}")
 
     def error(self, message, show_popup=False):
         self.logger.error(message)
+        if os.getenv("DEBUG_MODE"):
+            print(f"ERROR: {message}")
         if show_popup:
             self.show_error_popup(message)
 

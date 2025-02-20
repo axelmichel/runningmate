@@ -62,7 +62,16 @@ class DatabaseHandler:
             "elevation_img",
             "map_html",
         ],
-        "activities": ["id", "distance", "activity_type", "duration", "date", "title"],
+        "activities": [
+            "id",
+            "distance",
+            "activity_type",
+            "duration",
+            "date",
+            "title",
+            "file_id",
+            "calories",
+        ],
         "activity_details": [
             "activity_id",
             "segment_id",
@@ -76,6 +85,7 @@ class DatabaseHandler:
             "seg_distance",
             "seg_time_start",
             "seg_time_end",
+            "seg_elevation_gain",
         ],
         "weather": [
             "activity_id",
@@ -325,6 +335,8 @@ class DatabaseHandler:
                 WHERE runs.activity_id = ?;
             """
 
+        print(query)
+        print(f"activity_id: {activity_id}")
         self.cursor.execute(query, (activity_id,))
         row = self.cursor.fetchone()
         return dict(row)

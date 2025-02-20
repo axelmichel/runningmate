@@ -427,6 +427,12 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
                 )
             """,
             ),
+            (
+                38,
+                [
+                    "ALTER TABLE activity_details ADD COLUMN seg_elevation_gain REAL",
+                ],
+            ),
         ]
     )
 

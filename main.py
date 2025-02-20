@@ -314,6 +314,7 @@ class RunningDataApp(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             self.db.delete_activity(activity_id)
+            self.set_active_view(self.view_mode)
 
 
 if __name__ == "__main__":

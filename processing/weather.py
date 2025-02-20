@@ -9,13 +9,10 @@ class WeatherService:
     @staticmethod
     def get_weather(lat: float, lon: float, date: str) -> dict | None:
         """
-        Args:
-            lat (float): Latitude of the location.
-            lon (float): Longitude of the location.
-            date (str): Date in the format "YYYY-MM-DD".
-
-        Returns:
-            dict | None: Weather data containing temperature, precipitation, and wind speed,
+        :param lat: Latitude of the location.
+        :param lon: Longitude of the location.
+        :param date: Date in the format "YYYY-MM-DD".
+        :return: dict | None: Weather data containing temperature, precipitation, and wind speed,
                          or None if data is unavailable.
         """
         today = datetime.now().strftime("%Y-%m-%d")
@@ -30,12 +27,9 @@ class WeatherService:
         """
         Fetches current weather data from Open-Meteo API.
 
-        Args:
-            lat (float): Latitude of the location.
-            lon (float): Longitude of the location.
-
-        Returns:
-            dict | None: Current weather data including temperature, wind speed, precipitation,
+        :param lat: Latitude of the location.
+        :param lon: Longitude of the location.
+        :return: dict | None: Current weather data including temperature, wind speed, precipitation,
                          or None if data is unavailable.
         """
         url = "https://api.open-meteo.com/v1/forecast"
@@ -74,13 +68,10 @@ class WeatherService:
         """
         Fetches historical weather data from Open-Meteo API.
 
-        Args:
-            lat (float): Latitude of the location.
-            lon (float): Longitude of the location.
-            date (str): Date in the format "YYYY-MM-DD".
-
-        Returns:
-            dict | None: Historical weather data including temperature, wind speed, and precipitation,
+        :param lat: Latitude of the location.
+        :param lon: Longitude of the location.
+        :param date: Date in the format "YYYY-MM-DD".
+        :return: dict | None: Historical weather data including temperature, wind speed, and precipitation,
                          or None if data is unavailable.
         """
         url = "https://archive-api.open-meteo.com/v1/archive"
