@@ -1,3 +1,5 @@
+import os
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -8,9 +10,14 @@ from PyQt6.QtWidgets import QSizePolicy
 from database.database_handler import DatabaseHandler
 from processing.system_settings import getAllowedTypes
 
+# Cache directory for storing heatmap images
+CACHE_DIR = os.path.expanduser("~/RunningData/temp")
+if not os.path.exists(CACHE_DIR):
+    os.makedirs(CACHE_DIR)
+
 
 class HeatmapCanvas(FigureCanvas):
-    """Custom QWidget to display the heatmap in PyQt6."""
+    """Custom QWidget to generate and save heatmaps in PyQt6."""
 
     def __init__(self, parent=None):
         self.fig, self.ax = plt.subplots(figsize=(12, 6))
@@ -19,8 +26,8 @@ class HeatmapCanvas(FigureCanvas):
         self.updateGeometry()
         self.setParent(parent)  # Store parent for background detection
 
-    def plot_heatmap(self, heatmap_data):
-        """Generate and display a heatmap with a fully transparent background while keeping the heatmap visible."""
+    def plot_heatmap(self, heatmap_data, activity_type, save_path):
+        """Generate and save a heatmap only if required."""
         self.ax.clear()  # Clear previous plot
 
         num_weeks = len(heatmap_data.columns)
@@ -35,12 +42,12 @@ class HeatmapCanvas(FigureCanvas):
         self.fig.set_size_inches(fig_width, fig_height)
         mask = heatmap_data == 0
         line_color = QGuiApplication.palette().window().color().name()
-        bg_rgba = (0.055, 0.267, 0.161, 0.2)
+        bg_rgba = (0.5, 0.5, 0.5, 0.1)
 
         self.fig.patch.set_visible(False)  # Hide figure background
         self.ax.set_facecolor("none")  # Make axis background transparent
 
-        cmap = sns.color_palette("Greens_r", as_cmap=True)  # Normal heatmap colors
+        cmap = sns.color_palette("rocket", as_cmap=True)
         cmap = cmap.with_extremes(bad=bg_rgba)
 
         sns.heatmap(
@@ -65,18 +72,34 @@ class HeatmapCanvas(FigureCanvas):
         for _, spine in self.ax.spines.items():
             spine.set_visible(False)  # Remove all borders
 
-        self.draw()  # Refresh the canvas
+        # ✅ Save the heatmap image
+        self.fig.savefig(save_path, dpi=300, bbox_inches="tight", pad_inches=0.0, transparent=True)
+        return save_path
 
 
 class PlotHeatmap:
-    def __init__(self, db_handler: DatabaseHandler, vbox_layout, parent=None):
+    def __init__(self, db_handler: DatabaseHandler, parent=None):
         super().__init__()
         self.db = db_handler
         self.parent = parent
-        self.vbox_layout = vbox_layout
 
-    def get_heatmap(self, activity_type=None, end_date=None):
-        """Load activity data, filter by activity type, and update the heatmap."""
+    def get_heatmap(self, activity_type=None, end_date=None, redraw=False):
+        """
+        Load activity data, filter by activity type, and return the heatmap image path.
+
+        :param activity_type: str, the type of activity (e.g., "Run", "Cycle", etc.)
+        :param end_date: datetime, the end date for data selection (defaults to today)
+        :param redraw: bool, whether to force a redraw of the heatmap (default: False)
+        :return: str, path to the saved heatmap image
+        """
+
+        # ✅ Define the save path for this activity type
+        save_path = os.path.join(CACHE_DIR, f"heatmap_{activity_type}.png")
+
+        # ✅ Check if we need to redraw or if an existing image can be used
+        if not redraw and os.path.exists(save_path):
+            return save_path  # ✅ Use cached image if it exists
+
         if end_date is None:
             end_date = pd.Timestamp.today()  # Default to today
 
@@ -125,15 +148,7 @@ class PlotHeatmap:
         heatmap_data = heatmap_data.reindex(
             index=weekdays, columns=week_numbers, fill_value=0
         )
-        self.update_ui(heatmap_data)
 
-    def update_ui(self, heatmap_data):
-        """Remove old heatmap and add the new one to the layout."""
-        for i in reversed(range(self.vbox_layout.count())):
-            widget = self.vbox_layout.itemAt(i).widget()
-            if widget is not None:
-                widget.setParent(None)
-
+        # ✅ Generate and save the heatmap
         heatmap_canvas = HeatmapCanvas(parent=self.parent)  # ✅ Pass parent widget
-        heatmap_canvas.plot_heatmap(heatmap_data)
-        self.vbox_layout.addWidget(heatmap_canvas)
+        return heatmap_canvas.plot_heatmap(heatmap_data, activity_type, save_path)

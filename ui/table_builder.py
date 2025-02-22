@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
-    QWidget,
+    QWidget, QAbstractItemView,
 )
 
 from processing.system_settings import SortOrder, ViewMode
@@ -104,18 +104,25 @@ class TableBuilder:
         translated_headers = [_((header)) for header in headers]
 
         table_widget.clear()
+        table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        table_widget.setStyleSheet("QTableWidget::item:selected { background-color: red; }")
+
         table_widget.clearContents()
+        table_widget.verticalHeader().hide()
         table_widget.setRowCount(len(data))
-        table_widget.setColumnCount(len(headers) + 2)
+        table_widget.setColumnCount(len(headers) + 3)
+        table_widget.setStyleSheet("QHeaderView::section { height: 30px; }")
         table_widget.setHorizontalHeaderLabels(
-            translated_headers + ["_id", _("Actions")]
+            translated_headers + ["_id", _("Actions"), ""]
         )
         table_widget.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.ResizeToContents
         )
+        table_widget.verticalHeader().setDefaultSectionSize(40)
         table_widget.setAlternatingRowColors(True)
         table_widget.setShowGrid(True)
         table_widget.setGridStyle(Qt.PenStyle.SolidLine)
+        table_widget.horizontalHeader().setStretchLastSection(True)
         table_widget.row_data = data
 
         for row_index, row_data in enumerate(data):
@@ -135,6 +142,10 @@ class TableBuilder:
             # Add actions column
             actions_widget = TableBuilder.getActions(table_widget, row_index, parent)
             table_widget.setCellWidget(row_index, len(headers) + 1, actions_widget)
+
+            empty_item = QTableWidgetItem("")
+            empty_item.setFlags(Qt.ItemFlag.ItemIsEnabled)  # Optional: make it non-editable
+            table_widget.setItem(row_index, len(headers) + 2, empty_item)
 
             id_item = QTableWidgetItem(
                 str(row_data.get("activity_id", row_index))
@@ -225,7 +236,7 @@ class TableBuilder:
     def handle_action_click(table_widget, row, parent, action):
         """Finds the correct row index after sorting and passes the correct row data."""
         id_item = table_widget.item(
-            row, table_widget.columnCount() - 2
+            row, table_widget.columnCount() - 3
         )  # ✅ Get the hidden ID column
         if id_item:
             row_id = id_item.text()  # ✅ Extract the stored ID
@@ -238,7 +249,7 @@ class TableBuilder:
     def handle_row_click(table_widget, row, parent):
         """Finds the correct row index after sorting and passes the correct row data."""
         id_item = table_widget.item(
-            row, table_widget.columnCount() - 2
+            row, table_widget.columnCount() - 3
         )  # ✅ Get the hidden ID column
         if id_item:
             row_id = id_item.text()  # ✅ Extract the stored ID

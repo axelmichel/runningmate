@@ -72,6 +72,7 @@ class DatabaseHandler:
             "title",
             "file_id",
             "calories",
+            "elevation_gain",
         ],
         "activity_details": [
             "activity_id",
