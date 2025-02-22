@@ -1,11 +1,12 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
+    QAbstractItemView,
     QHBoxLayout,
     QHeaderView,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
-    QWidget, QAbstractItemView,
+    QWidget,
 )
 
 from processing.system_settings import SortOrder, ViewMode
@@ -104,8 +105,12 @@ class TableBuilder:
         translated_headers = [_((header)) for header in headers]
 
         table_widget.clear()
-        table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        table_widget.setStyleSheet("QTableWidget::item:selected { background-color: red; }")
+        table_widget.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        table_widget.setStyleSheet(
+            "QTableWidget::item:selected { background-color: red; }"
+        )
 
         table_widget.clearContents()
         table_widget.verticalHeader().hide()
@@ -144,7 +149,9 @@ class TableBuilder:
             table_widget.setCellWidget(row_index, len(headers) + 1, actions_widget)
 
             empty_item = QTableWidgetItem("")
-            empty_item.setFlags(Qt.ItemFlag.ItemIsEnabled)  # Optional: make it non-editable
+            empty_item.setFlags(
+                Qt.ItemFlag.ItemIsEnabled
+            )  # Optional: make it non-editable
             table_widget.setItem(row_index, len(headers) + 2, empty_item)
 
             id_item = QTableWidgetItem(

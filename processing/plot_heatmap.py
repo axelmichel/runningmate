@@ -73,7 +73,9 @@ class HeatmapCanvas(FigureCanvas):
             spine.set_visible(False)  # Remove all borders
 
         # ✅ Save the heatmap image
-        self.fig.savefig(save_path, dpi=300, bbox_inches="tight", pad_inches=0.0, transparent=True)
+        self.fig.savefig(
+            save_path, dpi=300, bbox_inches="tight", pad_inches=0.0, transparent=True
+        )
         return save_path
 
 

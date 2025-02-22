@@ -1,12 +1,12 @@
 import pandas as pd
-from PyQt6.QtCore import Qt, QLocale
+from PyQt6.QtCore import QLocale, Qt
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget, QSizePolicy
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 from database.database_handler import DatabaseHandler
 from processing.system_settings import ViewMode, getAllowedTypes
 from ui.themes import THEME
-from utils.app_mode import is_color_dark, is_dark_mode
+from utils.app_mode import is_dark_mode
 
 
 class InfoCard(QWidget):
@@ -33,10 +33,10 @@ class InfoCard(QWidget):
         self.metric_title = metric_titles.get(self.metric, "")
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(10,0,10,0)
+        layout.setContentsMargins(10, 0, 10, 0)
         layout.setSpacing(1)
 
-        value_color = THEME.ACCENT_COLOR if is_dark_mode()  else THEME.MAIN_COLOR
+        value_color = THEME.ACCENT_COLOR if is_dark_mode() else THEME.MAIN_COLOR
 
         self.value_label = QLabel("0")
         self.value_label.setFont(QFont("Arial", 18, QFont.Weight.Bold))
@@ -80,7 +80,6 @@ class InfoCard(QWidget):
             placeholders = ", ".join("?" * len(allowed_types))  # Generate placeholders
             query += f" WHERE activity_type IN ({placeholders})"
             params = tuple(allowed_types)
-
 
         df = pd.read_sql(query, self.db.conn, params=params)
         value = df.iloc[0, 0] if not df.empty else 0

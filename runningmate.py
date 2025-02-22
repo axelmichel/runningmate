@@ -166,7 +166,9 @@ class RunningDataApp(QWidget):
         self.center_layout.addLayout(top_row)
 
         self.tableWidget = QTableWidget()
-        self.tableWidget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.tableWidget.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self.center_layout.addWidget(self.tableWidget, 1)
         self.center_layout.addStretch()
 
@@ -179,7 +181,9 @@ class RunningDataApp(QWidget):
         self.next_button.clicked.connect(self.next_page)
 
         pagination_layout.addWidget(self.prev_button)
-        pagination_layout.addWidget(self.page_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        pagination_layout.addWidget(
+            self.page_label, alignment=Qt.AlignmentFlag.AlignCenter
+        )
         pagination_layout.addWidget(self.next_button)
 
         self.center_layout.addLayout(pagination_layout)
@@ -212,23 +216,29 @@ class RunningDataApp(QWidget):
         splitter.addWidget(self.right_widget)
 
         # ✅ Set Default Split Sizes: Left (Small), Center (Large), Right (Fixed)
-        splitter.setSizes([50, 800, 250])  # Left collapsed by default, center large, right fixed
+        splitter.setSizes(
+            [50, 800, 250]
+        )  # Left collapsed by default, center large, right fixed
 
         # ✅ Prevent RIGHT PANEL from being resized
         splitter.setCollapsible(0, False)  # Left Panel is NOT collapsible
         splitter.setCollapsible(1, False)  # Center Panel is NOT collapsible
         splitter.setCollapsible(2, False)  # Right Panel is NOT collapsible
 
-        splitter.setStretchFactor(0, 0)  # Left panel remains at min width unless expanded
+        splitter.setStretchFactor(
+            0, 0
+        )  # Left panel remains at min width unless expanded
         splitter.setStretchFactor(1, 1)  # Center panel takes priority in resizing
         splitter.setStretchFactor(2, 0)  # Right panel stays FIXED
 
-        splitter.setStyleSheet("""
+        splitter.setStyleSheet(
+            """
             QSplitter::handle {
                 background-color: #000;  /* Light Gray */
                 width: 1px;  /* Make divider thicker */
             }
-        """)
+        """
+        )
 
         main_layout.addWidget(splitter)
 
@@ -236,13 +246,12 @@ class RunningDataApp(QWidget):
         self.setWindowTitle("RunningMate")
 
         # ✅ Initialize Heatmap
-        #self.heatmap = PlotHeatmap(self.db, self.heatmap_layout)
-        #self.heatmap.get_heatmap()
+        # self.heatmap = PlotHeatmap(self.db, self.heatmap_layout)
+        # self.heatmap.get_heatmap()
 
         self.load_activities()
         self.update_button()
         self.update_pagination()
-
 
     def set_active_view(self, view_mode):
         """Switch the view and update button styles"""
@@ -264,7 +273,7 @@ class RunningDataApp(QWidget):
             self.heatmap_label.setPixmap(pixmap)
 
     def trigger_tool_action(self, action):
-       print(action)
+        print(action)
 
     def trigger_load(self):
         if self.view_mode == ViewMode.RUN:
