@@ -1,12 +1,19 @@
-# -*- mode: python ; coding: utf-8 -*-
+import os
+import glob
+from PyInstaller.utils.hooks import collect_submodules
 
+# Automatically collect all .svg files from the icons folder
+icon_folder = ('icons', 'icons')
 
 a = Analysis(
     ['runningmate.py'],
     pathex=[],
     binaries=[],
-    datas=[('splash_screen.png', '.')],
-    hiddenimports=[],
+    datas=[
+        ('splash_screen.png', '.'),
+        icon_folder,
+    ],
+    hiddenimports=collect_submodules('geopy') + ['PyQt6.QtSvgWidgets'],  # Collect all geopy submodules
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -22,7 +29,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='runningmate',
+    name='RunningMate',
     debug=False,
     bootloader_ignore_signals=False,
     strip=True,
@@ -35,11 +42,11 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['icon.icns'],
+    icon=['app-icon.icns'],
 )
 app = BUNDLE(
     exe,
-    name='runningmate.app',
-    icon='icon.icns',
+    name='RunningMate.app',
+    icon='app-icon.icns',
     bundle_identifier=None,
 )

@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QPushButton, QVBoxLayout, QWidget
 from ui.opacity_button import OpacityButton
 from ui.themes import THEME
 from utils.app_mode import is_dark_mode
+from utils.resource_path import resource_path
 from utils.translations import _
 
 
@@ -39,7 +40,7 @@ class Sidebar(QWidget):
         self.icon_folder = "light" if is_dark_mode() else "dark"
 
         self.actions = {
-            key: (f"icons/{self.icon_folder}/{icon}", _(text))
+            key: (resource_path(f"icons/{self.icon_folder}/{icon}"), _(text))
             for key, (icon, text) in actions.items()
         }
 
