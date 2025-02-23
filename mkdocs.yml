@@ -1,7 +1,14 @@
 site_name: RunningMate Docs
-theme: material
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: deep orange
+    accent: amber
 nav:
   - Home: index.md
+  - App :
+      - Main Screen: ui/main-window.md
   - Metrics :
       - Heart Rate Zones: metrics/heart-rate-zones.md
       - Pace: metrics/pace.md

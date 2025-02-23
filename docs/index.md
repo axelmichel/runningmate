@@ -1,5 +1,6 @@
-# RunningMate
 
+# RunningMate
+![Alt Text](images/logo-runningmate.png)
 ## Introduction
 RunningMate is an application for storing and analyzing sport activities written in Python. 
 In the current version it can handle running, cycling and walking activities. 
