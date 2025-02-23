@@ -1,3 +1,5 @@
+
+![Logo](./logo-runningmate.png)
 # RunningMate
 
 ![GitHub release](https://img.shields.io/github/v/release/axelmichel/runningmate?include_prereleases)

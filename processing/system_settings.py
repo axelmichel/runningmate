@@ -33,3 +33,25 @@ def mapActivityTypes(activity_type: str):
             return mode
 
     return ViewMode.ALL
+
+
+def getAllowedTypes(view_type: ViewMode):
+    """Returns a list of allowed activity types for the given view type."""
+
+    if view_type == ViewMode.RUN:
+        return ["Running", "Trailrun", "Run", "Trackrun", "Track"]
+    if view_type == ViewMode.WALK:
+        return ["Walking", "Hike", "Trekking", "Other", "Nordic Walking"]
+    if view_type == ViewMode.CYCLE:
+        return [
+            "Cycling",
+            "Bike",
+            "MTB",
+            "Bicycle",
+            "Biking",
+            "E-Bike",
+            "Gravelbike",
+            "Mountainbike",
+        ]
+
+    return []

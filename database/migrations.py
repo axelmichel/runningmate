@@ -433,6 +433,76 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
                     "ALTER TABLE activity_details ADD COLUMN seg_elevation_gain REAL",
                 ],
             ),
+            (
+                39,
+                [
+                    "ALTER TABLE activities ADD COLUMN elevation_gain TEXT",
+                ],
+            ),
+            (
+                40,
+                """
+                UPDATE activities
+                SET elevation_gain = (
+                    SELECT runs.elevation_gain
+                    FROM runs
+                    WHERE runs.activity_id = activities.id
+                )
+            """,
+            ),
+            (
+                41,
+                """
+                UPDATE activities
+                SET elevation_gain = (
+                    SELECT cycling.elevation_gain
+                    FROM cycling
+                    WHERE cycling.activity_id = activities.id
+                )
+            """,
+            ),
+            (
+                42,
+                """
+                UPDATE activities
+                SET elevation_gain = (
+                    SELECT walking.elevation_gain
+                    FROM walking
+                    WHERE walking.activity_id = activities.id
+                )
+            """,
+            ),
+            (
+                44,
+                """
+                CREATE TABLE activities_new (
+                    id INTEGER PRIMARY KEY,
+                    distance REAL,
+                    activity_type TEXT,
+                    comment TEXT,
+                    title TEXT,
+                    duration INTEGER,
+                    date INTEGER,
+                    calories INTEGER,
+                    file_id TEXT,
+                    elevation_gain REAL
+                )
+            """,
+            ),
+            (
+                45,
+                [
+                    "INSERT INTO activities_new (id, distance, activity_type, comment, title, duration, date, calories, file_id, elevation_gain) SELECT id, distance, activity_type, comment, title, duration, date, calories, file_id, elevation_gain FROM activities",
+                    "DROP TABLE activities",
+                    "ALTER TABLE activities_new RENAME TO activities",
+                ],
+            ),
+            (
+                46,
+                [
+                    "ALTER TABLE weather ADD COLUMN weather_code INTEGER DEFAULT 0",
+                ],
+            ),
         ]
     )
 
@@ -467,4 +537,5 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
                     f"ERROR in Migration {version}: {e}"
                 )  # ✅ Log specific migration failure
                 logger.critical("Stopping migrations due to error.")
+                print(e)
                 break  # Stop further migrations to prevent data corruption

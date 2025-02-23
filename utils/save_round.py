@@ -1,8 +1,8 @@
-import pandas as pd
+import math
 
 
 def safe_round(value, decimals=0):
     """Safely rounds a number, avoiding NaN and None issues."""
-    if value is None or not isinstance(value, (int, float)) or pd.isna(value):
-        return 0  # Return 0 if value is None or NaN
-    return int(round(value, decimals))
+    if value is None or math.isnan(value) or math.isinf(value):
+        return 0.0 if decimals > 0 else 0
+    return round(value, decimals) if decimals > 0 else int(round(value))

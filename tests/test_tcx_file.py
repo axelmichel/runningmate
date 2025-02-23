@@ -22,6 +22,8 @@ def mock_file_data():
             start="2025-02-15 10:00:00", periods=10, freq="min"
         ).astype(str),
         "Distance": np.linspace(0, 5.0, 10),
+        "DistDiff": np.linspace(0, 5.0, 10),
+        "TimeDiff": np.linspace(0, 600, 10),
         "Elevation": np.linspace(100, 150, 10),
         "HeartRate": [150, 152, 155, 157, 157, 160, 158, 156, 154, 150],
         "Power": [200, 205, 210, 215, 215, 220, 225, 230, 235, 240],
@@ -50,6 +52,8 @@ def mock_tcx_data():
             start="2025-02-15 10:00:00", periods=10, freq="min"
         ).astype(str),
         "Distance": np.linspace(0, 5.0, 10),
+        "DistDiff": np.linspace(0, 5.0, 10),
+        "TimeDiff": np.linspace(0, 600, 10),
         "Elevation": np.linspace(100, 150, 10),
         "HeartRate": [150, 152, 155, 157, 157, 160, 158, 156, 154, 150],
         "Power": [200, 205, 210, 215, 215, 220, 225, 230, 235, 240],

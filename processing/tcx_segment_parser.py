@@ -2,6 +2,7 @@ import pandas as pd
 from geopy.distance import geodesic
 
 from processing.system_settings import ViewMode, mapActivityTypes
+from utils.logger import logger
 from utils.save_avg import safe_avg
 from utils.save_round import safe_round
 
@@ -57,8 +58,9 @@ class TcxSegmentParser:
                 type_group,  # Use the last updated time
             )
 
-        print(f"Segmented {activity_type} activity into {len(segments)} segments")
-        print(f"Segments: {segments}")
+        logger.debug(
+            f"Segmented {activity_type} activity into {len(segments)} segments"
+        )
         return pd.DataFrame(segments)
 
     @staticmethod

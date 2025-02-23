@@ -125,6 +125,7 @@ class TcxFileImporter:
         if not activity_id:
             next_id = self.db.get_next_activity_id()
         else:
+            print("activity_id existing: ", activity_id)
             next_id = activity_id
 
         computed_data = self.compute_data(df, name)
@@ -150,14 +151,13 @@ class TcxFileImporter:
 
         if target == ViewMode.RUN:
             computed_data = self.plot_stats(name, df, computed_data)
-
-            self.process_run(df, computed_data)
+            self.process_run(df, computed_data, activity_id)
         elif target == ViewMode.WALK:
             computed_data = self.plot_stats(name, df, computed_data)
-            self.process_walk(df, computed_data)
+            self.process_walk(df, computed_data, activity_id)
         elif target == ViewMode.CYCLE:
             computed_data = self.plot_stats(name, df, computed_data)
-            self.process_cycle(df, computed_data)
+            self.process_cycle(df, computed_data, activity_id)
         else:
             return False
 
@@ -221,6 +221,7 @@ class TcxFileImporter:
             plot_elevation(df, elevation_img)
             computed_data["elevation_img"] = elevation_img
         except Exception as e:
+            print(e)
             logger.warning(f"Failed to generate elevation image: {e}")
 
         try:
@@ -274,9 +275,7 @@ class TcxFileImporter:
             ),
             "avg_speed": round(avg_speed, 2),
             "avg_power": (
-                int(round(df["Power"].mean(), 0))
-                if not df["Power"].isnull().all()
-                else 0
+                safe_round(df["Power"].mean()) if not df["Power"].isnull().all() else 0
             ),
         }
 

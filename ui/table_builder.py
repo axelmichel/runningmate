@@ -1,5 +1,7 @@
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
+    QAbstractItemView,
     QHBoxLayout,
     QHeaderView,
     QPushButton,
@@ -8,7 +10,10 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from processing.system_settings import SortOrder, ViewMode
+from processing.system_settings import SortOrder, ViewMode, mapActivityTypes
+from ui.themes import THEME
+from utils.app_mode import is_dark_mode
+from utils.resource_path import resource_path
 from utils.translations import _  # Import translation function
 
 
@@ -18,6 +23,8 @@ class NumericTableWidgetItem(QTableWidgetItem):
     def __init__(self, value):
         super().__init__(str(value))
         try:
+            if value is None:
+                value = 0
             self.numeric_value = float(value)
         except ValueError:
             self.numeric_value = value
@@ -104,18 +111,38 @@ class TableBuilder:
         translated_headers = [_((header)) for header in headers]
 
         table_widget.clear()
+        table_widget.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        table_widget.setStyleSheet(
+            """
+            QTableWidget::item:selected {
+                background-color: #333333;
+                color: white;
+            }
+            QTableWidget::item {
+                selection-background-color: transparent;
+                selection-color: inherit;
+            }
+        """
+        )
+
         table_widget.clearContents()
+        table_widget.verticalHeader().hide()
         table_widget.setRowCount(len(data))
-        table_widget.setColumnCount(len(headers) + 2)
+        table_widget.setColumnCount(len(headers) + 3)
+        table_widget.setStyleSheet("QHeaderView::section { height: 30px; }")
         table_widget.setHorizontalHeaderLabels(
-            translated_headers + ["_id", _("Actions")]
+            translated_headers + ["_id", _("Actions"), ""]
         )
         table_widget.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.ResizeToContents
         )
+        table_widget.verticalHeader().setDefaultSectionSize(40)
         table_widget.setAlternatingRowColors(True)
         table_widget.setShowGrid(True)
         table_widget.setGridStyle(Qt.PenStyle.SolidLine)
+        table_widget.horizontalHeader().setStretchLastSection(True)
         table_widget.row_data = data
 
         for row_index, row_data in enumerate(data):
@@ -135,6 +162,12 @@ class TableBuilder:
             # Add actions column
             actions_widget = TableBuilder.getActions(table_widget, row_index, parent)
             table_widget.setCellWidget(row_index, len(headers) + 1, actions_widget)
+
+            empty_item = QTableWidgetItem("")
+            empty_item.setFlags(
+                Qt.ItemFlag.ItemIsEnabled
+            )  # Optional: make it non-editable
+            table_widget.setItem(row_index, len(headers) + 2, empty_item)
 
             id_item = QTableWidgetItem(
                 str(row_data.get("activity_id", row_index))
@@ -195,27 +228,68 @@ class TableBuilder:
         actions_widget = QWidget()
         layout = QHBoxLayout()
         layout.setContentsMargins(
-            0, 0, 0, 0
+            10, 0, 10, 0
         )  # Remove margins for better button alignment
 
-        # Refresh Button
-        refresh_button = QPushButton(_("Refresh"))
-        refresh_button.setStyleSheet("padding: 2px; font-size: 12px;")
+        # Determine the icon folder based on theme
+        icon_folder = "light" if is_dark_mode() else "dark"
+
+        def create_icon_button(icon_name, tooltip, bg_color, hover_color):
+            """Helper function to create styled icon buttons."""
+            button = QPushButton()
+            button.setIcon(QIcon(resource_path(f"icons/{icon_folder}/{icon_name}")))
+            button.setToolTip(tooltip)
+            button.setFixedSize(30, 30)  # ✅ Square button (30x30)
+
+            # ✅ Set button style: No border, background color, hover effect
+            button.setStyleSheet(
+                f"""
+                QPushButton {{
+                    background-color: {bg_color};
+                    border-radius: 5px;
+                    padding: 5px;
+                }}
+                QPushButton:hover {{
+                    background-color: {hover_color};
+                }}
+                QPushButton:pressed {{
+                    background-color: #222222;
+                }}
+            """
+            )
+            return button
+
+        view_button = create_icon_button(
+            "eye-2-line.svg", _("View Details"), THEME.MAIN_COLOR, THEME.MAIN_COLOR_DARK
+        )
+        view_button.clicked.connect(
+            lambda _, row=row_index: TableBuilder.handle_action_click(
+                table_widget, row, parent, "view"
+            )
+        )
+
+        refresh_button = create_icon_button(
+            "restart-fill.svg",
+            _("Refresh"),
+            THEME.ACCENT_COLOR,
+            THEME.ACCENT_COLOR_DARK,
+        )
         refresh_button.clicked.connect(
             lambda _, row=row_index: TableBuilder.handle_action_click(
                 table_widget, row, parent, "refresh"
             )
         )
 
-        # Delete Button
-        delete_button = QPushButton(_("Delete"))
-        delete_button.setStyleSheet("color: red; padding: 2px; font-size: 12px;")
+        delete_button = create_icon_button(
+            "close-circle-line.svg", _("Delete"), "#FF4C4C", "#FF3333"
+        )
         delete_button.clicked.connect(
             lambda _, row=row_index: TableBuilder.handle_action_click(
                 table_widget, row, parent, "delete"
             )
         )
 
+        layout.addWidget(view_button)
         layout.addWidget(refresh_button)
         layout.addWidget(delete_button)
         layout.addStretch()
@@ -225,7 +299,7 @@ class TableBuilder:
     def handle_action_click(table_widget, row, parent, action):
         """Finds the correct row index after sorting and passes the correct row data."""
         id_item = table_widget.item(
-            row, table_widget.columnCount() - 2
+            row, table_widget.columnCount() - 3
         )  # ✅ Get the hidden ID column
         if id_item:
             row_id = id_item.text()  # ✅ Extract the stored ID
@@ -233,23 +307,25 @@ class TableBuilder:
                 parent.delete_entry(row_id)
             elif action == "refresh":
                 parent.refresh_entry(row_id)
+            elif action == "view":
+                correct_row_data = next(
+                    (
+                        data
+                        for data in table_widget.row_data
+                        if str(data.get("activity_id")) == row_id
+                    ),
+                    None,
+                )
+                activity_type = mapActivityTypes(correct_row_data["activity_type"])
+                if correct_row_data:
+                    parent.open_detail(activity_id=row_id, activity_type=activity_type)
 
     @staticmethod
     def handle_row_click(table_widget, row, parent):
         """Finds the correct row index after sorting and passes the correct row data."""
         id_item = table_widget.item(
-            row, table_widget.columnCount() - 2
+            row, table_widget.columnCount() - 3
         )  # ✅ Get the hidden ID column
         if id_item:
-            row_id = id_item.text()  # ✅ Extract the stored ID
-            correct_row_data = next(
-                (
-                    data
-                    for data in table_widget.row_data
-                    if str(data.get("activity_id")) == row_id
-                ),
-                None,
-            )
-
-            if correct_row_data:
-                parent.load_detail(data=correct_row_data)  # ✅ Pass correct data
+            row_id = id_item.text()
+            parent.load_detail(row_id)
