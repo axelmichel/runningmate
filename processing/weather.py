@@ -42,7 +42,7 @@ class WeatherService:
                 "temperature_2m",
                 "windspeed_10m",
                 "precipitation",
-                "weathercode",
+                "weather_code",
             ],
             "timezone": "auto",
         }
@@ -58,6 +58,7 @@ class WeatherService:
                 "min_temp": data["current"]["temperature_2m"],  # Same as above
                 "precipitation": data["current"]["precipitation"],
                 "max_wind_speed": data["current"]["windspeed_10m"],
+                "weather_code": data["current"]["weather_code"],
                 "source": "current",
             }
         logger.warning(f"No weather data: {data}")
@@ -87,6 +88,7 @@ class WeatherService:
                 "temperature_2m_min",
                 "precipitation_sum",
                 "windspeed_10m_max",
+                "weather_code",
             ],
             "timezone": "auto",
         }
@@ -101,6 +103,7 @@ class WeatherService:
                 "min_temp": data["daily"]["temperature_2m_min"][0],
                 "precipitation": data["daily"]["precipitation_sum"][0],
                 "max_wind_speed": data["daily"]["windspeed_10m_max"][0],
+                "weather_code": data["daily"]["weather_code"][0],
                 "source": "historical",
             }
         logger.warning(f"No historical weather data for {date}: {data}")

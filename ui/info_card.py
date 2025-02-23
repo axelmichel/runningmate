@@ -91,7 +91,7 @@ class InfoCard(QWidget):
         elif self.metric == "distance":
             formatted_value = f"{locale.toString(value, 'f', 2)} km"
         elif self.metric == "elevation":
-            formatted_value = f"{locale.toString(value, 'f', 2)} m"
+            formatted_value = f"{locale.toString(value, 'f', 0)} m"
         else:
             formatted_value = str(value)
 

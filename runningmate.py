@@ -5,7 +5,6 @@ from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
-    QFrame,
     QHBoxLayout,
     QLabel,
     QMessageBox,
@@ -23,14 +22,18 @@ from database.database_handler import DatabaseHandler
 from database.migrations import apply_migrations
 from importer.file.tcx_file import TcxFileImporter
 from importer.garmin.garmin import garmin_connect_login
+from processing.activity_info import ActivityInfo
 from processing.plot_heatmap import PlotHeatmap
 from processing.system_settings import SortOrder, ViewMode, mapActivityTypes
+from ui.activity_widget import ActivityWidget
 from ui.info_card import InfoCard
 from ui.main_menu import MenuBar
 from ui.side_bar import Sidebar
 from ui.table_builder import TableBuilder
 from ui.window_garmin_sync import GarminSyncWindow
 from ui.window_run_details import RunDetailsWindow
+from utils.app_mode import is_dark_mode
+from utils.resource_path import resource_path
 from utils.translations import _
 
 # Directories
@@ -69,6 +72,8 @@ class NumericTableWidgetItem(QTableWidgetItem):
 class RunningDataApp(QWidget):
     def __init__(self, db_handler: DatabaseHandler):
         super().__init__()
+        self.activity_widget = None
+        self.right_widget = None
         self.heatmap = None
         self.tool_bar = None
         self.page_label = None
@@ -83,6 +88,7 @@ class RunningDataApp(QWidget):
         self.current_page = 0
         self.page_size = 25
         self.offset = 0
+        self.activity_info_handler = ActivityInfo(self.db, IMG_DIR)
         self.init_ui()
 
     def init_ui(self):
@@ -172,18 +178,38 @@ class RunningDataApp(QWidget):
         self.center_layout.addWidget(self.tableWidget, 1)
         self.center_layout.addStretch()
 
+        icon_folder = "light" if is_dark_mode() else "dark"
         pagination_layout = QHBoxLayout()
-        self.prev_button = QPushButton(_("Previous"))
-        self.next_button = QPushButton(_("Next"))
-        self.page_label = QLabel(f"{_('Page')} 1")
 
+        # Previous Button (⬅ arrow-left-line)
+        self.prev_button = QPushButton()
+        self.prev_button.setIcon(
+            QIcon(resource_path(f"icons/{icon_folder}/arrow-left-line.svg"))
+        )
+        self.prev_button.setToolTip(_("Previous Page"))
         self.prev_button.clicked.connect(self.previous_page)
+
+        # Next Button (➡ arrow-right-line)
+        self.next_button = QPushButton()
+        self.next_button.setIcon(
+            QIcon(resource_path(f"icons/{icon_folder}/arrow-right-line.svg"))
+        )
+        self.next_button.setToolTip(_("Next Page"))
         self.next_button.clicked.connect(self.next_page)
 
+        # Page Label (Current Page x / Total Pages)
+        self.page_label = QLabel()
+        self.page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.page_label = QLabel()
+        self.page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.items_info_label = QLabel()
+        self.items_info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Add widgets to layout
         pagination_layout.addWidget(self.prev_button)
-        pagination_layout.addWidget(
-            self.page_label, alignment=Qt.AlignmentFlag.AlignCenter
-        )
+        pagination_layout.addWidget(self.page_label)
         pagination_layout.addWidget(self.next_button)
 
         self.center_layout.addLayout(pagination_layout)
@@ -194,21 +220,14 @@ class RunningDataApp(QWidget):
         # ───────────────────────────────────────────
         # 🔹 RIGHT PANEL (INFO CARDS - FIXED)
         # ───────────────────────────────────────────
+        # Create the right panel layout
         self.right_widget = QWidget()
         self.right_layout = QVBoxLayout(self.right_widget)
 
-        self.card_1 = QLabel(_("Card 1"))
-        self.card_1.setFrameShape(QFrame.Shape.Box)
-        self.card_2 = QLabel(_("Card 2"))
-        self.card_2.setFrameShape(QFrame.Shape.Box)
-        self.card_3 = QLabel(_("Card 3"))
-        self.card_3.setFrameShape(QFrame.Shape.Box)
+        # Placeholder for ActivityWidget (initialized empty)
+        self.activity_widget = None
 
-        self.right_layout.addWidget(self.card_1)
-        self.right_layout.addWidget(self.card_2)
-        self.right_layout.addWidget(self.card_3)
         self.right_layout.addStretch()
-
         self.right_widget.setLayout(self.right_layout)
 
         # ✅ Add Right Panel to Splitter (Always Visible & FIXED WIDTH)
@@ -252,6 +271,7 @@ class RunningDataApp(QWidget):
         self.load_activities()
         self.update_button()
         self.update_pagination()
+        self.update_activity_view()
 
     def set_active_view(self, view_mode):
         """Switch the view and update button styles"""
@@ -265,6 +285,34 @@ class RunningDataApp(QWidget):
         self.update_button()
         self.update_pagination()
         self.update_heatmap(view_mode)
+        self.update_activity_view(view_mode)
+
+    def update_activity_view(self, activity_type=ViewMode.ALL, activity_id=None):
+        """
+        Update the right panel with the new activity information.
+
+        :param activity_id: Optional[int]
+            The selected activity ID (if provided).
+        :param activity_type: Optional[ViewMode]
+            The selected activity type (if provided).
+        """
+        # Fetch the latest or specific activity info
+        activity_data = self.activity_info_handler.get_activity_info(
+            activity_type, activity_id
+        )
+
+        if activity_data is None:
+            print("No activity found!")
+            return  # Avoid errors if no data is found
+
+        # Remove the previous widget if exists
+        if self.activity_widget:
+            self.right_layout.removeWidget(self.activity_widget)
+            self.activity_widget.deleteLater()
+
+        # Create and display the new activity widget
+        self.activity_widget = ActivityWidget(activity_data)
+        self.right_layout.insertWidget(0, self.activity_widget)
 
     def update_heatmap(self, view_mode):
         heatmap_image = self.heatmap.get_heatmap(activity_type=view_mode)
@@ -303,9 +351,14 @@ class RunningDataApp(QWidget):
         total_rows = self.db.get_total_activity_count(self.view_mode)
         total_pages = max(1, (total_rows + self.page_size - 1) // self.page_size)
 
+        start_item = self.current_page * self.page_size + 1
+        end_item = min((self.current_page + 1) * self.page_size, total_rows)
+
         self.prev_button.setEnabled(self.current_page > 0)
         self.next_button.setEnabled(self.current_page < total_pages - 1)
-        self.page_label.setText(f"{_('Page')} {self.current_page + 1} / {total_pages}")
+        self.page_label.setText(
+            f"{_('Page')} {self.current_page + 1} / {total_pages} | {_('Showing')} {start_item}-{end_item} {_('of')} {total_rows}"
+        )
 
     def previous_page(self):
         if self.current_page > 0:
@@ -323,6 +376,12 @@ class RunningDataApp(QWidget):
         self.offset = self.current_page * self.page_size
         self.trigger_load()
         self.update_pagination()
+
+    def update_infoCards(self):
+        self.activities_card.update_info(self.view_mode)
+        self.distance_card.update_info(self.view_mode)
+        self.duration_card.update_info(self.view_mode)
+        self.elevation_card.update_info(self.view_mode)
 
     def load_activities(self):
         activities = self.db.fetch_activities(
@@ -372,20 +431,22 @@ class RunningDataApp(QWidget):
             self.tableWidget, ViewMode.CYCLE, self.sort_field, self.sort_direction
         )
 
-    def load_detail(self, data):
-        activity_type = mapActivityTypes(data["activity_type"])
+    def load_detail(self, activity_id):
+        self.update_activity_view(None, activity_id)
+
+    def open_detail(self, activity_id, activity_type):
         if activity_type == ViewMode.RUN:
-            data = self.db.fetch_run_by_activity_id(data["activity_id"])
+            data = self.db.fetch_run_by_activity_id(activity_id)
             self.details_window = RunDetailsWindow(data, MEDIA_DIR, self.db)
             self.details_window.exec()
             self.details_window = None
         elif activity_type == ViewMode.WALK:
-            data = self.db.fetch_walk_by_activity_id(data["activity_id"])
+            data = self.db.fetch_walk_by_activity_id(activity_id)
             self.details_window = RunDetailsWindow(data, MEDIA_DIR, self.db)
             self.details_window.exec()
             self.details_window = None
         elif activity_type == ViewMode.CYCLE:
-            data = self.db.fetch_ride_by_activity_id(data["activity_id"])
+            data = self.db.fetch_ride_by_activity_id(activity_id)
             self.details_window = RunDetailsWindow(data, MEDIA_DIR, self.db)
             self.details_window.exec()
             self.details_window = None
@@ -417,6 +478,9 @@ class RunningDataApp(QWidget):
     def upload_tcx_file(self):
         importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db, self)
         importer.by_upload()
+        self.heatmap.clear_heatmaps()
+        self.update_heatmap(self.view_mode)
+        self.update_infoCards()
         self.processed_msg()
         self.set_active_view(self.view_mode)
 

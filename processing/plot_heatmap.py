@@ -154,3 +154,10 @@ class PlotHeatmap:
         # ✅ Generate and save the heatmap
         heatmap_canvas = HeatmapCanvas(parent=self.parent)  # ✅ Pass parent widget
         return heatmap_canvas.plot_heatmap(heatmap_data, activity_type, save_path)
+
+    @staticmethod
+    def clear_heatmaps():
+        """Delete all cached heatmap images."""
+        for file in os.listdir(CACHE_DIR):
+            if file.startswith("heatmap_") and file.endswith(".png"):
+                os.remove(os.path.join(CACHE_DIR, file))

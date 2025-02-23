@@ -95,6 +95,7 @@ class DatabaseHandler:
             "min_temp",
             "precipitation",
             "max_wind_speed",
+            "weather_code",
         ],
     }
 

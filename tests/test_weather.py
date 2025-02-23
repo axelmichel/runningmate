@@ -14,7 +14,7 @@ def sample_current_weather():
             "temperature_2m": 15.3,
             "windspeed_10m": 12.4,
             "precipitation": 0.8,
-            "weathercode": 2,
+            "weather_code": 2,
         }
     }
 
@@ -28,6 +28,7 @@ def sample_historical_weather():
             "temperature_2m_min": [10.2],
             "precipitation_sum": [5.1],
             "windspeed_10m_max": [18.7],
+            "weather_code": [3],
         }
     }
 
@@ -45,6 +46,7 @@ def test_get_current_weather_success(mock_get, sample_current_weather):
         "min_temp": 15.3,
         "precipitation": 0.8,
         "max_wind_speed": 12.4,
+        "weather_code": 2,
         "source": "current",
     }
 
@@ -75,6 +77,7 @@ def test_get_historical_weather_success(mock_get, sample_historical_weather):
         "min_temp": 10.2,
         "precipitation": 5.1,
         "max_wind_speed": 18.7,
+        "weather_code": 3,
         "source": "historical",
     }
 

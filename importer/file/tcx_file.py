@@ -221,6 +221,7 @@ class TcxFileImporter:
             plot_elevation(df, elevation_img)
             computed_data["elevation_img"] = elevation_img
         except Exception as e:
+            print(e)
             logger.warning(f"Failed to generate elevation image: {e}")
 
         try:

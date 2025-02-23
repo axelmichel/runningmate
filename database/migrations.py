@@ -497,6 +497,12 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
                     "ALTER TABLE activities_new RENAME TO activities",
                 ],
             ),
+            (
+                46,
+                [
+                    "ALTER TABLE weather ADD COLUMN weather_code INTEGER DEFAULT 0",
+                ],
+            ),
         ]
     )
 
