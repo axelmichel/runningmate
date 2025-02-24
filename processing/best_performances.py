@@ -103,42 +103,40 @@ class BestSegmentFinder:
         """
         Finds the fastest segment by summing smaller segments until reaching the target distance.
 
-        :param df: pd.DataFrame
-            Dataframe containing all segments for an activity.
-        :param target_distance: int
-            The cumulative distance to reach (e.g., 1K, 5K, 10K).
-        :return: Optional[Dict[str, Any]]
-            Dictionary with best segment details or None if no valid segment found.
+        Instead of recalculating pace, this method simply averages the existing segment paces.
         """
+
         best_segment = None
         best_pace = float("inf")
 
         for start_idx in range(len(df)):
             total_distance = 0.0
-            segment_start_time = pd.to_datetime(df.iloc[start_idx]["seg_time_start"])
+            pace_sum = 0.0
+            segment_count = 0
+            segment_start_time = df.iloc[start_idx]["seg_time_start"]
 
             for end_idx in range(start_idx, len(df)):
                 segment = df.iloc[end_idx]
                 segment_distance = segment["seg_distance"] if segment["seg_distance"] is not None else 0.0
+
                 total_distance += segment_distance
+                pace_sum += segment["seg_avg_pace"]
+                segment_count += 1
 
                 if total_distance < target_distance:
                     continue
 
-                segment_end_time = pd.to_datetime(segment["seg_time_end"])
-                total_time = (segment_end_time - segment_start_time).total_seconds() / 60  # minutes
-                avg_pace = total_time / total_distance if total_distance > 0 else None
+                avg_pace = pace_sum / segment_count
 
-                if avg_pace and avg_pace < best_pace:
+                if avg_pace < best_pace:
                     best_pace = avg_pace
                     best_segment = {
-                        "seg_time_start": df.iloc[start_idx]["seg_time_start"],
+                        "seg_time_start": segment_start_time,
                         "seg_time_end": segment["seg_time_end"],
                         "seg_avg_pace": avg_pace,
                     }
 
-                if total_distance >= target_distance + 0.001:
-                    break
+                break  # Stop searching this start index once we hit the target distance
 
         return best_segment
 

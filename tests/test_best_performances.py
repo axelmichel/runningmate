@@ -33,8 +33,6 @@ def generate_test_activity(test_db, atype=None):
     timestamp = int(time.time())  # Current Unix timestamp
     title = "test"
 
-    print(f"Generated activity: {distance} km {activity_type} in {duration} seconds")
-
     db.insert_activity(
         {
             "distance": distance,
@@ -85,10 +83,6 @@ def test_get_best_performance_running(test_db, best_segment_finder):
 
     best_performances = best_segment_finder.get_best_performance(activity_type)
 
-    # Verify the best performances are retrieved correctly
-
-    print(best_performances)
-
     assert best_performances is not None
     # Check the structure of the output dictionary
     assert "5K" in best_performances
@@ -109,7 +103,6 @@ def test_get_best_performance_running(test_db, best_segment_finder):
 def test_get_best_performance_cycling(test_db, best_segment_finder):
     """Test retrieving the best performances for cycling."""
     activity_type = ViewMode.CYCLE
-    print("Running test_get_best_performance_cycling")
     for _ in range(1, 6):
         generate_test_activity(test_db, activity_type)
 
@@ -137,7 +130,6 @@ def test_get_best_performance_cycling(test_db, best_segment_finder):
 def test_get_best_performance_walking(test_db, best_segment_finder):
     """Test retrieving the best performances for walking."""
     activity_type = ViewMode.WALK
-    print("Running test_get_best_performance_walking")
     for _ in range(1, 6):
         generate_test_activity(test_db, activity_type)
 
@@ -171,14 +163,13 @@ def test_get_best_performance_no_data(test_db, best_segment_finder):
 
 def test_get_best_segments_run(test_db, best_segment_finder):
     """Test best segment retrieval for a running activity."""
-    print("Running test_get_best_segments_run")
     activity_data = generate_test_activity(test_db)
     activity_id = activity_data["id"]
 
     sample_data = [
-        (activity_id, 0, 1.1, "2025-02-23 13:54:33", "2025-02-23 13:56:33", 5.2),
-        (activity_id, 1, 1.1, "2025-02-23 13:56:33", "2025-02-23 13:58:33", 4.9),
-        (activity_id, 2, 1.0, "2025-02-23 13:58:33", "2025-02-23 14:03:33", 5.0),
+        (activity_id, 0, 1.001, "2025-02-23 13:54:33", "2025-02-23 13:56:33", 5.2),
+        (activity_id, 1, 1.001, "2025-02-23 13:56:33", "2025-02-23 13:58:33", 4.9),
+        (activity_id, 2, 1.002, "2025-02-23 13:58:33", "2025-02-23 14:03:33", 5.0),
         (activity_id, 3, 0.7, "2025-02-23 14:10:33", "2025-02-23 14:12:33", 3.9),
     ]
 
@@ -201,7 +192,7 @@ def test_get_best_segments_run(test_db, best_segment_finder):
     assert best_segments is not None
     assert "1K" in best_segments
     assert "5K" not in best_segments  # No 5K distance in sample data
-    assert best_segments["1K"]["seg_avg_pace"] == 5.0  # Best 1K pace
+    assert best_segments["1K"]["seg_avg_pace"] == 4.9  # Best 1K pace
 
 
 @pytest.fixture(autouse=True)
