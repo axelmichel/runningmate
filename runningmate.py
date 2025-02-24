@@ -1,5 +1,6 @@
 import os
 import sys
+import webbrowser
 
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QIcon, QPixmap
@@ -532,6 +533,22 @@ class RunningDataApp(QWidget):
             msg.setText("The file has been imported.")
         msg.setStandardButtons(QMessageBox.StandardButton.Ok)
         msg.exec()
+
+    def show_about(self):
+        """ Show splash screen when menu item is clicked """
+        splash_pixmap = QPixmap("splash_screen.png")  # Replace with your splash image
+        self.splash = QSplashScreen(splash_pixmap, Qt.WindowType.WindowStaysOnTopHint)
+        self.splash.show()
+
+        # Simulate loading process (2 seconds)
+        QTimer.singleShot(2000, self.hide_splash_screen)
+
+    def online_help(self):
+        webbrowser.open("https://axelmichel.github.io/runningmate/")  # Change to your desired URL
+
+    def hide_splash_screen(self):
+        """ Hide the splash screen after loading """
+        self.splash.close()
 
 
 if __name__ == "__main__":
