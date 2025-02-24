@@ -99,7 +99,9 @@ class BestSegmentFinder:
         return best_segments if best_segments else None
 
     @staticmethod
-    def _get_best_cumulative_segment(df: pd.DataFrame, target_distance: int) -> Optional[Dict[str, Any]]:
+    def _get_best_cumulative_segment(
+        df: pd.DataFrame, target_distance: int
+    ) -> Optional[Dict[str, Any]]:
         """
         Finds the fastest segment by summing smaller segments until reaching the target distance.
 
@@ -117,7 +119,11 @@ class BestSegmentFinder:
 
             for end_idx in range(start_idx, len(df)):
                 segment = df.iloc[end_idx]
-                segment_distance = segment["seg_distance"] if segment["seg_distance"] is not None else 0.0
+                segment_distance = (
+                    segment["seg_distance"]
+                    if segment["seg_distance"] is not None
+                    else 0.0
+                )
 
                 total_distance += segment_distance
                 pace_sum += segment["seg_avg_pace"]

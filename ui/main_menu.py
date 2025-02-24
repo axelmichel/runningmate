@@ -63,7 +63,6 @@ class MenuBar(QMenuBar):
         search_action.setShortcut(search_shortcut)
         view_menu.addAction(search_action)
 
-
         about_action = QAction("About", self)
         about_action.setMenuRole(
             QAction.MenuRole.NoRole
