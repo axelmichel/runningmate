@@ -146,12 +146,19 @@ class PlotHeatmap:
                 0, index=weekdays, columns=week_numbers
             )  # Create empty grid
 
+        heatmap_data = heatmap_data.fillna(0)
+        if heatmap_data.isnull().values.all():
+            heatmap_data.iloc[:, :] = 0  # Replace all NaNs with zeros
+
         # Reindex to enforce 52 weeks & 7 days structure
         heatmap_data = heatmap_data.reindex(
             index=weekdays, columns=week_numbers, fill_value=0
         )
 
-        # ✅ Generate and save the heatmap
+        if heatmap_data.max().max() == 0:
+            heatmap_data = heatmap_data.astype(float)
+            heatmap_data.iloc[0, 0] = 1e-6
+
         heatmap_canvas = HeatmapCanvas(parent=self.parent)  # ✅ Pass parent widget
         return heatmap_canvas.plot_heatmap(heatmap_data, activity_type, save_path)
 

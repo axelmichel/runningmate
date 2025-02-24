@@ -3,3 +3,4 @@ isort
 ruff
 pytest
 pytest-cov
+pytest-mock
