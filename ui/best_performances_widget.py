@@ -3,6 +3,9 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from ui.themes import THEME
+from utils.app_mode import is_dark_mode
+
 
 class BestPerformanceWidget(QWidget):
     """
@@ -19,7 +22,7 @@ class BestPerformanceWidget(QWidget):
         Initializes the BestPerformanceWidget.
 
         :param best_performance_data: dict
-            A dictionary containing best performance details.
+            A dictionary containing the best performance details.
             Expected format:
             {
                 "1K": {"seg_time_start": "2025-02-23 13:54:33+00:00",
@@ -37,8 +40,10 @@ class BestPerformanceWidget(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        """Set up the layout and populate the UI with best performance data."""
+        """Set up the layout and populate the UI with the best performance data."""
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 10, 10, 0)
+        value_color = THEME.ACCENT_COLOR if is_dark_mode() else THEME.MAIN_COLOR
 
         # Sort dictionary items by numeric distance (e.g., "1K" → 1, "5K" → 5)
         sorted_items = sorted(
@@ -52,16 +57,18 @@ class BestPerformanceWidget(QWidget):
 
             # Distance Label (Left-aligned)
             distance_label = QLabel(distance_key)
-            distance_label.setFont(QFont("Arial", 12))
+            distance_label.setFont(QFont("Arial", 14))
             distance_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
             # Pace Label (Right-aligned)
             pace_label = QLabel(formatted_pace)
-            pace_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
+            pace_label.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+            pace_label.setStyleSheet(f"color: {value_color};")
             pace_label.setAlignment(Qt.AlignmentFlag.AlignRight)
 
             # Row layout with distance (left) and pace (right)
             row_layout = QHBoxLayout()
+            row_layout.setContentsMargins(0, 0, 0, 0)
             row_layout.addWidget(distance_label)
             row_layout.addStretch()  # Pushes pace to the right
             row_layout.addWidget(pace_label)
@@ -75,7 +82,7 @@ class BestPerformanceWidget(QWidget):
                 separator = QFrame()
                 separator.setFrameShape(QFrame.Shape.HLine)
                 separator.setFrameShadow(QFrame.Shadow.Sunken)
-                separator.setStyleSheet("color: #cccccc;")  # Light gray fine line
+                separator.setStyleSheet("color: #333333;")  # Light gray fine line
                 layout.addWidget(separator)
 
         self.setLayout(layout)
@@ -95,4 +102,4 @@ class BestPerformanceWidget(QWidget):
 
         minutes = int(pace)
         seconds = int((pace - minutes) * 60)
-        return f"{minutes:02d}:{seconds:02d} min/km"
+        return f"{minutes:02d}:{seconds:02d}"

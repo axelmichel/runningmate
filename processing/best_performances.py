@@ -54,7 +54,7 @@ class BestSegmentFinder:
             best_segments = {}
             for _, row in df_cached.iterrows():
                 # Note: best_performances does not store seg_time_end.
-                best_segments[f"{row['distance']}K"] = {
+                best_segments[f"{int(row['distance'])}K"] = {
                     "seg_time_start": row["date_time"],
                     "seg_avg_pace": row["best_time"],
                 }
@@ -73,11 +73,12 @@ class BestSegmentFinder:
 
         best_segments = {}
         for target_distance in self.SEGMENT_DISTANCES[activity_type]:
+            target_distance = int(target_distance)
             best_segment = self._get_best_cumulative_segment(
                 df_details, target_distance
             )
             if best_segment:
-                best_segments[f"{target_distance}K"] = best_segment
+                best_segments[f"{int(target_distance)}K"] = best_segment
                 # Insert the computed best segment into the best_performances table.
                 # Fields: activity_id, distance, best_time (pace), date_time (seg_time_start), activity_type.
                 insert_query = """
@@ -98,9 +99,7 @@ class BestSegmentFinder:
         return best_segments if best_segments else None
 
     @staticmethod
-    def _get_best_cumulative_segment(
-        df: pd.DataFrame, target_distance: int
-    ) -> Optional[Dict[str, Any]]:
+    def _get_best_cumulative_segment(df: pd.DataFrame, target_distance: int) -> Optional[Dict[str, Any]]:
         """
         Finds the fastest segment by summing smaller segments until reaching the target distance.
 
@@ -120,23 +119,14 @@ class BestSegmentFinder:
 
             for end_idx in range(start_idx, len(df)):
                 segment = df.iloc[end_idx]
-                segment_distance = (
-                    segment["seg_distance"]
-                    if segment["seg_distance"] is not None
-                    else 0.0
-                )
+                segment_distance = segment["seg_distance"] if segment["seg_distance"] is not None else 0.0
                 total_distance += segment_distance
 
                 if total_distance < target_distance:
                     continue
 
-                if total_distance > target_distance:
-                    break
-
                 segment_end_time = pd.to_datetime(segment["seg_time_end"])
-                total_time = (
-                    segment_end_time - segment_start_time
-                ).total_seconds() / 60  # minutes
+                total_time = (segment_end_time - segment_start_time).total_seconds() / 60  # minutes
                 avg_pace = total_time / total_distance if total_distance > 0 else None
 
                 if avg_pace and avg_pace < best_pace:
@@ -146,6 +136,10 @@ class BestSegmentFinder:
                         "seg_time_end": segment["seg_time_end"],
                         "seg_avg_pace": avg_pace,
                     }
+
+                if total_distance >= target_distance + 0.001:
+                    break
+
         return best_segment
 
     def get_best_performance(
@@ -171,10 +165,6 @@ class BestSegmentFinder:
             df_perf = pd.read_sql(
                 query, self.conn, params=(activity_type, target_distance)
             )
-
-            print(
-                f"Fetching best performances for {target_distance}K:\n", df_perf
-            )  # Debug print
 
             if not df_perf.empty:
                 best_performances[f"{int(target_distance)}K"] = [
