@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from geopy.distance import geodesic
 
@@ -20,6 +21,11 @@ class TcxSegmentParser:
         :param activity_type: The type of activity.
         :return: A dataframe containing segmented activity data.
         """
+        if "DistDiff" not in df.columns:
+            df["DistDiff"] = TcxSegmentParser._compute_distance_diff(df)
+
+        df["DistDiff"] = df["DistDiff"].replace(np.nan, 0)
+
         type_group = mapActivityTypes(activity_type)
         segment_length = TcxSegmentParser._get_segment_length(type_group)
         segments = []
@@ -40,7 +46,7 @@ class TcxSegmentParser:
                 )
             )
             dist_diff = row.get("DistDiff", 0.0) / 1000.0  # ✅ FIXED: Now it's in KM!
-            current_distance += dist_diff  # Add only the new di
+            current_distance += dist_diff
 
             # Store segment if distance threshold is reached
             if current_distance >= segment_length:
@@ -61,6 +67,7 @@ class TcxSegmentParser:
         logger.debug(
             f"Segmented {activity_type} activity into {len(segments)} segments"
         )
+        df["DistDiff"] = df["DistDiff"].replace(0, np.nan)
         return pd.DataFrame(segments)
 
     @staticmethod
@@ -92,23 +99,37 @@ class TcxSegmentParser:
         :param segment_data: The segment data dictionary.
         :return: dictionary containing average values for the segment.
         """
+        avg_heart_rate = safe_avg(segment_data.get("heart_rate", []))
+        avg_power = safe_avg(segment_data.get("power", []))
+        avg_speed = safe_avg(segment_data.get("speed", []))
+        avg_steps = safe_avg(segment_data.get("steps", []))
+        avg_elevation = safe_avg(segment_data.get("elevation", []))
 
-        avg_heart_rate = safe_avg(segment_data["heart_rate"])
-        avg_power = safe_avg(segment_data["power"])
-        avg_speed = safe_avg(segment_data["speed"])
-        avg_steps = safe_avg(segment_data["steps"])
-        avg_elevation = safe_avg(segment_data["elevation"])
-        avg_pace = avg_speed * 3.6 if avg_speed else 0.0
+        # ✅ Use `.get()` to prevent KeyError
+        seg_time_start = segment_data.get("seg_time_start")
+        seg_time_end = segment_data.get("seg_time_end")
 
-        computed_values = {
+        if seg_time_start and seg_time_end:
+            total_time = (
+                pd.to_datetime(seg_time_end) - pd.to_datetime(seg_time_start)
+            ).total_seconds() / 60  # Convert to minutes
+        else:
+            total_time = None  # ✅ If missing, set to None
+
+        avg_pace = (
+            total_time / segment_data.get("seg_distance", 1) if total_time else None
+        )
+
+        return {
             "avg_heart_rate": safe_round(avg_heart_rate),
             "avg_power": safe_round(avg_power),
             "avg_speed": avg_speed,
-            "avg_pace": avg_pace,
+            "avg_pace": (
+                avg_pace if avg_pace else 0.0
+            ),  # ✅ Prevent None in calculations
             "avg_steps": safe_round(avg_steps) if avg_steps else 0,
             "avg_elevation": safe_round(avg_elevation) if avg_elevation else 0,
         }
-        return computed_values
 
     @staticmethod
     def _store_segment(
@@ -214,3 +235,23 @@ class TcxSegmentParser:
         if speed is None and "DistDiff" in df and "TimeDiff" in df:
             speed = row["DistDiff"] / row["TimeDiff"] if row["TimeDiff"] > 0 else None
         return speed
+
+    @staticmethod
+    def _compute_distance_diff(df: pd.DataFrame) -> pd.Series:
+        """
+        Computes the distance difference between consecutive GPS points.
+
+        :param df: The input dataframe containing Latitude and Longitude.
+        :return: A Pandas Series containing distance differences in meters.
+        """
+        distances = [0]  # First row has no previous point
+
+        for i in range(1, len(df)):
+            prev_point = (df.iloc[i - 1]["Latitude"], df.iloc[i - 1]["Longitude"])
+            curr_point = (df.iloc[i]["Latitude"], df.iloc[i]["Longitude"])
+
+            # Compute geodesic distance
+            distance = geodesic(prev_point, curr_point).meters
+            distances.append(distance)
+
+        return pd.Series(distances)

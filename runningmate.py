@@ -23,9 +23,11 @@ from database.migrations import apply_migrations
 from importer.file.tcx_file import TcxFileImporter
 from importer.garmin.garmin import garmin_connect_login
 from processing.activity_info import ActivityInfo
+from processing.best_performances import BestSegmentFinder
 from processing.plot_heatmap import PlotHeatmap
 from processing.system_settings import SortOrder, ViewMode, mapActivityTypes
 from ui.activity_widget import ActivityWidget
+from ui.best_performances_widget import BestPerformanceWidget
 from ui.info_card import InfoCard
 from ui.main_menu import MenuBar
 from ui.side_bar import Sidebar
@@ -89,6 +91,8 @@ class RunningDataApp(QWidget):
         self.page_size = 25
         self.offset = 0
         self.activity_info_handler = ActivityInfo(self.db, IMG_DIR)
+        self.activity_performance_widget = None
+        self.best_performance_handler = BestSegmentFinder(self.db)
         self.init_ui()
 
     def init_ui(self):
@@ -226,6 +230,7 @@ class RunningDataApp(QWidget):
 
         # Placeholder for ActivityWidget (initialized empty)
         self.activity_widget = None
+        self.activity_performance_widget = None
 
         self.right_layout.addStretch()
         self.right_widget.setLayout(self.right_layout)
@@ -264,10 +269,6 @@ class RunningDataApp(QWidget):
         self.setLayout(main_layout)
         self.setWindowTitle("RunningMate")
 
-        # ✅ Initialize Heatmap
-        # self.heatmap = PlotHeatmap(self.db, self.heatmap_layout)
-        # self.heatmap.get_heatmap()
-
         self.load_activities()
         self.update_button()
         self.update_pagination()
@@ -305,14 +306,29 @@ class RunningDataApp(QWidget):
             print("No activity found!")
             return  # Avoid errors if no data is found
 
-        # Remove the previous widget if exists
+        best_performance_data = self.best_performance_handler.get_best_segments(
+            activity_data["id"],
+            activity_data["category"],
+        )
+
         if self.activity_widget:
             self.right_layout.removeWidget(self.activity_widget)
             self.activity_widget.deleteLater()
+            self.activity_widget = None
 
-        # Create and display the new activity widget
+        if self.activity_performance_widget:
+            self.right_layout.removeWidget(self.activity_performance_widget)
+            self.activity_performance_widget.deleteLater()
+            self.activity_performance_widget = None
+
         self.activity_widget = ActivityWidget(activity_data)
         self.right_layout.insertWidget(0, self.activity_widget)
+
+        if best_performance_data:
+            self.activity_performance_widget = BestPerformanceWidget(
+                best_performance_data
+            )
+            self.right_layout.insertWidget(1, self.activity_performance_widget)
 
     def update_heatmap(self, view_mode):
         heatmap_image = self.heatmap.get_heatmap(activity_type=view_mode)
