@@ -7,6 +7,23 @@ from utils.logger import logger
 
 class WeatherService:
     @staticmethod
+    def fetch_weather_data(url: str, params: dict) -> dict | None:
+        """
+        Generic function to handle API requests.
+
+        :param url: API endpoint.
+        :param params: Query parameters.
+        :return: JSON response as dict or None if request fails.
+        """
+        try:
+            response = requests.get(url, params=params)
+            response.raise_for_status()  # Raise exception for HTTP errors
+            return response.json()
+        except requests.RequestException as e:
+            logger.error(f"Failed to fetch weather data: {e}")
+            return None
+
+    @staticmethod
     def get_weather(lat: float, lon: float, date: str) -> dict | None:
         """
         :param lat: Latitude of the location.
@@ -47,15 +64,14 @@ class WeatherService:
             "timezone": "auto",
         }
 
-        response = requests.get(url, params=params)
-        data = response.json()
+        data = WeatherService.fetch_weather_data(url, params)
 
-        if "current" in data:
+        if data and "current" in data:
             logger.info("Successfully received current weather data")
             return {
                 "date": datetime.now().strftime("%Y-%m-%d"),
-                "max_temp": data["current"]["temperature_2m"],  # Current temp as max
-                "min_temp": data["current"]["temperature_2m"],  # Same as above
+                "max_temp": data["current"]["temperature_2m"],
+                "min_temp": data["current"]["temperature_2m"],
                 "precipitation": data["current"]["precipitation"],
                 "max_wind_speed": data["current"]["windspeed_10m"],
                 "weather_code": data["current"]["weather_code"],
@@ -93,10 +109,9 @@ class WeatherService:
             "timezone": "auto",
         }
 
-        response = requests.get(url, params=params)
-        data = response.json()
+        data = WeatherService.fetch_weather_data(url, params)
 
-        if "daily" in data:
+        if data and "daily" in data:
             logger.info(f"Successfully received historical weather data for {date}")
             return {
                 "max_temp": data["daily"]["temperature_2m_max"][0],

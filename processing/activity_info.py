@@ -110,6 +110,8 @@ class ActivityInfo:
 
             Example Output:
             {
+                "id": 1234,
+                "category": "RUN",
                 "date": "Friday 14:30",
                 "title": "Evening Run",
                 "distance": 5.42,
@@ -224,6 +226,8 @@ class ActivityInfo:
                 extra_data = extra.iloc[0].to_dict()
 
         return {
+            "id": activity_id,
+            "category": current_type,
             "date": formatted_date,
             "title": activity["title"],
             "distance": activity["distance"],  # Already in KM
