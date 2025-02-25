@@ -503,6 +503,41 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
                     "ALTER TABLE weather ADD COLUMN weather_code INTEGER DEFAULT 0",
                 ],
             ),
+            (
+                47,
+                """
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY,
+                    name TEXT,
+                    weight REAL,
+                    age INTEGER,
+                    height INTEGER,
+                    hr_min INTEGER,
+                    hr_max INTEGER,
+                    vo2max REAL,
+                    zone1 INTEGER,
+                    zone2 INTEGER,
+                    zone3 INTEGER,
+                    zone4 INTEGER,
+                    zone5 INTEGER
+                )
+                """,
+            ),
+            (
+                48,
+                [
+                    "ALTER TABLE bikes DROP COLUMN status",
+                    "ALTER TABLE shoes DROP COLUMN status",
+                    "ALTER TABLE bikes ADD COLUMN status BOOLEAN DEFAULT 1",
+                    "ALTER TABLE shoes ADD COLUMN status BOOLEAN DEFAULT 1",
+                ],
+            ),
+            (
+                49,
+                [
+                    "ALTER TABLE users ADD COLUMN birthday TEXT",
+                ],
+            ),
         ]
     )
 
