@@ -4,34 +4,57 @@ from database.database_handler import DatabaseHandler
 from utils.calculate_age import calculate_age
 
 
-class UserSettings():
+class UserSettings:
     def __init__(self, db_handler: DatabaseHandler):
         """Initialize the database connection."""
         self.cursor = db_handler.cursor
         self.conn = db_handler.conn
 
-
-    def insert_or_update_user(self, name: str, weight: float, height: int, hr_min: int, hr_max: int, birthday: str, id = None) -> None:
+    def insert_or_update_user(
+        self,
+        name: str,
+        weight: float,
+        height: int,
+        hr_min: int,
+        hr_max: int,
+        birthday: str,
+        id=None,
+    ) -> None:
         """
         Inserts or updates user general information.
         """
         age = calculate_age(birthday)
 
         if id:
-            self.cursor.execute("UPDATE users SET name = ?, weight = ?, age = ?, height = ?, hr_min= ?, hr_max = ?, birthday = ? WHERE id = ?",
-                                (name, weight, age, height, hr_min, hr_max, birthday, id))
+            self.cursor.execute(
+                "UPDATE users SET name = ?, weight = ?, age = ?, height = ?, hr_min= ?, hr_max = ?, birthday = ? WHERE id = ?",
+                (name, weight, age, height, hr_min, hr_max, birthday, id),
+            )
         else:
-            self.cursor.execute("INSERT INTO users (name, weight, age, height, hr_min, hr_max, birthday) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                            (name, weight, age, height, hr_min, hr_max,birthday ))
+            self.cursor.execute(
+                "INSERT INTO users (name, weight, age, height, hr_min, hr_max, birthday) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (name, weight, age, height, hr_min, hr_max, birthday),
+            )
         self.conn.commit()
 
-    def set_heart_rates_zones(self, id: int, vo2max: float, zone1: int, zone2: int, zone3: int, zone4: int, zone5: int) -> None:
+    def set_heart_rates_zones(
+        self,
+        id: int,
+        vo2max: float,
+        zone1: int,
+        zone2: int,
+        zone3: int,
+        zone4: int,
+        zone5: int,
+    ) -> None:
         """
         Inserts or updates hr zones and vo2max.
         """
         if id:
-            self.cursor.execute("UPDATE users SET vo2max=?, zone1=?, zone2=?, zone3=?, zone4=?, zone5=? WHERE id = ?",
-                                (vo2max, zone1, zone2, zone3, zone4, zone5))
+            self.cursor.execute(
+                "UPDATE users SET vo2max=?, zone1=?, zone2=?, zone3=?, zone4=?, zone5=? WHERE id = ?",
+                (vo2max, zone1, zone2, zone3, zone4, zone5),
+            )
         self.conn.commit()
 
     def get_user_data(self) -> Optional[dict[str, any]]:
@@ -46,10 +69,14 @@ class UserSettings():
         """
         Inserts a new shoe into the database.
         """
-        self.cursor.execute("INSERT INTO shoes (name, status) VALUES (?, ?)", (name, status))
+        self.cursor.execute(
+            "INSERT INTO shoes (name, status) VALUES (?, ?)", (name, status)
+        )
         self.conn.commit()
 
-    def get_shoes(self) -> list[dict[Any, Any] | dict[str, Any] | dict[str, str] | dict[bytes, bytes]]:
+    def get_shoes(
+        self,
+    ) -> list[dict[Any, Any] | dict[str, Any] | dict[str, str] | dict[bytes, bytes]]:
         """
         Retrieves all shoes from the database.
         """
@@ -61,10 +88,15 @@ class UserSettings():
         """
         Inserts a new bike into the database.
         """
-        self.cursor.execute("INSERT INTO bikes (name, weight, status) VALUES (?, ?, ?)", (name, status, weight))
+        self.cursor.execute(
+            "INSERT INTO bikes (name, weight, status) VALUES (?, ?, ?)",
+            (name, status, weight),
+        )
         self.conn.commit()
 
-    def get_bikes(self) -> list[dict[Any, Any] | dict[str, Any] | dict[str, str] | dict[bytes, bytes]]:
+    def get_bikes(
+        self,
+    ) -> list[dict[Any, Any] | dict[str, Any] | dict[str, str] | dict[bytes, bytes]]:
         """
         Retrieves all bikes from the database.
         """
@@ -76,14 +108,18 @@ class UserSettings():
         """
         Updates the status of a bike.
         """
-        self.cursor.execute("UPDATE bikes SET status = ? WHERE name = ?", (status, name))
+        self.cursor.execute(
+            "UPDATE bikes SET status = ? WHERE name = ?", (status, name)
+        )
         self.conn.commit()
 
     def update_shoe_status(self, name: str, status: bool) -> None:
         """
         Updates the status of a shoe.
         """
-        self.cursor.execute("UPDATE shoes SET status = ? WHERE name = ?", (status, name))
+        self.cursor.execute(
+            "UPDATE shoes SET status = ? WHERE name = ?", (status, name)
+        )
         self.conn.commit()
 
     def delete_bike(self, id: int) -> None:

@@ -347,7 +347,6 @@ class RunningDataApp(QWidget):
             self.user_window.exec()
             self.user_window = None
 
-
     def trigger_load(self):
         if self.view_mode == ViewMode.RUN:
             self.load_runs()

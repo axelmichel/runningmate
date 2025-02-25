@@ -14,7 +14,11 @@ def calculate_age(birthday: str) -> int:
     try:
         birth_date = datetime.strptime(birthday, "%d.%m.%Y")
         today = datetime.today()
-        age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        age = (
+            today.year
+            - birth_date.year
+            - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        )
         return age
     except ValueError:
         return 0

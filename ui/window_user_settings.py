@@ -27,7 +27,7 @@ from utils.translations import _
 
 class UserSettingsWindow(QDialog):
 
-    def __init__(self, user_settings: UserSettings , parent=None):
+    def __init__(self, user_settings: UserSettings, parent=None):
         super().__init__()
 
         self.pages = None
@@ -110,7 +110,9 @@ class UserSettingsWindow(QDialog):
         self.btn_general = add_button("user-line", "General", self.general_page)
         self.btn_shoes = add_button("footprint-fill", "Shoes", self.shoes_page)
         self.btn_bikes = add_button("bike-line", "Bikes", self.bikes_page)
-        self.btn_heart_rate = add_button("heart-pulse-line", "Heart Rate Zones", self.heart_rate_page)
+        self.btn_heart_rate = add_button(
+            "heart-pulse-line", "Heart Rate Zones", self.heart_rate_page
+        )
 
         self.update_menu_buttons()
 
@@ -173,8 +175,12 @@ class UserSettingsWindow(QDialog):
         form_layout = QFormLayout()
         form_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         form_layout.setSpacing(20)
-        form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
-        form_layout.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        form_layout.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow
+        )
+        form_layout.setFormAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
         form_layout.setContentsMargins(0, 10, 0, 10)
         return form_layout
 
@@ -204,7 +210,9 @@ class UserSettingsWindow(QDialog):
         height = int(self.height_input.text())
         hr_min = int(self.hr_min_input.text())
         hr_max = int(self.hr_max_input.text())
-        self.db.insert_or_update_user(name, weight, height, hr_min, hr_max, birthday, id)
+        self.db.insert_or_update_user(
+            name, weight, height, hr_min, hr_max, birthday, id
+        )
         self.user = self.db.get_user_data()
         self.update_menu_buttons()
 
@@ -215,15 +223,18 @@ class UserSettingsWindow(QDialog):
 
         self.shoes_table = self.get_table()
         self.shoes_table.setColumnCount(4)
-        self.shoes_table.setHorizontalHeaderLabels([_("Shoe"), _("Distance"), _("In Use"), ""])
-        self.shoes_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.shoes_table.setHorizontalHeaderLabels(
+            [_("Shoe"), _("Distance"), _("In Use"), ""]
+        )
+        self.shoes_table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeMode.Stretch
+        )
         self.load_shoes()
         table_layout = QVBoxLayout()
         table_layout.addWidget(QLabel(_("Existing Shoes:")))
         table_layout.setSpacing(10)
         table_layout.addWidget(self.shoes_table)
         layout.addLayout(table_layout)
-
 
         form_layout = self.get_form()
         self.shoe_name = self.get_form_field()
@@ -236,7 +247,7 @@ class UserSettingsWindow(QDialog):
 
         form_box = QVBoxLayout()
         form_box.setSpacing(10)
-        title_label = QLabel(_('Add Shoe'))
+        title_label = QLabel(_("Add Shoe"))
         title_label.setStyleSheet(
             """
                 font-size: 14px;
@@ -275,8 +286,12 @@ class UserSettingsWindow(QDialog):
 
         self.bikes_table = self.get_table()
         self.bikes_table.setColumnCount(5)
-        self.bikes_table.setHorizontalHeaderLabels([_("Bike"), _("Weight"), _("Distance"), _("In Use"), ""])
-        self.bikes_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.bikes_table.setHorizontalHeaderLabels(
+            [_("Bike"), _("Weight"), _("Distance"), _("In Use"), ""]
+        )
+        self.bikes_table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeMode.Stretch
+        )
         self.load_bikes()
 
         table_layout = QVBoxLayout()
@@ -298,7 +313,7 @@ class UserSettingsWindow(QDialog):
 
         form_box = QVBoxLayout()
         form_box.setSpacing(10)
-        title_label = QLabel(_('Add Bike'))
+        title_label = QLabel(_("Add Bike"))
         title_label.setStyleSheet(
             """
                 font-size: 14px;
@@ -360,18 +375,29 @@ class UserSettingsWindow(QDialog):
         """
         if self.user:
             if self.user["vo2max"]:
-                self.vo2max_input.setText(str( self.user["vo2max"]))
+                self.vo2max_input.setText(str(self.user["vo2max"]))
             if self.user["zone1"]:
-                self.zone1_input.setText(str( self.user["zone1"]))
+                self.zone1_input.setText(str(self.user["zone1"]))
             if self.user["zone2"]:
-                self.zone2_input.setText(str( self.user["zone2"]))
+                self.zone2_input.setText(str(self.user["zone2"]))
             if self.user["zone3"]:
-                self.zone3_input.setText(str( self.user["zone3"]))
+                self.zone3_input.setText(str(self.user["zone3"]))
             if self.user["zone4"]:
-                self.zone4_input.setText(str( self.user["zone4"]))
+                self.zone4_input.setText(str(self.user["zone4"]))
             if self.user["zone5"]:
                 self.zone5_input.setText(str(self.user["zone5"]))
-            if not any([self.user["zone1"], self.user["zone2"], self.user["zone3"], self.user["zone4"], self.user["zone5"]]) and self.user["age"]:
+            if (
+                not any(
+                    [
+                        self.user["zone1"],
+                        self.user["zone2"],
+                        self.user["zone3"],
+                        self.user["zone4"],
+                        self.user["zone5"],
+                    ]
+                )
+                and self.user["age"]
+            ):
                 self.calculate_heart_rate_zones()
 
     def calculate_heart_rate_zones(self) -> None:
@@ -399,7 +425,9 @@ class UserSettingsWindow(QDialog):
         zone3 = int(self.zone3_input.text() or 0)
         zone4 = int(self.zone4_input.text() or 0)
         zone5 = int(self.zone5_input.text() or 0)
-        self.db.set_heart_rates_zones(self.user["id"], vo2max, hr_min, zone1, zone2, zone3, zone4, zone5)
+        self.db.set_heart_rates_zones(
+            self.user["id"], vo2max, hr_min, zone1, zone2, zone3, zone4, zone5
+        )
 
     def load_shoes(self) -> None:
         shoes = self.db.get_shoes()
@@ -410,20 +438,30 @@ class UserSettingsWindow(QDialog):
             status = row_data.get("status", False)
 
             name_item = QTableWidgetItem(name)
-            name_item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+            name_item.setTextAlignment(
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+            )
             self.shoes_table.setItem(row_index, 0, name_item)
 
             distance_item = QTableWidgetItem(distance)
-            distance_item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            distance_item.setTextAlignment(
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            )
             self.shoes_table.setItem(row_index, 1, distance_item)
 
             status_checkbox = QCheckBox()
             status_checkbox.setChecked(status)
-            status_checkbox.stateChanged.connect(lambda state, id=row_data["id"]: self.db.update_shoe_status(id, bool(state)))
+            status_checkbox.stateChanged.connect(
+                lambda state, id=row_data["id"]: self.db.update_shoe_status(
+                    id, bool(state)
+                )
+            )
             self.shoes_table.setCellWidget(row_index, 2, status_checkbox)
 
             delete_button = self.get_delete_button()
-            delete_button.clicked.connect(lambda _, id=row_data["id"]: self.db.delete_shoe(id))
+            delete_button.clicked.connect(
+                lambda _, id=row_data["id"]: self.db.delete_shoe(id)
+            )
             self.shoes_table.setCellWidget(row_index, 3, delete_button)
 
     def load_bikes(self) -> None:
@@ -436,27 +474,38 @@ class UserSettingsWindow(QDialog):
             weight = str(row_data.get("weight", "0.0"))
 
             name_item = QTableWidgetItem(name)
-            name_item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+            name_item.setTextAlignment(
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+            )
             self.bikes_table.setItem(row_index, 0, name_item)
 
             weight_item = QTableWidgetItem(weight)
-            weight_item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            weight_item.setTextAlignment(
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            )
             self.bikes_table.setItem(row_index, 1, weight_item)
 
             distance_item = QTableWidgetItem(distance)
-            distance_item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            distance_item.setTextAlignment(
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            )
             self.bikes_table.setItem(row_index, 2, distance_item)
 
             # Status Checkbox
             status_checkbox = QCheckBox()
             status_checkbox.setChecked(status)
             status_checkbox.stateChanged.connect(
-                lambda state, bike_id=row_data["id"]: self.db.update_bike_status(bike_id, bool(state)))
+                lambda state, bike_id=row_data["id"]: self.db.update_bike_status(
+                    bike_id, bool(state)
+                )
+            )
             self.bikes_table.setCellWidget(row_index, 3, status_checkbox)
 
             # Delete Button
             delete_button = self.get_delete_button()
-            delete_button.clicked.connect(lambda _, bike_id=row_data["id"]: self.db.delete_bike(bike_id))
+            delete_button.clicked.connect(
+                lambda _, bike_id=row_data["id"]: self.db.delete_bike(bike_id)
+            )
             self.bikes_table.setCellWidget(row_index, 4, delete_button)
 
     @staticmethod
@@ -484,7 +533,9 @@ class UserSettingsWindow(QDialog):
 
     def get_delete_button(self):
         delete_button = QPushButton()
-        delete_button.setIcon(QIcon(resource_path(f"icons/{self.icon_folder}/close-circle-line.svg")))
+        delete_button.setIcon(
+            QIcon(resource_path(f"icons/{self.icon_folder}/close-circle-line.svg"))
+        )
         delete_button.setToolTip(_("Delete"))
         delete_button.setFixedSize(30, 30)
         delete_button.setStyleSheet(
@@ -497,5 +548,6 @@ class UserSettingsWindow(QDialog):
                QPushButton:hover {{
                    background-color: {THEME.DELETE_HOVER};
                }}
-           """)
+           """
+        )
         return delete_button
