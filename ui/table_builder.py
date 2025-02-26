@@ -281,7 +281,7 @@ class TableBuilder:
         )
 
         delete_button = create_icon_button(
-            "close-circle-line.svg", _("Delete"), "#FF4C4C", "#FF3333"
+            "close-circle-line.svg", _("Delete"), THEME.DELETE_COLOR, THEME.DELETE_HOVER
         )
         delete_button.clicked.connect(
             lambda _, row=row_index: TableBuilder.handle_action_click(

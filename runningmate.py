@@ -21,6 +21,7 @@ from PyQt6.QtWidgets import (
 
 from database.database_handler import DatabaseHandler
 from database.migrations import apply_migrations
+from database.user_settings import UserSettings
 from importer.file.tcx_file import TcxFileImporter
 from importer.garmin.garmin import garmin_connect_login
 from processing.activity_info import ActivityInfo
@@ -35,6 +36,7 @@ from ui.side_bar import Sidebar
 from ui.table_builder import TableBuilder
 from ui.window_garmin_sync import GarminSyncWindow
 from ui.window_run_details import RunDetailsWindow
+from ui.window_user_settings import UserSettingsWindow
 from utils.app_mode import is_dark_mode
 from utils.resource_path import resource_path
 from utils.translations import _
@@ -82,8 +84,10 @@ class RunningDataApp(QWidget):
         self.page_label = None
         self.sync_window = None
         self.details_window = None
+        self.user_window = None
         self.tableWidget = None
         self.db = db_handler
+        self.userSettings = UserSettings(self.db)
         self.view_mode = ViewMode.ALL
         self.nav_bar = None
         self.sort_field = "date_time"
@@ -338,7 +342,10 @@ class RunningDataApp(QWidget):
             self.heatmap_label.setPixmap(pixmap)
 
     def trigger_tool_action(self, action):
-        print(action)
+        if action == "user":
+            self.user_window = UserSettingsWindow(self.userSettings, self)
+            self.user_window.exec()
+            self.user_window = None
 
     def trigger_load(self):
         if self.view_mode == ViewMode.RUN:
