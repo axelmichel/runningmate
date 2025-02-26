@@ -610,6 +610,16 @@ class DatabaseHandler:
         self.cursor.execute(f"SELECT COUNT(*) FROM {table}")
         return self.cursor.fetchone()[0]
 
+    def get_activity_by_file_id(self, file_id):
+        """
+        Fetch an activity ID by file ID.
+        :param file_id: The file ID to fetch
+        :return: int or None
+        """
+        self.cursor.execute("SELECT id FROM activities WHERE file_id = ?", (file_id,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
+
     def delete_media(self, activity_id, file_path):
         """Deletes a media entry from the database and removes the file."""
         try:
