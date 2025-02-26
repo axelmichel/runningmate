@@ -23,6 +23,7 @@ if not os.path.exists(APPDATA_DIR):
 
 SYNC_FILE = os.path.join(APPDATA_DIR, "sync.json")
 
+
 def save_sync(sync_type, sync_value):
     """
     :param sync_type: str, type of sync (e.g., 'last_garmin_sync', 'last_icloud_sync')

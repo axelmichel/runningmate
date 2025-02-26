@@ -25,6 +25,7 @@ from utils.translations import _
 
 class iCloudSyncDialog(QDialog):
     """Dialog window for iCloud sync settings."""
+
     sync_complete_signal = pyqtSignal()
 
     def __init__(self, file_dir, img_dir, db_handler: DatabaseHandler, parent=None):
@@ -65,10 +66,10 @@ class iCloudSyncDialog(QDialog):
         # ✅ Folder selection (One horizontal line)
         folder_layout = QHBoxLayout()
         self.status_label = QLabel(self.get_folder_name())
-        label_color = THEME.ACCENT_COLOR_LIGHT if self.icloud_folder else THEME.DISABLED_COLOR
-        self.status_label.setStyleSheet(
-            f"color: {label_color};"
+        label_color = (
+            THEME.ACCENT_COLOR_LIGHT if self.icloud_folder else THEME.DISABLED_COLOR
         )
+        self.status_label.setStyleSheet(f"color: {label_color};")
         select_button = QPushButton(_("Select iCloud Folder"))
         select_button.clicked.connect(self.select_folder)
         folder_layout.addWidget(self.status_label)
@@ -98,7 +99,6 @@ class iCloudSyncDialog(QDialog):
 
         self.setLayout(layout)
 
-
         if self.icloud_folder:
             self.check_and_update_info()
 
@@ -112,7 +112,9 @@ class iCloudSyncDialog(QDialog):
         since_date = None
         if last_sync_str:
             try:
-                since_date = datetime.datetime.strptime(last_sync_str, "%Y-%m-%d %H:%M:%S")
+                since_date = datetime.datetime.strptime(
+                    last_sync_str, "%Y-%m-%d %H:%M:%S"
+                )
             except ValueError:
                 since_date = None
         return since_date
@@ -153,10 +155,14 @@ class iCloudSyncDialog(QDialog):
             file_path = os.path.join(self.icloud_folder, file)
 
             if os.path.isfile(file_path):  # Ensure it's a file, not a folder
-                file_modified_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))
+                file_modified_time = datetime.datetime.fromtimestamp(
+                    os.path.getmtime(file_path)
+                )
 
                 if since_date is None or (
-                        isinstance(since_date, datetime.datetime) and file_modified_time > since_date):
+                    isinstance(since_date, datetime.datetime)
+                    and file_modified_time > since_date
+                ):
                     file_list.append(file)
 
         return file_list if file_list else None
@@ -166,16 +172,16 @@ class iCloudSyncDialog(QDialog):
         file_list = self.check_folder(self.since_date)
 
         if file_list:
-            self.file_info_label.setText(_("Found {count} new files. Press Sync to import.").format(count=len(file_list)))
-            self.file_info_label.setStyleSheet(
-                f"color: {THEME.ACCENT_COLOR};"
+            self.file_info_label.setText(
+                _("Found {count} new files. Press Sync to import.").format(
+                    count=len(file_list)
+                )
             )
+            self.file_info_label.setStyleSheet(f"color: {THEME.ACCENT_COLOR};")
             self.action_bar.set_submit_enabled(True)
         else:
             self.file_info_label.setText(_("No new files found."))
-            self.file_info_label.setStyleSheet(
-                f"color: {THEME.DISABLED_COLOR};"
-            )
+            self.file_info_label.setStyleSheet(f"color: {THEME.DISABLED_COLOR};")
             self.action_bar.set_submit_enabled(False)
 
     def prepare_import(self):
@@ -206,7 +212,9 @@ class iCloudSyncDialog(QDialog):
     def on_sync_complete(self):
         """Handle UI updates when import is finished."""
         self.log_output.append(_("iCloud Sync Completed!"))
-        save_sync("last_icloud_sync", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        save_sync(
+            "last_icloud_sync", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        )
         self.sync_complete_signal.emit()
 
     def show_sync_complete_message(self):

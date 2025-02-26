@@ -185,7 +185,7 @@ class UserSettingsWindow(QDialog):
         action_bar = DialogActionBar(
             cancel_action=self.close,
             submit_action=self.save_general_settings,
-            submit_label="Save"
+            submit_label="Save",
         )
 
         form_box.addWidget(action_bar)
@@ -287,9 +287,7 @@ class UserSettingsWindow(QDialog):
         form_box.addStretch(1)
 
         action_bar = DialogActionBar(
-            cancel_action=self.close,
-            submit_action=self.save_shoe,
-            submit_label="Add"
+            cancel_action=self.close, submit_action=self.save_shoe, submit_label="Add"
         )
 
         form_box.addWidget(action_bar)
@@ -359,9 +357,7 @@ class UserSettingsWindow(QDialog):
         form_box.addStretch(1)
 
         action_bar = DialogActionBar(
-            cancel_action=self.close,
-            submit_action=self.save_bike,
-            submit_label="Add"
+            cancel_action=self.close, submit_action=self.save_bike, submit_label="Add"
         )
 
         form_box.addWidget(action_bar)
@@ -406,7 +402,7 @@ class UserSettingsWindow(QDialog):
         action_bar = DialogActionBar(
             cancel_action=self.close,
             submit_action=self.save_heart_rate_zones,
-            submit_label="Set"
+            submit_label="Set",
         )
 
         form_box.addWidget(action_bar)

@@ -335,7 +335,9 @@ class TcxImportThread(QThread):
                     importer.by_file(file_path)  # ✅ If this crashes, it will be caught
                     self.log.emit(f"Successfully imported {filename}")
                 except Exception as e:
-                    error_msg = f"Failed to import {filename}: {e}\n{traceback.format_exc()}"
+                    error_msg = (
+                        f"Failed to import {filename}: {e}\n{traceback.format_exc()}"
+                    )
                     self.log.emit(error_msg)
 
                 progress_percent = int((index / total_files) * 100)
