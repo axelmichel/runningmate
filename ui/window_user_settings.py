@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
 )
 
 from database.user_settings import UserSettings
+from ui.dialog_action_bar import DialogActionBar
 from ui.side_bar import Sidebar
 from ui.themes import THEME
 from utils.app_mode import is_dark_mode
@@ -181,22 +182,13 @@ class UserSettingsWindow(QDialog):
         form_box.addLayout(form_layout)
         form_box.addStretch(1)
 
-        save_btn = QPushButton(_("Save"))
-        save_btn.setFixedWidth(100)
-        save_btn.setStyleSheet(
-            f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;"
+        action_bar = DialogActionBar(
+            cancel_action=self.close,
+            submit_action=self.save_general_settings,
+            submit_label="Save",
         )
-        save_btn.clicked.connect(self.save_general_settings)
 
-        cancel_btn = self.get_cancel()
-
-        button_layout = QHBoxLayout()
-        button_layout.addStretch(1)
-        button_layout.addWidget(cancel_btn)
-        button_layout.addWidget(save_btn)
-
-        form_box.addLayout(button_layout)
-
+        form_box.addWidget(action_bar)
         layout.addLayout(form_box)
 
         page.setLayout(layout)
@@ -294,22 +286,11 @@ class UserSettingsWindow(QDialog):
         form_box.addLayout(form_layout)
         form_box.addStretch(1)
 
-        save_btn = QPushButton(_("Add"))
-        save_btn.clicked.connect(self.save_shoe)
-        save_btn.setFixedWidth(100)
-        save_btn.setStyleSheet(
-            f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;"
+        action_bar = DialogActionBar(
+            cancel_action=self.close, submit_action=self.save_shoe, submit_label="Add"
         )
 
-        cancel_btn = self.get_cancel()
-
-        button_layout = QHBoxLayout()
-        button_layout.addStretch(1)
-        button_layout.addWidget(cancel_btn)
-        button_layout.addWidget(save_btn)
-
-        form_box.addLayout(button_layout)
-
+        form_box.addWidget(action_bar)
         layout.addLayout(form_box)
 
         page.setLayout(layout)
@@ -375,35 +356,16 @@ class UserSettingsWindow(QDialog):
         form_box.addLayout(form_layout)
         form_box.addStretch(1)
 
-        save_btn = QPushButton(_("Add"))
-        save_btn.clicked.connect(self.save_bike)
-        save_btn.setFixedWidth(100)
-        save_btn.setStyleSheet(
-            f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;"
+        action_bar = DialogActionBar(
+            cancel_action=self.close, submit_action=self.save_bike, submit_label="Add"
         )
 
-        cancel_btn = self.get_cancel()
-
-        button_layout = QHBoxLayout()
-        button_layout.addStretch(1)
-        button_layout.addWidget(cancel_btn)
-        button_layout.addWidget(save_btn)
-
-        form_box.addLayout(button_layout)
+        form_box.addWidget(action_bar)
         layout.addLayout(form_box)
 
         page.setLayout(layout)
 
         return page
-
-    def get_cancel(self) -> QPushButton:
-        cancel_btn = QPushButton(_("Cancel"))
-        cancel_btn.setFixedWidth(100)
-        cancel_btn.setStyleSheet(
-            f"background-color: {THEME.SYSTEM_BUTTON}; padding: 8px; border-radius: 5px;"
-        )
-        cancel_btn.clicked.connect(self.close)  #
-        return cancel_btn
 
     def save_bike(self) -> None:
         name = self.bike_name.text()
@@ -437,21 +399,13 @@ class UserSettingsWindow(QDialog):
         form_box.addLayout(form_layout)
         form_box.addStretch(1)
 
-        save_btn = QPushButton(_("Set"))
-        save_btn.clicked.connect(self.save_heart_rate_zones)
-        save_btn.setFixedWidth(100)
-        save_btn.setStyleSheet(
-            f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;"
+        action_bar = DialogActionBar(
+            cancel_action=self.close,
+            submit_action=self.save_heart_rate_zones,
+            submit_label="Set",
         )
 
-        cancel_btn = self.get_cancel()
-
-        button_layout = QHBoxLayout()
-        button_layout.addStretch(1)
-        button_layout.addWidget(cancel_btn)
-        button_layout.addWidget(save_btn)
-
-        form_box.addLayout(button_layout)
+        form_box.addWidget(action_bar)
         layout.addLayout(form_box)
 
         self.load_heart_rate_data()

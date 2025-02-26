@@ -45,6 +45,10 @@ class MenuBar(QMenuBar):
         garmin_action.triggered.connect(parent.garmin_connect)
         file_menu.addAction(garmin_action)
 
+        icloud_action = QAction("ICloud Sync", self)
+        icloud_action.triggered.connect(parent.icloud_sync)
+        file_menu.addAction(icloud_action)
+
         settings_action = QAction("Settings", self)
         settings_action.setShortcut(settings_shortcut)
         file_menu.addAction(settings_action)

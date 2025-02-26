@@ -35,6 +35,7 @@ from ui.main_menu import MenuBar
 from ui.side_bar import Sidebar
 from ui.table_builder import TableBuilder
 from ui.window_garmin_sync import GarminSyncWindow
+from ui.window_icloud_sync import iCloudSyncDialog
 from ui.window_run_details import RunDetailsWindow
 from ui.window_user_settings import UserSettingsWindow
 from utils.app_mode import is_dark_mode
@@ -420,6 +421,11 @@ class RunningDataApp(QWidget):
             self.tableWidget, ViewMode.ALL, self.sort_field, self.sort_direction
         )
 
+    def icloud_sync(self):
+        self.sync_window = iCloudSyncDialog(FILE_DIR, IMG_DIR, self.db, self)
+        self.sync_window.exec()
+        self.sync_window = None
+
     def load_runs(self):
         runs = self.db.fetch_runs(
             start=self.offset,
@@ -504,22 +510,22 @@ class RunningDataApp(QWidget):
         importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db, self)
         uploaded = importer.by_upload()
         if uploaded:
-            self.heatmap.clear_heatmaps()
             self.processed_msg()
-            self.trigger_load()
-            self.update_infoCards()
-            self.update_heatmap(self.view_mode)
-            self.update_activity_view(self.view_mode)
+            self.refresh_view()
 
     def refresh_entry(self, activity_id):
         importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db, self)
         imported = importer.by_activity(activity_id)
         if imported:
             self.processed_msg(activity_id)
-            self.trigger_load()
-            self.update_infoCards()
-            self.update_heatmap(self.view_mode)
-            self.update_activity_view(self.view_mode)
+            self.refresh_view()
+
+    def refresh_view(self):
+        self.heatmap.clear_heatmaps()
+        self.trigger_load()
+        self.update_infoCards()
+        self.update_heatmap(self.view_mode)
+        self.update_activity_view(self.view_mode)
 
     def delete_entry(self, activity_id):
         """Delete the selected activity after confirmation."""
