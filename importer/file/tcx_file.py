@@ -1,9 +1,11 @@
 import os
 import tarfile
+import traceback
 
 import numpy as np
 import pandas as pd
 from PyQt6.QtCore import QThread, pyqtSignal
+from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
 from database.database_handler import DatabaseHandler
@@ -129,11 +131,12 @@ class TcxFileImporter:
         if not activity_id:
             existing_activity = self.db.get_activity_by_file_id(name)
             if existing_activity:
-                QMessageBox.information(
-                    None,
-                    _("Duplicate File"),
-                    _("This activity has already been imported."),
-                )
+                if QThread.currentThread() == QGuiApplication.instance().thread():
+                    QMessageBox.information(
+                        None,
+                        _("Duplicate File"),
+                        _("This activity has already been imported."),
+                    )
                 return False
 
         if not activity_id:
@@ -296,6 +299,7 @@ class TcxFileImporter:
 
 class TcxImportThread(QThread):
     log = pyqtSignal(str)
+    progress = pyqtSignal(int)
     finished = pyqtSignal()
 
     def __init__(self, file_dir, image_path, db_handler: DatabaseHandler):
@@ -305,14 +309,40 @@ class TcxImportThread(QThread):
         self.db = db_handler
 
     def run(self):
-        importer = TcxFileImporter(self.file_dir, self.image_path, self.db)
-        for filename in os.listdir(self.file_dir):
-            if filename.endswith(".tcx"):
+        """Runs the TCX import process in a separate thread."""
+        try:
+            importer = TcxFileImporter(self.file_dir, self.image_path, self.db)
+
+            # ✅ Check if the directory exists
+            if not os.path.exists(self.file_dir):
+                self.log.emit(f"Error: Directory '{self.file_dir}' does not exist.")
+                self.finished.emit()
+                return
+
+            # ✅ Get .tcx files
+            tcx_files = [f for f in os.listdir(self.file_dir) if f.endswith(".tcx")]
+            total_files = len(tcx_files)
+
+            if total_files == 0:
+                self.log.emit("No .tcx files found for import.")
+                self.finished.emit()
+                return
+
+            for index, filename in enumerate(tcx_files, start=1):
                 file_path = os.path.join(self.file_dir, filename)
+
                 try:
-                    importer.by_file(file_path)
+                    importer.by_file(file_path)  # ✅ If this crashes, it will be caught
                     self.log.emit(f"Successfully imported {filename}")
                 except Exception as e:
-                    self.log.emit(f"Failed to import {filename}: {e}")
+                    error_msg = f"Failed to import {filename}: {e}\n{traceback.format_exc()}"
+                    self.log.emit(error_msg)
 
-        self.finished.emit()
+                progress_percent = int((index / total_files) * 100)
+                self.progress.emit(progress_percent)
+
+        except Exception as e:
+            error_msg = f"Critical Thread Error: {e}\n{traceback.format_exc()}"
+            self.log.emit(error_msg)
+        finally:
+            self.finished.emit()

@@ -7,7 +7,7 @@ from importer.file.tcx_file import TcxImportThread
 from importer.garmin.garmin import (
     SyncGarminThread,
     get_first_activity_date,
-    load_sync_date,
+    load_sync,
 )
 from utils.translations import _
 
@@ -44,7 +44,7 @@ class GarminSyncWindow(QDialog):
         self.setLayout(self.layout)
 
     def start_sync(self):
-        min_date_str = load_sync_date()
+        min_date_str = load_sync("last_garmin_sync")
         if not min_date_str:
             min_date_str = get_first_activity_date(self.client)
 

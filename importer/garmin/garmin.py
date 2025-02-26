@@ -21,20 +21,54 @@ APPDATA_DIR = os.path.expanduser("~/RunningData/appdata")
 if not os.path.exists(APPDATA_DIR):
     os.makedirs(APPDATA_DIR)
 
+SYNC_FILE = os.path.join(APPDATA_DIR, "sync.json")
 
-def save_sync_date(date):
-    sync_file = os.path.join(APPDATA_DIR, "sync.json")
-    with open(sync_file, "w") as f:
-        json.dump({"last_garmin_sync": date}, f)
+def save_sync(sync_type, sync_value):
+    """
+    :param sync_type: str, type of sync (e.g., 'last_garmin_sync', 'last_icloud_sync')
+    :param sync_value: str
+    """
+    sync_data = load_full_sync()  # Load existing data
+    sync_data[sync_type] = sync_value  # Update the specific sync type
+
+    with open(SYNC_FILE, "w") as f:
+        json.dump(sync_data, f)
 
 
-def load_sync_date():
-    sync_file = os.path.join(APPDATA_DIR, "sync.json")
-    if os.path.exists(sync_file):
-        with open(sync_file) as f:
-            data = json.load(f)
-            return data.get("last_garmin_sync")
-    return None
+def load_sync(sync_type):
+    """
+    Load the sync date for a specific sync type.
+
+    :param sync_type: str, type of sync to retrieve (e.g., 'garmin_sync', 'icloud_sync')
+    :return: str or None, last sync date for the given sync type
+    """
+    sync_data = load_full_sync()
+    return sync_data.get(sync_type, None)
+
+
+def load_full_sync():
+    """
+    Load all stored sync dates from the JSON file.
+
+    :return: dict, all sync dates (e.g., {'last_garmin_sync': '2025-02-26T10:30:00', 'last_icloud_sync': '2025-02-25T09:00:00'})
+    """
+    if os.path.exists(SYNC_FILE):
+        with open(SYNC_FILE, "r") as f:
+            return json.load(f)
+    return {}  # Return an empty dictionary if file doesn't exist
+
+
+def delete_from_sync(sync_type):
+    """
+    Delete a specific sync type entry from the sync file.
+
+    :param sync_type: str, the type of sync to delete
+    """
+    sync_data = load_full_sync()
+    if sync_type in sync_data:
+        del sync_data[sync_type]
+        with open(SYNC_FILE, "w") as f:
+            json.dump(sync_data, f)
 
 
 def get_first_activity_date(client):
@@ -179,5 +213,5 @@ class SyncGarminThread(QThread):
             self.progress.emit(int((completed / total_days) * 100))
             current_date += timedelta(days=1)
 
-        save_sync_date(latest_date.strftime("%Y-%m-%d"))
+        save_sync("last_garmin_sync", latest_date.strftime("%Y-%m-%d"))
         self.finished.emit()
