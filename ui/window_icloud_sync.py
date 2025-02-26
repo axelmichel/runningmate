@@ -196,7 +196,7 @@ class iCloudSyncDialog(QDialog):
             dest_path = os.path.join(self.file_dir, file)
             try:
                 shutil.copy2(source_path, dest_path)
-            except (FileNotFoundError, PermissionError, OSError) as e:
+            except (FileNotFoundError, PermissionError, OSError):
                 logger.critical(f"Failed to copy file: {source_path} to {dest_path}")
                 return
 
