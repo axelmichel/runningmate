@@ -20,6 +20,7 @@ from importer.file.tcx_file import TcxImportThread
 from importer.garmin.garmin import load_sync, save_sync
 from ui.dialog_action_bar import DialogActionBar
 from ui.themes import THEME
+from utils.logger import logger
 from utils.translations import _
 
 
@@ -193,7 +194,11 @@ class iCloudSyncDialog(QDialog):
         for file in file_list:
             source_path = os.path.join(self.icloud_folder, file)
             dest_path = os.path.join(self.file_dir, file)
-            shutil.copy2(source_path, dest_path)
+            try:
+                shutil.copy2(source_path, dest_path)
+            except (FileNotFoundError, PermissionError, OSError) as e:
+                logger.critical(f"Failed to copy file: {source_path} to {dest_path}")
+                return
 
         self.start_import()  # ✅ Start import after copying
 
