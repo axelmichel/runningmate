@@ -9,11 +9,12 @@ from PyQt6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QSplitter,
     QStackedWidget,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
-    QWidget, QSplitter,
+    QWidget,
 )
 
 from database.user_settings import UserSettings
@@ -78,10 +79,10 @@ class UserSettingsWindow(QDialog):
         self.setGeometry(100, 100, 800, 500)
 
         nav_buttons = {
-            'user': ("user-line.svg", "General"),
-            'shoes': ("footprint-fill.svg", "Shoes"),
-            'bikes': ("bike-line.svg", "Bikes"),
-            'zones': ("heart-pulse-line.svg", "Heart Rate Zones"),
+            "user": ("user-line.svg", "General"),
+            "shoes": ("footprint-fill.svg", "Shoes"),
+            "bikes": ("bike-line.svg", "Bikes"),
+            "zones": ("heart-pulse-line.svg", "Heart Rate Zones"),
         }
 
         main_layout = QHBoxLayout()
@@ -112,9 +113,7 @@ class UserSettingsWindow(QDialog):
         self.pages.addWidget(self.heart_rate_page)
 
         splitter.addWidget(self.pages)
-        splitter.setSizes(
-            [50,750]
-        )
+        splitter.setSizes([50, 750])
 
         splitter.setCollapsible(0, False)  # Left Panel is NOT collapsible
         splitter.setCollapsible(1, False)  # Center Panel is NOT collapsible
@@ -134,9 +133,8 @@ class UserSettingsWindow(QDialog):
         )
 
         main_layout.addWidget(splitter)
-        self.nav_bar.set_active_action('user')
+        self.nav_bar.set_active_action("user")
         self.setLayout(main_layout)
-
 
     def set_active_page(self, page) -> None:
         if page == "user":
@@ -185,7 +183,9 @@ class UserSettingsWindow(QDialog):
 
         save_btn = QPushButton(_("Save"))
         save_btn.setFixedWidth(100)
-        save_btn.setStyleSheet(f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;")
+        save_btn.setStyleSheet(
+            f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;"
+        )
         save_btn.clicked.connect(self.save_general_settings)
 
         cancel_btn = self.get_cancel()
@@ -297,7 +297,9 @@ class UserSettingsWindow(QDialog):
         save_btn = QPushButton(_("Add"))
         save_btn.clicked.connect(self.save_shoe)
         save_btn.setFixedWidth(100)
-        save_btn.setStyleSheet(f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;")
+        save_btn.setStyleSheet(
+            f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;"
+        )
 
         cancel_btn = self.get_cancel()
 
@@ -360,7 +362,6 @@ class UserSettingsWindow(QDialog):
         form_layout.addRow("Weight (KG):", self.bike_weight)
         form_layout.addRow("Status:", self.bike_status)
 
-
         form_box = QVBoxLayout()
         form_box.setSpacing(10)
         title_label = QLabel(_("Add Bike"))
@@ -377,7 +378,9 @@ class UserSettingsWindow(QDialog):
         save_btn = QPushButton(_("Add"))
         save_btn.clicked.connect(self.save_bike)
         save_btn.setFixedWidth(100)
-        save_btn.setStyleSheet(f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;")
+        save_btn.setStyleSheet(
+            f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;"
+        )
 
         cancel_btn = self.get_cancel()
 
@@ -396,8 +399,10 @@ class UserSettingsWindow(QDialog):
     def get_cancel(self) -> QPushButton:
         cancel_btn = QPushButton(_("Cancel"))
         cancel_btn.setFixedWidth(100)
-        cancel_btn.setStyleSheet(f"background-color: {THEME.SYSTEM_BUTTON}; padding: 8px; border-radius: 5px;")
-        cancel_btn.clicked.connect(self.close)#
+        cancel_btn.setStyleSheet(
+            f"background-color: {THEME.SYSTEM_BUTTON}; padding: 8px; border-radius: 5px;"
+        )
+        cancel_btn.clicked.connect(self.close)  #
         return cancel_btn
 
     def save_bike(self) -> None:
@@ -435,7 +440,9 @@ class UserSettingsWindow(QDialog):
         save_btn = QPushButton(_("Set"))
         save_btn.clicked.connect(self.save_heart_rate_zones)
         save_btn.setFixedWidth(100)
-        save_btn.setStyleSheet(f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;")
+        save_btn.setStyleSheet(
+            f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;"
+        )
 
         cancel_btn = self.get_cancel()
 
