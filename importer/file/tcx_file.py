@@ -126,10 +126,14 @@ class TcxFileImporter:
 
         name = os.path.basename(file_path).replace(".tcx", "")
 
-        if activity_id is None:
+        if not activity_id:
             existing_activity = self.db.get_activity_by_file_id(name)
             if existing_activity:
-                QMessageBox.information(None, _("Duplicate File"), _("This activity has already been imported."))
+                QMessageBox.information(
+                    None,
+                    _("Duplicate File"),
+                    _("This activity has already been imported."),
+                )
                 return False
 
         if not activity_id:
