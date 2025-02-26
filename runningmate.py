@@ -288,6 +288,7 @@ class RunningDataApp(QWidget):
         self.current_page = 0
 
         self.trigger_load()
+        self.update_infoCards()
         self.update_button()
         self.update_pagination()
         self.update_heatmap(view_mode)
