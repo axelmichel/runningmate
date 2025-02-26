@@ -22,6 +22,7 @@ from processing.visualization import plot_activity_map, plot_elevation, plot_tra
 from processing.weather import WeatherService
 from utils.logger import logger
 from utils.save_round import safe_round
+from utils.translations import _
 
 
 def get_weather_segment(details):
@@ -50,20 +51,23 @@ class TcxFileImporter:
         file_path, _ = QFileDialog.getOpenFileName(
             None, "Select TCX File", "", "TCX Files (*.tcx)"
         )
+        if not file_path:  # If the user cancels, return False
+            return False
 
-        if file_path:
-            self.process_file(file_path, activity_id)
+        processed = self.process_file(file_path, activity_id)
+        if processed:
             self.archive_file(file_path)
             return True
         return False
 
     def by_file(self, file_path, activity_id=None):
         if file_path:
-            self.process_file(file_path, activity_id)
-            self.archive_file(file_path)
-            os.remove(file_path)
-            return True
-        return
+            processed = self.process_file(file_path, activity_id)
+            if processed:
+                self.archive_file(file_path)
+                os.remove(file_path)
+                return True
+        return False
 
     def by_activity(self, activity_id):
         proceed = False
@@ -110,7 +114,7 @@ class TcxFileImporter:
             return True
         return False
 
-    def process_file(self, file_path, activity_id=None):
+    def process_file(self, file_path, activity_id=None):  # noqa: C901
         parser = TcxFileParser()
         df, activity_type = parser.parse_tcx(file_path)
         details = TcxSegmentParser.parse_segments(df, activity_type)
@@ -122,6 +126,12 @@ class TcxFileImporter:
 
         name = os.path.basename(file_path).replace(".tcx", "")
 
+        if activity_id is None:
+            existing_activity = self.db.get_activity_by_file_id(name)
+            if existing_activity:
+                QMessageBox.information(None, _("Duplicate File"), _("This activity has already been imported."))
+                return False
+
         if not activity_id:
             next_id = self.db.get_next_activity_id()
         else:
@@ -129,7 +139,6 @@ class TcxFileImporter:
             next_id = activity_id
 
         computed_data = self.compute_data(df, name)
-        logger.debug(f"computed_data: {computed_data}")
         computed_data["title"] = generate_activity_title(
             mapActivityTypes(activity_type), computed_data["date"]
         )
@@ -172,6 +181,7 @@ class TcxFileImporter:
             self.db.insert_activity(computed_data, details)
             if weather_data:
                 self.db.insert_weather(weather_data)
+        return True
 
     def process_run(self, df, computed_data, activity_id=None):
         avg_steps, total_steps = calculate_steps(df)
