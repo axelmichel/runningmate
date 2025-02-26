@@ -14,6 +14,7 @@ class DatabaseHandler:
         "title": "activities.title",
         "duration": "activities.duration",
         "distance": "activities.distance",
+        "elevation_gain": "activities.elevation_gain",
     }
 
     TABLE_COLUMNS = {
