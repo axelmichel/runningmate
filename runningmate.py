@@ -281,7 +281,7 @@ class RunningDataApp(QWidget):
 
     def set_active_view(self, view_mode):
         """Switch the view and update button styles"""
-        if view_mode == self.view_mode:  # ✅ Prevent unnecessary recursive calls
+        if view_mode == self.view_mode:
             return
         self.view_mode = view_mode
         self.offset = 0
@@ -501,19 +501,24 @@ class RunningDataApp(QWidget):
 
     def upload_tcx_file(self):
         importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db, self)
-        importer.by_upload()
-        self.heatmap.clear_heatmaps()
-        self.update_heatmap(self.view_mode)
-        self.update_infoCards()
-        self.processed_msg()
-        self.set_active_view(self.view_mode)
+        uploaded = importer.by_upload()
+        if uploaded:
+            self.heatmap.clear_heatmaps()
+            self.processed_msg()
+            self.trigger_load()
+            self.update_infoCards()
+            self.update_heatmap(self.view_mode)
+            self.update_activity_view(self.view_mode)
 
     def refresh_entry(self, activity_id):
         importer = TcxFileImporter(FILE_DIR, IMG_DIR, self.db, self)
         imported = importer.by_activity(activity_id)
         if imported:
             self.processed_msg(activity_id)
-            self.set_active_view(self.view_mode)
+            self.trigger_load()
+            self.update_infoCards()
+            self.update_heatmap(self.view_mode)
+            self.update_activity_view(self.view_mode)
 
     def delete_entry(self, activity_id):
         """Delete the selected activity after confirmation."""
@@ -528,7 +533,10 @@ class RunningDataApp(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             self.db.delete_activity(activity_id)
-            self.set_active_view(self.view_mode)
+            self.trigger_load()
+            self.update_infoCards()
+            self.update_heatmap(self.view_mode)
+            self.update_activity_view(self.view_mode)
 
     def processed_msg(self, activity_id=None):
         msg = QMessageBox()
