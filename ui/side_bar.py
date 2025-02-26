@@ -32,6 +32,7 @@ class Sidebar(QWidget):
         """
         super().__init__(parent)
 
+        self.button_states = None
         self.parent_widget = parent
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -45,6 +46,7 @@ class Sidebar(QWidget):
         }
 
         self.buttons = {}
+        self.button_states = {}
         for action, (icon_path, text) in self.actions.items():
             button = OpacityButton(f"  {_(text)}")
             button.setCheckable(True)
@@ -55,6 +57,7 @@ class Sidebar(QWidget):
             button.setStyleSheet(self.get_button_style())
 
             self.buttons[action] = button
+            self.button_states[action] = True
             self.layout.addWidget(button)
 
         self.update_button_labels()
@@ -68,6 +71,27 @@ class Sidebar(QWidget):
         if action in self.actions:
             self.buttons[action].setChecked(True)
             self.action_triggered.emit(action)
+
+    def set_button_enabled(self, action, enabled):
+        """
+        Enables or disables a specific button.
+
+        :param action: str, the button identifier.
+        :param enabled: bool, whether the button should be enabled or disabled.
+        """
+        if action in self.buttons:
+            self.buttons[action].setEnabled(enabled)
+            self.button_states[action] = enabled
+
+    def update_buttons_state(self, states):
+        """
+        Updates multiple buttons' enabled state based on a dictionary.
+
+        :param states: dict, mapping of action names to boolean enabled states.
+            Example: {"identifier": True, "another_action": False}
+        """
+        for action, enabled in states.items():
+            self.set_button_enabled(action, enabled)
 
     def update_button_labels(self):
         """

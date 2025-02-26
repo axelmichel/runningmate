@@ -4,7 +4,6 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QDialog,
     QFormLayout,
-    QFrame,
     QHBoxLayout,
     QHeaderView,
     QLabel,
@@ -14,11 +13,11 @@ from PyQt6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
-    QWidget,
+    QWidget, QSplitter,
 )
 
 from database.user_settings import UserSettings
-from ui.opacity_button import OpacityButton, get_opacity_button_style
+from ui.side_bar import Sidebar
 from ui.themes import THEME
 from utils.app_mode import is_dark_mode
 from utils.resource_path import resource_path
@@ -30,6 +29,7 @@ class UserSettingsWindow(QDialog):
     def __init__(self, user_settings: UserSettings, parent=None):
         super().__init__()
 
+        self.nav_bar = None
         self.pages = None
         self.general_page = None
         self.shoes_page = None
@@ -77,12 +77,27 @@ class UserSettingsWindow(QDialog):
         self.setWindowTitle("User Settings")
         self.setGeometry(100, 100, 800, 500)
 
+        nav_buttons = {
+            'user': ("user-line.svg", "General"),
+            'shoes': ("footprint-fill.svg", "Shoes"),
+            'bikes': ("bike-line.svg", "Bikes"),
+            'zones': ("heart-pulse-line.svg", "Heart Rate Zones"),
+        }
+
         main_layout = QHBoxLayout()
-        sidebar_layout = QVBoxLayout()
-        sidebar_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        sidebar_frame = QFrame()
-        sidebar_frame.setLayout(sidebar_layout)
-        sidebar_frame.setFixedWidth(200)
+
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.left_widget = QWidget()
+        self.left_layout = QVBoxLayout(self.left_widget)
+        self.left_layout.setContentsMargins(0, 0, 0, 0)
+        self.left_widget.setMinimumWidth(50)
+        self.left_widget.setMaximumWidth(200)
+
+        self.nav_bar = Sidebar(nav_buttons, self.left_widget)
+        self.nav_bar.action_triggered.connect(self.set_active_page)
+        self.left_layout.addWidget(self.nav_bar)
+        self.left_layout.addStretch()
+        splitter.addWidget(self.left_widget)
 
         self.pages = QStackedWidget()
 
@@ -96,50 +111,59 @@ class UserSettingsWindow(QDialog):
         self.pages.addWidget(self.bikes_page)
         self.pages.addWidget(self.heart_rate_page)
 
-        def add_button(icon, tooltip, page):
-            button = OpacityButton(f"  {_(tooltip)}")
-            button.setCheckable(True)
-            button.setAutoExclusive(True)
-            button.setStyleSheet(get_opacity_button_style())
-            button.setIcon(QIcon(resource_path(f"icons/{self.icon_folder}/{icon}.svg")))
-            button.setToolTip(_(tooltip))
-            button.clicked.connect(lambda: self.set_active_page(page, button))
-            sidebar_layout.addWidget(button)
-            return button
-
-        self.btn_general = add_button("user-line", "General", self.general_page)
-        self.btn_shoes = add_button("footprint-fill", "Shoes", self.shoes_page)
-        self.btn_bikes = add_button("bike-line", "Bikes", self.bikes_page)
-        self.btn_heart_rate = add_button(
-            "heart-pulse-line", "Heart Rate Zones", self.heart_rate_page
+        splitter.addWidget(self.pages)
+        splitter.setSizes(
+            [50,750]
         )
 
-        self.update_menu_buttons()
+        splitter.setCollapsible(0, False)  # Left Panel is NOT collapsible
+        splitter.setCollapsible(1, False)  # Center Panel is NOT collapsible
 
-        main_layout.addWidget(sidebar_frame)
-        main_layout.addWidget(self.pages, 1)
+        splitter.setStretchFactor(
+            0, 0
+        )  # Left panel remains at min width unless expanded
+        splitter.setStretchFactor(1, 1)  # Center panel takes priority in resizing
+
+        splitter.setStyleSheet(
+            """
+            QSplitter::handle {
+                background-color: #000;  /* Light Gray */
+                width: 1px;  /* Make divider thicker */
+            }
+        """
+        )
+
+        main_layout.addWidget(splitter)
+        self.nav_bar.set_active_action('user')
         self.setLayout(main_layout)
-        self.btn_general.setChecked(True)
 
-    def set_active_page(self, page, button=None) -> None:
-        if button:
-            button.setChecked(True)
-        self.pages.setCurrentWidget(page)
+
+    def set_active_page(self, page) -> None:
+        if page == "user":
+            self.pages.setCurrentWidget(self.general_page)
+        elif page == "shoes":
+            self.pages.setCurrentWidget(self.shoes_page)
+        elif page == "bikes":
+            self.pages.setCurrentWidget(self.bikes_page)
+        elif page == "zones":
+            self.pages.setCurrentWidget(self.heart_rate_page)
 
     def update_menu_buttons(self) -> None:
         """
         Updates the state of menu buttons. If no user is present, disables them.
         """
         user_available = self.user is not None
-        self.btn_shoes.setEnabled(user_available)
-        self.btn_bikes.setEnabled(user_available)
-        self.btn_heart_rate.setEnabled(user_available)
+        self.nav_bar.set_button_enabled("shoes", user_available)
+        self.nav_bar.set_button_enabled("bikes", user_available)
+        self.nav_bar.set_button_enabled("zones", user_available)
 
     def create_general_page(self) -> QWidget:
         page = QWidget()
         layout = QVBoxLayout()
+        layout.setContentsMargins(10, 10, 10, 10)
         self.set_page_title(layout, "General Settings")
 
+        form_box = QVBoxLayout()
         form_layout = self.get_form()
 
         self.name_input = self.get_form_field()
@@ -155,14 +179,28 @@ class UserSettingsWindow(QDialog):
         form_layout.addRow(_("Height (cm):"), self.height_input)
         form_layout.addRow(_("HRmax:"), self.hr_max_input)
         form_layout.addRow(_("HRmin:"), self.hr_min_input)
+
+        form_box.addLayout(form_layout)
+        form_box.addStretch(1)
+
         save_btn = QPushButton(_("Save"))
+        save_btn.setFixedWidth(100)
+        save_btn.setStyleSheet(f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;")
         save_btn.clicked.connect(self.save_general_settings)
-        layout.addLayout(form_layout)
-        self.load_general_settings()
-        layout.addWidget(save_btn)
-        layout.addStretch(1)
+
+        cancel_btn = self.get_cancel()
+
+        button_layout = QHBoxLayout()
+        button_layout.addStretch(1)
+        button_layout.addWidget(cancel_btn)
+        button_layout.addWidget(save_btn)
+
+        form_box.addLayout(button_layout)
+
+        layout.addLayout(form_box)
 
         page.setLayout(layout)
+        self.load_general_settings()
         return page
 
     def get_form_field(self):
@@ -242,8 +280,6 @@ class UserSettingsWindow(QDialog):
         self.shoe_status.setChecked(True)
         form_layout.addRow("Name:", self.shoe_name)
         form_layout.addRow("Status:", self.shoe_status)
-        save_btn = QPushButton(_("Add"))
-        save_btn.clicked.connect(self.save_shoe)
 
         form_box = QVBoxLayout()
         form_box.setSpacing(10)
@@ -256,7 +292,22 @@ class UserSettingsWindow(QDialog):
         )
         form_box.addWidget(title_label)
         form_box.addLayout(form_layout)
-        form_box.addWidget(save_btn)
+        form_box.addStretch(1)
+
+        save_btn = QPushButton(_("Add"))
+        save_btn.clicked.connect(self.save_shoe)
+        save_btn.setFixedWidth(100)
+        save_btn.setStyleSheet(f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;")
+
+        cancel_btn = self.get_cancel()
+
+        button_layout = QHBoxLayout()
+        button_layout.addStretch(1)
+        button_layout.addWidget(cancel_btn)
+        button_layout.addWidget(save_btn)
+
+        form_box.addLayout(button_layout)
+
         layout.addLayout(form_box)
 
         page.setLayout(layout)
@@ -308,8 +359,7 @@ class UserSettingsWindow(QDialog):
         form_layout.addRow("Name:", self.bike_name)
         form_layout.addRow("Weight (KG):", self.bike_weight)
         form_layout.addRow("Status:", self.bike_status)
-        save_btn = QPushButton(_("Add"))
-        save_btn.clicked.connect(self.save_bike)
+
 
         form_box = QVBoxLayout()
         form_box.setSpacing(10)
@@ -322,12 +372,33 @@ class UserSettingsWindow(QDialog):
         )
         form_box.addWidget(title_label)
         form_box.addLayout(form_layout)
-        form_box.addWidget(save_btn)
+        form_box.addStretch(1)
+
+        save_btn = QPushButton(_("Add"))
+        save_btn.clicked.connect(self.save_bike)
+        save_btn.setFixedWidth(100)
+        save_btn.setStyleSheet(f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;")
+
+        cancel_btn = self.get_cancel()
+
+        button_layout = QHBoxLayout()
+        button_layout.addStretch(1)
+        button_layout.addWidget(cancel_btn)
+        button_layout.addWidget(save_btn)
+
+        form_box.addLayout(button_layout)
         layout.addLayout(form_box)
 
         page.setLayout(layout)
 
         return page
+
+    def get_cancel(self) -> QPushButton:
+        cancel_btn = QPushButton(_("Cancel"))
+        cancel_btn.setFixedWidth(100)
+        cancel_btn.setStyleSheet(f"background-color: {THEME.SYSTEM_BUTTON}; padding: 8px; border-radius: 5px;")
+        cancel_btn.clicked.connect(self.close)#
+        return cancel_btn
 
     def save_bike(self) -> None:
         name = self.bike_name.text()
@@ -350,18 +421,31 @@ class UserSettingsWindow(QDialog):
         self.zone4_input = self.get_form_field()
         self.zone5_input = self.get_form_field()
 
+        form_box = QVBoxLayout()
+
         form_layout.addRow("VO2max:", self.vo2max_input)
         form_layout.addRow("Zone 1 MAX:", self.zone1_input)
         form_layout.addRow("Zone 2 MAX:", self.zone2_input)
         form_layout.addRow("Zone 3 MAX:", self.zone3_input)
         form_layout.addRow("Zone 4 MAX:", self.zone4_input)
         form_layout.addRow("Zone 5 MAX:", self.zone5_input)
+        form_box.addLayout(form_layout)
+        form_box.addStretch(1)
 
-        save_btn = QPushButton(_("Save Heart Rate Zones"))
+        save_btn = QPushButton(_("Set"))
         save_btn.clicked.connect(self.save_heart_rate_zones)
-        layout.addLayout(form_layout)
-        layout.addWidget(save_btn)
-        layout.addStretch(1)
+        save_btn.setFixedWidth(100)
+        save_btn.setStyleSheet(f"background-color: {THEME.MAIN_COLOR_LIGHT}; padding: 8px; border-radius: 5px;")
+
+        cancel_btn = self.get_cancel()
+
+        button_layout = QHBoxLayout()
+        button_layout.addStretch(1)
+        button_layout.addWidget(cancel_btn)
+        button_layout.addWidget(save_btn)
+
+        form_box.addLayout(button_layout)
+        layout.addLayout(form_box)
 
         self.load_heart_rate_data()
         page.setLayout(layout)
