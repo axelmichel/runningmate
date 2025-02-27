@@ -100,6 +100,13 @@ class DatabaseHandler:
         ],
     }
 
+    FILTER_MAPPINGS = {
+        "min_distance": "activities.distance", "max_distance": "activities.distance",
+        "min_duration": "activities.duration", "max_duration": "activities.duration",
+        "min_elevation": "activities.elevation_gain", "max_elevation": "activities.elevation_gain",
+        "min_date": "activities.date", "max_date": "activities.date",  # Ensure date filtering
+    }
+
     def __init__(self, db_path=None, conn=None):
         """Initialize the database connection."""
         if conn:
@@ -426,7 +433,7 @@ class DatabaseHandler:
         return highest_id + 1 if highest_id is not None else 1
 
     def fetch_activities(
-        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"
+        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC", filters=None
     ):
         """
         Fetch paginated entries from the activities table, sorting by date (most recent first).
@@ -435,12 +442,14 @@ class DatabaseHandler:
         :param limit: Number of records to fetch (default: 50)
         :param sort_field: Column name to sort by (default "activities.date")
         :param sort_direction: Sorting direction (ASC or DESC, default DESC)
+        :param filters: Dictionary of filters
         :return: List of dictionaries
         """
 
         if sort_field in self.SORT_MAP:
             sort_field = self.SORT_MAP[sort_field]
 
+        filter_params = None
         query = f"""
             SELECT
                 id as activity_id,
@@ -452,14 +461,18 @@ class DatabaseHandler:
                 distance,
                 title
             FROM activities
-            ORDER BY {sort_field} {sort_direction}
-            LIMIT ? OFFSET ?;
             """
+        if filters:
+            query += " WHERE 1=1"
+            query = self.add_filter_to_query(query, filters)
+            filter_params = self.get_filter_params(filters)
 
-        return self.fetch_all(query, start, limit)
+        query += f" ORDER BY {sort_field} {sort_direction} LIMIT ? OFFSET ?;"
+
+        return self.fetch_all(query, start, limit, filter_params)
 
     def fetch_runs(
-        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"
+        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC", filters=None
     ):
         """
         Fetch paginated entries from the runs table, sorting by date (most recent first).
@@ -468,11 +481,14 @@ class DatabaseHandler:
         :param limit: Number of records to fetch (default: 50)
         :param sort_field: Column name to sort by (default "activities.date")
         :param sort_direction: Sorting direction (ASC or DESC, default DESC)
+        :param filters: Dictionary of filters
         :return: List of dictionaries
         """
 
         if sort_field in self.SORT_MAP:
             sort_field = self.SORT_MAP[sort_field]
+
+        filter_params = None
 
         query = f"""
                SELECT
@@ -495,14 +511,39 @@ class DatabaseHandler:
                     runs.pause
                 FROM runs
                 JOIN activities ON activities.id = runs.activity_id
-                ORDER BY {sort_field} {sort_direction}
-                LIMIT ? OFFSET ?;
                """
 
-        return self.fetch_all(query, start, limit)
+        if filters:
+            query += " WHERE 1=1"
+            query = self.add_filter_to_query(query, filters)
+            filter_params = self.get_filter_params(filters)
+
+        query += f" ORDER BY {sort_field} {sort_direction} LIMIT ? OFFSET ?;"
+
+        return self.fetch_all(query, start, limit, filter_params)
+
+    def get_filter_params(self, filters):
+        params = []
+        search_text = filters.get("search_text", "")
+        if search_text:
+            params.extend([f"%{search_text}%", f"%{search_text}%"])
+        for key,__ in self.FILTER_MAPPINGS.items():
+            if key in filters:
+                params.append(filters[key])
+        return params
+
+    def add_filter_to_query(self, query, filters):
+        search_text = filters.get("search_text", "")
+        if search_text:
+            query += " AND (activities.title LIKE ? OR activities.comment LIKE ?)"
+        for key, column in self.FILTER_MAPPINGS.items():
+            if key in filters:
+                operator = ">=" if "min" in key else "<="
+                query += f" AND {column} {operator} ?"
+        return query
 
     def fetch_walks(
-        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"
+        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC", filters=None
     ):
         """
         Fetch paginated entries from the walks table, sorting by date (most recent first).
@@ -511,8 +552,10 @@ class DatabaseHandler:
         :param limit: Number of records to fetch (default: 50)
         :param sort_field: Column name to sort by (default "activities.date")
         :param sort_direction: Sorting direction (ASC or DESC, default DESC)
+        :param filters: Dictionary of filters
         :return: List of dictionaries
         """
+        filter_params = None
 
         if sort_field in self.SORT_MAP:
             sort_field = self.SORT_MAP[sort_field]
@@ -538,14 +581,19 @@ class DatabaseHandler:
                 walking.pause
             FROM walking
             JOIN activities ON activities.id = walking.activity_id
-            ORDER BY {sort_field} {sort_direction}
-            LIMIT ? OFFSET ?;
            """
 
-        return self.fetch_all(query, start, limit)
+        if filters:
+            query += " WHERE 1=1"
+            query = self.add_filter_to_query(query, filters)
+            filter_params = self.get_filter_params(filters)
+
+        query += f" ORDER BY {sort_field} {sort_direction} LIMIT ? OFFSET ?;"
+
+        return self.fetch_all(query, start, limit, filter_params)
 
     def fetch_rides(
-        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC"
+        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC", filters=None
     ):
         """
         Fetch paginated entries from the cycling table, sorting by date (most recent first).
@@ -554,8 +602,10 @@ class DatabaseHandler:
         :param limit: Number of records to fetch (default: 50)
         :param sort_field: Column name to sort by (default "activities.date")
         :param sort_direction: Sorting direction (ASC or DESC, default DESC)
+        :param filters: Dictionary of filters
         :return: List of dictionaries
         """
+        filter_params = None
 
         if sort_field in self.SORT_MAP:
             sort_field = self.SORT_MAP[sort_field]
@@ -579,20 +629,34 @@ class DatabaseHandler:
                    cycling.pause
                FROM cycling
                JOIN activities ON activities.id = cycling.activity_id
-               ORDER BY {sort_field} {sort_direction}
-               LIMIT ? OFFSET ?;
               """
 
-        return self.fetch_all(query, start, limit)
+        if filters:
+            query += " WHERE 1=1"
+            query = self.add_filter_to_query(query, filters)
+            filter_params = self.get_filter_params(filters)
 
-    def fetch_all(self, query, start=0, limit=50):
+        query += f" ORDER BY {sort_field} {sort_direction} LIMIT ? OFFSET ?;"
+
+        return self.fetch_all(query, start, limit, filter_params)
+
+    def fetch_all(self, query, start=0, limit=50, filter_params=None):
         """
         Fetch paginated entries from the database using a custom query.
         :param start: Offset for pagination (default: 0)
         :param limit: Number of records to fetch (default: 50
+        :param filter_params: List of additional parameters for the query
         :return: List of dictionaries
         """
-        self.cursor.execute(query, (limit, start))
+        if filter_params is None:
+            filter_params = []
+
+        params = filter_params + [limit, start]
+
+        print (f" params: {params}")
+        print (f" query: {query}")
+
+        self.cursor.execute(query, params)
         rows = self.cursor.fetchall()
 
         return [dict(row) for row in rows]
