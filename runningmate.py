@@ -34,6 +34,7 @@ from ui.info_card import InfoCard
 from ui.main_menu import MenuBar
 from ui.side_bar import Sidebar
 from ui.table_builder import TableBuilder
+from ui.widget_search import SearchWidget
 from ui.window_garmin_sync import GarminSyncWindow
 from ui.window_icloud_sync import iCloudSyncDialog
 from ui.window_run_details import RunDetailsWindow
@@ -87,7 +88,9 @@ class RunningDataApp(QWidget):
         self.details_window = None
         self.user_window = None
         self.tableWidget = None
+        self.search_widget = None
         self.db = db_handler
+        self.search_filter = None
         self.userSettings = UserSettings(self.db)
         self.view_mode = ViewMode.ALL
         self.nav_bar = None
@@ -146,6 +149,13 @@ class RunningDataApp(QWidget):
 
         self.center_widget = QWidget()
         self.center_layout = QVBoxLayout(self.center_widget)
+
+        self.search_widget = SearchWidget(self.db, self.run_search, self)
+
+        search_row = QHBoxLayout()
+        search_row.addWidget(self.search_widget)
+        self.search_widget.setVisible(False)
+        self.center_layout.addLayout(search_row)
 
         top_row = QHBoxLayout()
 
@@ -295,6 +305,11 @@ class RunningDataApp(QWidget):
         self.update_heatmap(view_mode)
         self.update_activity_view(view_mode)
 
+
+    def run_search(self, filters):
+        self.search_filter = filters
+        self.trigger_load()
+
     def update_activity_view(self, activity_type=ViewMode.ALL, activity_id=None):
         """
         Update the right panel with the new activity information.
@@ -348,6 +363,11 @@ class RunningDataApp(QWidget):
             self.user_window = UserSettingsWindow(self.userSettings, self)
             self.user_window.exec()
             self.user_window = None
+        elif action == "search":
+            self.toggle_search()
+
+    def toggle_search(self):
+        self.search_widget.setVisible(False) if self.search_widget.isVisible() else self.search_widget.setVisible(True)
 
     def trigger_load(self):
         if self.view_mode == ViewMode.RUN:
@@ -415,6 +435,7 @@ class RunningDataApp(QWidget):
             sort_field=self.sort_field,
             limit=self.page_size,
             sort_direction=self.sort_direction,
+            filters=self.search_filter
         )
         TableBuilder.setup_table(self.tableWidget, ViewMode.ALL, activities, self)
         TableBuilder.update_header_styles(
@@ -432,6 +453,7 @@ class RunningDataApp(QWidget):
             sort_field=self.sort_field,
             limit=self.page_size,
             sort_direction=self.sort_direction,
+            filters=self.search_filter
         )
         TableBuilder.setup_table(self.tableWidget, ViewMode.RUN, runs, self)
         TableBuilder.update_header_styles(
