@@ -17,7 +17,6 @@ class ActivityInfo:
     def __init__(self, db_handler: DatabaseHandler, file_path: str):
         """
         Initialize the ActivityInfo class.
-
         :param db_handler: database.DatabaseHandler
         """
         self.conn = db_handler.conn
