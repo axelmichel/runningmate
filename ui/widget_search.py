@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
 
 from database.database_handler import DatabaseHandler
 from ui.dialog_search_filter import SearchFilterDialog
+from ui.icon_button import IconButton
 from utils.translations import _
 
 
@@ -21,11 +22,9 @@ class SearchWidget(QWidget):
         self.conn = db_handler.conn
         self.search_callback = search_callback
 
-        # Main layout
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
 
-        # 🔹 Row for Search Field & Buttons
         search_row = QHBoxLayout()
 
         self.search_field = QLineEdit()
@@ -35,7 +34,7 @@ class SearchWidget(QWidget):
         self.search_field.textChanged.connect(self.update_reset_button_state)
         search_row.addWidget(self.search_field)
 
-        self.filter_button = QPushButton(_("Add Filters"))
+        self.filter_button = IconButton("filter-fill.svg")
         self.filter_button.clicked.connect(self.open_filter_dialog)
         search_row.addWidget(self.filter_button)
         search_row.addStretch(1)
@@ -51,7 +50,6 @@ class SearchWidget(QWidget):
 
         main_layout.addLayout(search_row)
 
-        # 🔹 Filter summary row (initially empty)
         self.filter_summary_label = QLabel("")
         self.filter_summary_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         main_layout.addWidget(self.filter_summary_label)

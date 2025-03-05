@@ -42,21 +42,4 @@ class OpacityButton(QPushButton):
             if checked:
                 self.opacity_effect.setOpacity(1.0)  # Fully visible
             else:
-                self.opacity_effect.setOpacity(0.5)  #
-
-
-def get_opacity_button_style():
-    """
-    Returns custom stylesheet for the navigation buttons.
-
-    :return: str, CSS stylesheet for button appearance
-    """
-    return f"""
-        QPushButton {{
-            background-color: transparent;
-            color: {THEME.NAV_TEXT};
-            padding: 8px;
-            text-align: left;
-            border-radius: 5px;
-        }}
-    """
+                self.opacity_effect.setOpacity(0.5)
