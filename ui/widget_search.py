@@ -1,9 +1,10 @@
-from PyQt6.QtCore import Qt, QDateTime
+from PyQt6.QtCore import QDateTime, Qt
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -27,8 +28,10 @@ class SearchWidget(QWidget):
 
         search_row = QHBoxLayout()
 
+        search_row = QHBoxLayout()
+
         self.search_field = QLineEdit()
-        self.search_field.setMinimumWidth(300)
+        self.search_field.setMinimumWidth(250)
         self.search_field.setStyleSheet("QLineEdit { padding: 5px 10px;}")
         self.search_field.setPlaceholderText(_("Search title or comment..."))
         self.search_field.textChanged.connect(self.update_reset_button_state)
@@ -37,7 +40,26 @@ class SearchWidget(QWidget):
         self.filter_button = IconButton("filter-fill.svg")
         self.filter_button.clicked.connect(self.open_filter_dialog)
         search_row.addWidget(self.filter_button)
-        search_row.addStretch(1)
+
+        # Wrapper for filter summary label (ensures stretching behavior)
+        self.filter_summary_wrapper = QWidget()
+        self.filter_summary_layout = QVBoxLayout(self.filter_summary_wrapper)
+        self.filter_summary_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Filter summary label (forces word wrapping)
+        self.filter_summary_label = QLabel("")
+        self.filter_summary_label.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+        )
+        self.filter_summary_label.setWordWrap(True)  # Enable wrapping
+        self.filter_summary_label.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
+        )
+        self.filter_summary_layout.addWidget(self.filter_summary_label)
+
+        search_row.addWidget(
+            self.filter_summary_wrapper, 1
+        )  # This forces it to stretch
 
         self.search_button = QPushButton(_("Search"))
         self.search_button.clicked.connect(self.search)
@@ -49,11 +71,6 @@ class SearchWidget(QWidget):
         search_row.addWidget(self.reset_button)
 
         main_layout.addLayout(search_row)
-
-        self.filter_summary_label = QLabel("")
-        self.filter_summary_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        main_layout.addWidget(self.filter_summary_label)
-
         self.setLayout(main_layout)
 
     def set_search_filters(self, filters):
@@ -82,7 +99,9 @@ class SearchWidget(QWidget):
             prefix, filter_name = key.split("_", 1)
 
             if filter_name == "date":
-                formatted_value = QDateTime.fromSecsSinceEpoch(value).toString("yyyy-MM-dd")
+                formatted_value = QDateTime.fromSecsSinceEpoch(value).toString(
+                    "yyyy-MM-dd"
+                )
 
             elif filter_name == "duration":
                 hours = value // 3600
@@ -99,7 +118,9 @@ class SearchWidget(QWidget):
             else:
                 formatted_value = str(value)
 
-            filter_texts.append(f"{filter_name.capitalize()} ({prefix}): {formatted_value}")
+            filter_texts.append(
+                f"{filter_name.capitalize()} ({prefix}): {formatted_value}"
+            )
 
         self.filter_summary_label.setText(", ".join(filter_texts))
 

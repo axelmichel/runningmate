@@ -305,10 +305,16 @@ class RunningDataApp(QWidget):
         self.update_heatmap(view_mode)
         self.update_activity_view(view_mode)
 
-
     def run_search(self, filters):
         self.search_filter = filters
-        self.trigger_load()
+        self.offset = 0
+        self.current_page = 0
+        self.update_infoCards()
+        self.update_button()
+        self.update_view()
+        self.heatmap.clear_heatmaps()
+        self.update_heatmap(self.view_mode)
+        self.update_activity_view(self.view_mode)
 
     def update_activity_view(self, activity_type=ViewMode.ALL, activity_id=None):
         """
@@ -353,7 +359,9 @@ class RunningDataApp(QWidget):
             self.right_layout.insertWidget(1, self.activity_performance_widget)
 
     def update_heatmap(self, view_mode):
-        heatmap_image = self.heatmap.get_heatmap(activity_type=view_mode)
+        heatmap_image = self.heatmap.get_heatmap(
+            activity_type=view_mode, filters=self.search_filter
+        )
         if heatmap_image:
             pixmap = QPixmap(heatmap_image)
             self.heatmap_label.setPixmap(pixmap)
@@ -367,7 +375,11 @@ class RunningDataApp(QWidget):
             self.toggle_search()
 
     def toggle_search(self):
-        self.search_widget.setVisible(False) if self.search_widget.isVisible() else self.search_widget.setVisible(True)
+        (
+            self.search_widget.setVisible(False)
+            if self.search_widget.isVisible()
+            else self.search_widget.setVisible(True)
+        )
 
     def trigger_load(self):
         if self.view_mode == ViewMode.RUN:
@@ -394,7 +406,9 @@ class RunningDataApp(QWidget):
         self.move(x, y)
 
     def update_pagination(self):
-        total_rows = self.db.get_total_activity_count(self.view_mode)
+        total_rows = self.db.get_total_activity_count(
+            self.view_mode, self.search_filter
+        )
         total_pages = max(1, (total_rows + self.page_size - 1) // self.page_size)
 
         start_item = self.current_page * self.page_size + 1
@@ -412,7 +426,9 @@ class RunningDataApp(QWidget):
             self.update_view()
 
     def next_page(self):
-        total_rows = self.db.get_total_activity_count(self.view_mode)
+        total_rows = self.db.get_total_activity_count(
+            self.view_mode, self.search_filter
+        )
         total_pages = max(1, (total_rows + self.page_size - 1) // self.page_size)
         if self.current_page < total_pages - 1:
             self.current_page += 1
@@ -424,10 +440,10 @@ class RunningDataApp(QWidget):
         self.update_pagination()
 
     def update_infoCards(self):
-        self.activities_card.update_info(self.view_mode)
-        self.distance_card.update_info(self.view_mode)
-        self.duration_card.update_info(self.view_mode)
-        self.elevation_card.update_info(self.view_mode)
+        self.activities_card.update_info(self.view_mode, self.search_filter)
+        self.distance_card.update_info(self.view_mode, self.search_filter)
+        self.duration_card.update_info(self.view_mode, self.search_filter)
+        self.elevation_card.update_info(self.view_mode, self.search_filter)
 
     def load_activities(self):
         activities = self.db.fetch_activities(
@@ -435,7 +451,7 @@ class RunningDataApp(QWidget):
             sort_field=self.sort_field,
             limit=self.page_size,
             sort_direction=self.sort_direction,
-            filters=self.search_filter
+            filters=self.search_filter,
         )
         TableBuilder.setup_table(self.tableWidget, ViewMode.ALL, activities, self)
         TableBuilder.update_header_styles(
@@ -453,7 +469,7 @@ class RunningDataApp(QWidget):
             sort_field=self.sort_field,
             limit=self.page_size,
             sort_direction=self.sort_direction,
-            filters=self.search_filter
+            filters=self.search_filter,
         )
         TableBuilder.setup_table(self.tableWidget, ViewMode.RUN, runs, self)
         TableBuilder.update_header_styles(

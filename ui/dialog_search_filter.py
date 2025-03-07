@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QDoubleSpinBox,
     QHBoxLayout,
     QLabel,
+    QSizePolicy,
     QSpinBox,
     QVBoxLayout,
 )
@@ -20,24 +21,27 @@ class SearchFilterDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(_("Search Filters"))
         self.setGeometry(400, 200, 400, 250)
-
         layout = QVBoxLayout()
 
-        # ✅ Row 1: Date Range (QDateEdit)
         self.date_from = QDateEdit()
         self.date_from.setCalendarPopup(True)
         self.date_from.setDate(QDate.currentDate())
+        self.date_from.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        self.date_from.setFixedHeight(28)
 
         self.date_to = QDateEdit()
         self.date_to.setCalendarPopup(True)
         self.date_to.setDate(QDate.currentDate())
-
-        # 🔹 Ensure validation only happens when modifying max date
+        self.date_to.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        self.date_to.setFixedHeight(28)
         self.date_to.dateChanged.connect(self.validate_dates)
 
         layout.addLayout(self.create_row(_("Date"), self.date_from, self.date_to))
 
-        # ✅ Distance Filter
         self.distance_from = QDoubleSpinBox()
         self.distance_from.setRange(0, 1000)
         self.distance_from.setSuffix(" km")
@@ -46,54 +50,54 @@ class SearchFilterDialog(QDialog):
         self.distance_to.setRange(0, 1000)
         self.distance_to.setSuffix(" km")
 
-        # 🔹 Ensure validation only happens when modifying max distance
         self.distance_to.valueChanged.connect(self.validate_distances)
 
-        layout.addLayout(self.create_row(_("Distance"), self.distance_from, self.distance_to))
+        layout.addLayout(
+            self.create_row(_("Distance"), self.distance_from, self.distance_to)
+        )
 
-        # ✅ Duration Filter
         self.duration_from_h = self.create_spinbox(0, 23)
+        self.duration_from_h.setFixedHeight(28)
+        self.duration_from_h.setFixedWidth(52)
         self.duration_from_m = self.create_spinbox(0, 59)
-        self.duration_from_s = self.create_spinbox(0, 59)
+        self.duration_from_m.setFixedHeight(28)
+        self.duration_from_m.setFixedWidth(52)
 
         self.duration_to_h = self.create_spinbox(0, 23)
+        self.duration_to_h.setFixedHeight(28)
+        self.duration_to_h.setFixedWidth(52)
         self.duration_to_m = self.create_spinbox(0, 59)
-        self.duration_to_s = self.create_spinbox(0, 59)
+        self.duration_to_m.setFixedHeight(28)
+        self.duration_to_m.setFixedWidth(52)
 
         duration_layout = QHBoxLayout()
-        duration_layout.addWidget(QLabel("From:"))
+        label = QLabel(_("Duration"))
+        label.setFixedWidth(60)
+        duration_layout.addWidget(label)
         duration_layout.addWidget(self.duration_from_h)
         duration_layout.addWidget(QLabel(":"))
         duration_layout.addWidget(self.duration_from_m)
-        duration_layout.addWidget(QLabel(":"))
-        duration_layout.addWidget(self.duration_from_s)
-
-        duration_layout.addWidget(QLabel(" To:"))
+        duration_layout.addStretch(1)
         duration_layout.addWidget(self.duration_to_h)
         duration_layout.addWidget(QLabel(":"))
         duration_layout.addWidget(self.duration_to_m)
-        duration_layout.addWidget(QLabel(":"))
-        duration_layout.addWidget(self.duration_to_s)
 
-        # 🔹 Ensure validation only happens when modifying max duration
         self.duration_to_h.valueChanged.connect(self.validate_durations)
         self.duration_to_m.valueChanged.connect(self.validate_durations)
-        self.duration_to_s.valueChanged.connect(self.validate_durations)
 
-        layout.addWidget(QLabel(_("Duration")))
         layout.addLayout(duration_layout)
 
-        # ✅ Elevation Filter
         self.elevation_from = QSpinBox()
         self.elevation_from.setRange(0, 10000)
 
         self.elevation_to = QSpinBox()
         self.elevation_to.setRange(0, 10000)
 
-        # 🔹 Ensure validation only happens when modifying max elevation
         self.elevation_to.valueChanged.connect(self.validate_elevations)
 
-        layout.addLayout(self.create_row(_("Elevation"), self.elevation_from, self.elevation_to))
+        layout.addLayout(
+            self.create_row(_("Elevation"), self.elevation_from, self.elevation_to)
+        )
 
         self.action_bar = DialogActionBar(
             cancel_action=self.close,
@@ -106,10 +110,19 @@ class SearchFilterDialog(QDialog):
     @staticmethod
     def create_row(title, from_widget, to_widget):
         """Helper function to create a row layout with title and two input fields."""
+
+        from_widget.setFixedHeight(28)
+        from_widget.setMinimumWidth(125)
+        to_widget.setFixedHeight(28)
+        to_widget.setMinimumWidth(125)
+
         row_layout = QHBoxLayout()
-        row_layout.addWidget(QLabel(title))
+        row_layout.setContentsMargins(0, 0, 0, 0)
+        label = QLabel(title)
+        label.setFixedWidth(60)
+        row_layout.addWidget(label)
         row_layout.addWidget(from_widget)
-        row_layout.addWidget(QLabel(" - "))
+        row_layout.addStretch(1)
         row_layout.addWidget(to_widget)
         return row_layout
 
@@ -127,12 +140,16 @@ class SearchFilterDialog(QDialog):
         date_filter = filters.get("date", {})
 
         if "min" in date_filter and date_filter["min"] > 0:
-            self.date_from.setDate(QDateTime.fromSecsSinceEpoch(date_filter["min"]).date())
+            self.date_from.setDate(
+                QDateTime.fromSecsSinceEpoch(date_filter["min"]).date()
+            )
         else:
             self.date_from.setDate(QDate.currentDate())  # Default to today
 
         if "max" in date_filter and date_filter["max"] > 0:
-            self.date_to.setDate(QDateTime.fromSecsSinceEpoch(date_filter["max"]).date())
+            self.date_to.setDate(
+                QDateTime.fromSecsSinceEpoch(date_filter["max"]).date()
+            )
         else:
             self.date_to.setDate(QDate.currentDate())  # Default to today
 
@@ -146,11 +163,9 @@ class SearchFilterDialog(QDialog):
 
         self.duration_from_h.setValue(min_duration // 3600)  # Hours
         self.duration_from_m.setValue((min_duration % 3600) // 60)  # Minutes
-        self.duration_from_s.setValue(min_duration % 60)  # Seconds
 
         self.duration_to_h.setValue(max_duration // 3600)  # Hours
         self.duration_to_m.setValue((max_duration % 3600) // 60)  # Minutes
-        self.duration_to_s.setValue(max_duration % 60)  # Seconds
 
         elevation_filter = filters.get("elevation", {})
         self.elevation_from.setValue(elevation_filter.get("min", 0))
@@ -169,19 +184,14 @@ class SearchFilterDialog(QDialog):
     def validate_durations(self):
         """Ensures that max duration is greater than or equal to min duration, but only when max is modified."""
         min_duration = (
-            self.duration_from_h.value() * 3600 +
-            self.duration_from_m.value() * 60 +
-            self.duration_from_s.value()
+            self.duration_from_h.value() * 3600 + self.duration_from_m.value() * 60
         )
         max_duration = (
-            self.duration_to_h.value() * 3600 +
-            self.duration_to_m.value() * 60 +
-            self.duration_to_s.value()
+            self.duration_to_h.value() * 3600 + self.duration_to_m.value() * 60
         )
         if max_duration < min_duration:
             self.duration_to_h.setValue(self.duration_from_h.value())
             self.duration_to_m.setValue(self.duration_from_m.value())
-            self.duration_to_s.setValue(self.duration_from_s.value())
 
     def validate_elevations(self):
         """Ensures that max elevation is greater than or equal to min elevation, but only when max is modified."""
@@ -194,22 +204,19 @@ class SearchFilterDialog(QDialog):
 
         # Convert Duration filters into total seconds
         from_duration_sec = (
-                self.duration_from_h.value() * 3600 +
-                self.duration_from_m.value() * 60 +
-                self.duration_from_s.value()
+            self.duration_from_h.value() * 3600 + self.duration_from_m.value() * 60
         )
         to_duration_sec = (
-                self.duration_to_h.value() * 3600 +
-                self.duration_to_m.value() * 60 +
-                self.duration_to_s.value()
+            self.duration_to_h.value() * 3600 + self.duration_to_m.value() * 60
         )
 
-        if self.date_from.date() != QDate.currentDate() and self.date_to.date() != QDate.currentDate():
+        if (
+            self.date_from.date() != QDate.currentDate()
+            and self.date_to.date() != QDate.currentDate()
+        ):
             self.validate_dates()
         if self.distance_from.value() > 0 and self.distance_to.value() > 0:
             self.validate_distances()
-        if from_duration_sec > 0 and to_duration_sec > 0:
-            self.validate_durations()
         if self.elevation_from.value() > 0 and self.elevation_to.value() > 0:
             self.validate_elevations()
 
@@ -219,7 +226,9 @@ class SearchFilterDialog(QDialog):
             filters.setdefault("date", {})["min"] = date_min
 
         if self.date_to.date() != QDate.currentDate():
-            date_max = QDateTime(self.date_to.date(), QTime(23, 59, 59)).toSecsSinceEpoch()
+            date_max = QDateTime(
+                self.date_to.date(), QTime(23, 59, 59)
+            ).toSecsSinceEpoch()
             filters.setdefault("date", {})["max"] = date_max
 
         # Distance filter: Only include min/max if > 0

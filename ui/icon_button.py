@@ -16,7 +16,6 @@ class IconButton(QPushButton):
         self.setIcon(QIcon(icon_path))
         self.setStyleSheet(get_icon_button_style())
 
-
     def setEnabled(self, enabled: bool) -> None:
         """Override setEnabled to adjust opacity."""
         super().setEnabled(enabled)
@@ -24,7 +23,6 @@ class IconButton(QPushButton):
             self.opacity_effect.setOpacity(1)
         else:
             self.opacity_effect.setOpacity(0.2)
-
 
 
 def get_icon_button_style():

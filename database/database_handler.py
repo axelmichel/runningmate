@@ -101,10 +101,14 @@ class DatabaseHandler:
     }
 
     FILTER_MAPPINGS = {
-        "min_distance": "activities.distance", "max_distance": "activities.distance",
-        "min_duration": "activities.duration", "max_duration": "activities.duration",
-        "min_elevation": "activities.elevation_gain", "max_elevation": "activities.elevation_gain",
-        "min_date": "activities.date", "max_date": "activities.date",  # Ensure date filtering
+        "min_distance": "activities.distance",
+        "max_distance": "activities.distance",
+        "min_duration": "activities.duration",
+        "max_duration": "activities.duration",
+        "min_elevation": "activities.elevation_gain",
+        "max_elevation": "activities.elevation_gain",
+        "min_date": "activities.date",
+        "max_date": "activities.date",  # Ensure date filtering
     }
 
     def __init__(self, db_path=None, conn=None):
@@ -433,7 +437,12 @@ class DatabaseHandler:
         return highest_id + 1 if highest_id is not None else 1
 
     def fetch_activities(
-        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC", filters=None
+        self,
+        start=0,
+        limit=50,
+        sort_field="date_time",
+        sort_direction="DESC",
+        filters=None,
     ):
         """
         Fetch paginated entries from the activities table, sorting by date (most recent first).
@@ -472,7 +481,12 @@ class DatabaseHandler:
         return self.fetch_all(query, start, limit, filter_params)
 
     def fetch_runs(
-        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC", filters=None
+        self,
+        start=0,
+        limit=50,
+        sort_field="date_time",
+        sort_direction="DESC",
+        filters=None,
     ):
         """
         Fetch paginated entries from the runs table, sorting by date (most recent first).
@@ -527,7 +541,7 @@ class DatabaseHandler:
         search_text = filters.get("search_text", "")
         if search_text:
             params.extend([f"%{search_text}%", f"%{search_text}%"])
-        for key,__ in self.FILTER_MAPPINGS.items():
+        for key, __ in self.FILTER_MAPPINGS.items():
             if key in filters:
                 params.append(filters[key])
         return params
@@ -543,7 +557,12 @@ class DatabaseHandler:
         return query
 
     def fetch_walks(
-        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC", filters=None
+        self,
+        start=0,
+        limit=50,
+        sort_field="date_time",
+        sort_direction="DESC",
+        filters=None,
     ):
         """
         Fetch paginated entries from the walks table, sorting by date (most recent first).
@@ -593,7 +612,12 @@ class DatabaseHandler:
         return self.fetch_all(query, start, limit, filter_params)
 
     def fetch_rides(
-        self, start=0, limit=50, sort_field="date_time", sort_direction="DESC", filters=None
+        self,
+        start=0,
+        limit=50,
+        sort_field="date_time",
+        sort_direction="DESC",
+        filters=None,
     ):
         """
         Fetch paginated entries from the cycling table, sorting by date (most recent first).
@@ -653,16 +677,15 @@ class DatabaseHandler:
 
         params = filter_params + [limit, start]
 
-        print (f" params: {params}")
-        print (f" query: {query}")
-
         self.cursor.execute(query, params)
         rows = self.cursor.fetchall()
 
         return [dict(row) for row in rows]
 
-    def get_total_activity_count(self, view_mode: ViewMode):
+    def get_total_activity_count(self, view_mode: ViewMode, filters=None):
         """Get the total number of activities for a given view mode."""
+        filter_params = []
+
         if view_mode == ViewMode.RUN:
             table = "runs"
         elif view_mode == ViewMode.WALK:
@@ -672,7 +695,13 @@ class DatabaseHandler:
         else:
             table = "activities"
 
-        self.cursor.execute(f"SELECT COUNT(*) FROM {table}")
+        query = f"SELECT COUNT(*) FROM {table}"
+        if filters:
+            query += " WHERE 1=1"
+            query = self.add_filter_to_query(query, filters)
+            filter_params = self.get_filter_params(filters)
+
+        self.cursor.execute(query, filter_params)
         return self.cursor.fetchone()[0]
 
     def get_activity_by_file_id(self, file_id):

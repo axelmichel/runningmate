@@ -1,7 +1,5 @@
 from PyQt6.QtWidgets import QGraphicsOpacityEffect, QPushButton
 
-from ui.themes import THEME
-
 
 class OpacityButton(QPushButton):
     def __init__(self, text, parent=None):
