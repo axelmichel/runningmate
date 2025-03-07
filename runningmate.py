@@ -314,7 +314,8 @@ class RunningDataApp(QWidget):
         self.update_view()
         self.heatmap.clear_heatmaps()
         self.update_heatmap(self.view_mode)
-        self.update_activity_view(self.view_mode)
+        if filters is None:
+            self.update_activity_view(self.view_mode)
 
     def update_activity_view(self, activity_type=ViewMode.ALL, activity_id=None):
         """
@@ -453,6 +454,10 @@ class RunningDataApp(QWidget):
             sort_direction=self.sort_direction,
             filters=self.search_filter,
         )
+        if self.search_filter and activities:
+            first_activity = activities[0]
+            first_id = first_activity.get("activity_id")
+            self.update_activity_view(None, first_id)
         TableBuilder.setup_table(self.tableWidget, ViewMode.ALL, activities, self)
         TableBuilder.update_header_styles(
             self.tableWidget, ViewMode.ALL, self.sort_field, self.sort_direction
@@ -464,38 +469,50 @@ class RunningDataApp(QWidget):
         self.sync_window = None
 
     def load_runs(self):
-        runs = self.db.fetch_runs(
+        activities = self.db.fetch_runs(
             start=self.offset,
             sort_field=self.sort_field,
             limit=self.page_size,
             sort_direction=self.sort_direction,
             filters=self.search_filter,
         )
-        TableBuilder.setup_table(self.tableWidget, ViewMode.RUN, runs, self)
+        if self.search_filter and activities:
+            first_activity = activities[0]
+            first_id = first_activity.get("activity_id")
+            self.update_activity_view(None, first_id)
+        TableBuilder.setup_table(self.tableWidget, ViewMode.RUN, activities, self)
         TableBuilder.update_header_styles(
             self.tableWidget, ViewMode.RUN, self.sort_field, self.sort_direction
         )
 
     def load_walks(self):
-        runs = self.db.fetch_walks(
+        activities = self.db.fetch_walks(
             start=self.offset,
             sort_field=self.sort_field,
             limit=self.page_size,
             sort_direction=self.sort_direction,
         )
-        TableBuilder.setup_table(self.tableWidget, ViewMode.WALK, runs, self)
+        if self.search_filter and activities:
+            first_activity = activities[0]
+            first_id = first_activity.get("activity_id")
+            self.update_activity_view(None, first_id)
+        TableBuilder.setup_table(self.tableWidget, ViewMode.WALK, activities, self)
         TableBuilder.update_header_styles(
             self.tableWidget, ViewMode.WALK, self.sort_field, self.sort_direction
         )
 
     def load_rides(self):
-        runs = self.db.fetch_rides(
+        activities = self.db.fetch_rides(
             start=self.offset,
             sort_field=self.sort_field,
             limit=self.page_size,
             sort_direction=self.sort_direction,
         )
-        TableBuilder.setup_table(self.tableWidget, ViewMode.CYCLE, runs, self)
+        if self.search_filter and activities:
+            first_activity = activities[0]
+            first_id = first_activity.get("activity_id")
+            self.update_activity_view(None, first_id)
+        TableBuilder.setup_table(self.tableWidget, ViewMode.CYCLE, activities, self)
         TableBuilder.update_header_styles(
             self.tableWidget, ViewMode.CYCLE, self.sort_field, self.sort_direction
         )

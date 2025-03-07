@@ -697,6 +697,8 @@ class DatabaseHandler:
 
         query = f"SELECT COUNT(*) FROM {table}"
         if filters:
+            if table != "activities":
+                query += f" JOIN activities ON activities.id = {table}.activity_id"
             query += " WHERE 1=1"
             query = self.add_filter_to_query(query, filters)
             filter_params = self.get_filter_params(filters)

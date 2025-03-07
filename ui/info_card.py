@@ -81,7 +81,8 @@ class InfoCard(QWidget):
             query += f" WHERE activity_type IN ({placeholders})"
             params = tuple(allowed_types)
         if filters:
-            query += " WHERE 1=1"
+            if "WHERE" not in query:  # ✅ Check if WHERE is already present
+                query += " WHERE 1=1"
             query = self.db.add_filter_to_query(query, filters)
             filter_params = self.db.get_filter_params(filters)
 
