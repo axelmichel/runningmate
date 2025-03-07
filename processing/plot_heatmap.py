@@ -85,37 +85,52 @@ class PlotHeatmap:
         self.db = db_handler
         self.parent = parent
 
-    def get_heatmap(self, activity_type=None, end_date=None, redraw=False):
+    def get_heatmap(
+        self, activity_type=None, end_date=None, filters=None, redraw=False
+    ):
         """
         Load activity data, filter by activity type, and return the heatmap image path.
 
         :param activity_type: str, the type of activity (e.g., "Run", "Cycle", etc.)
         :param end_date: datetime, the end date for data selection (defaults to today)
+        :param filters: dict, additional filters to apply to the query (optional)
         :param redraw: bool, whether to force a redraw of the heatmap (default: False)
         :return: str, path to the saved heatmap image
         """
 
-        # ✅ Define the save path for this activity type
         save_path = os.path.join(CACHE_DIR, f"heatmap_{activity_type}.png")
 
-        # ✅ Check if we need to redraw or if an existing image can be used
         if not redraw and os.path.exists(save_path):
-            return save_path  # ✅ Use cached image if it exists
+            return save_path
 
         if end_date is None:
-            end_date = pd.Timestamp.today()  # Default to today
+            end_date = pd.Timestamp.today()
+
+        if filters and "min_date" in filters:
+            temp_date = pd.to_datetime(filters["min_date"], unit="s")
+            end_date = temp_date + pd.Timedelta(days=365)
+        if filters and "max_date" in filters:
+            end_date = pd.to_datetime(filters["max_date"], unit="s")
 
         start_date = end_date - pd.Timedelta(days=365)
 
+        filter_params = []
         query = f"""
             SELECT duration, activity_type, date
             FROM activities
             WHERE date >= {start_date.timestamp()}
               AND date <= {end_date.timestamp()}
-            ORDER BY date ASC;
         """
 
-        df = pd.read_sql(query, self.db.conn)
+        if filters:
+            filters.pop("min_date", None)
+            filters.pop("max_date", None)
+            query = self.db.add_filter_to_query(query, filters)
+            filter_params = self.db.get_filter_params(filters)
+
+        query += " ORDER BY date ASC;"
+
+        df = pd.read_sql(query, self.db.conn, params=filter_params)
 
         if activity_type is not None and activity_type != "All":
             allowed_types = getAllowedTypes(activity_type)

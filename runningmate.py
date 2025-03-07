@@ -34,6 +34,7 @@ from ui.info_card import InfoCard
 from ui.main_menu import MenuBar
 from ui.side_bar import Sidebar
 from ui.table_builder import TableBuilder
+from ui.widget_search import SearchWidget
 from ui.window_garmin_sync import GarminSyncWindow
 from ui.window_icloud_sync import iCloudSyncDialog
 from ui.window_run_details import RunDetailsWindow
@@ -87,7 +88,9 @@ class RunningDataApp(QWidget):
         self.details_window = None
         self.user_window = None
         self.tableWidget = None
+        self.search_widget = None
         self.db = db_handler
+        self.search_filter = None
         self.userSettings = UserSettings(self.db)
         self.view_mode = ViewMode.ALL
         self.nav_bar = None
@@ -146,6 +149,13 @@ class RunningDataApp(QWidget):
 
         self.center_widget = QWidget()
         self.center_layout = QVBoxLayout(self.center_widget)
+
+        self.search_widget = SearchWidget(self.db, self.run_search, self)
+
+        search_row = QHBoxLayout()
+        search_row.addWidget(self.search_widget)
+        self.search_widget.setVisible(False)
+        self.center_layout.addLayout(search_row)
 
         top_row = QHBoxLayout()
 
@@ -295,6 +305,18 @@ class RunningDataApp(QWidget):
         self.update_heatmap(view_mode)
         self.update_activity_view(view_mode)
 
+    def run_search(self, filters):
+        self.search_filter = filters
+        self.offset = 0
+        self.current_page = 0
+        self.update_infoCards()
+        self.update_button()
+        self.update_view()
+        self.heatmap.clear_heatmaps()
+        self.update_heatmap(self.view_mode)
+        if filters is None:
+            self.update_activity_view(self.view_mode)
+
     def update_activity_view(self, activity_type=ViewMode.ALL, activity_id=None):
         """
         Update the right panel with the new activity information.
@@ -338,7 +360,9 @@ class RunningDataApp(QWidget):
             self.right_layout.insertWidget(1, self.activity_performance_widget)
 
     def update_heatmap(self, view_mode):
-        heatmap_image = self.heatmap.get_heatmap(activity_type=view_mode)
+        heatmap_image = self.heatmap.get_heatmap(
+            activity_type=view_mode, filters=self.search_filter
+        )
         if heatmap_image:
             pixmap = QPixmap(heatmap_image)
             self.heatmap_label.setPixmap(pixmap)
@@ -348,6 +372,15 @@ class RunningDataApp(QWidget):
             self.user_window = UserSettingsWindow(self.userSettings, self)
             self.user_window.exec()
             self.user_window = None
+        elif action == "search":
+            self.toggle_search()
+
+    def toggle_search(self):
+        (
+            self.search_widget.setVisible(False)
+            if self.search_widget.isVisible()
+            else self.search_widget.setVisible(True)
+        )
 
     def trigger_load(self):
         if self.view_mode == ViewMode.RUN:
@@ -374,7 +407,9 @@ class RunningDataApp(QWidget):
         self.move(x, y)
 
     def update_pagination(self):
-        total_rows = self.db.get_total_activity_count(self.view_mode)
+        total_rows = self.db.get_total_activity_count(
+            self.view_mode, self.search_filter
+        )
         total_pages = max(1, (total_rows + self.page_size - 1) // self.page_size)
 
         start_item = self.current_page * self.page_size + 1
@@ -392,7 +427,9 @@ class RunningDataApp(QWidget):
             self.update_view()
 
     def next_page(self):
-        total_rows = self.db.get_total_activity_count(self.view_mode)
+        total_rows = self.db.get_total_activity_count(
+            self.view_mode, self.search_filter
+        )
         total_pages = max(1, (total_rows + self.page_size - 1) // self.page_size)
         if self.current_page < total_pages - 1:
             self.current_page += 1
@@ -404,10 +441,10 @@ class RunningDataApp(QWidget):
         self.update_pagination()
 
     def update_infoCards(self):
-        self.activities_card.update_info(self.view_mode)
-        self.distance_card.update_info(self.view_mode)
-        self.duration_card.update_info(self.view_mode)
-        self.elevation_card.update_info(self.view_mode)
+        self.activities_card.update_info(self.view_mode, self.search_filter)
+        self.distance_card.update_info(self.view_mode, self.search_filter)
+        self.duration_card.update_info(self.view_mode, self.search_filter)
+        self.elevation_card.update_info(self.view_mode, self.search_filter)
 
     def load_activities(self):
         activities = self.db.fetch_activities(
@@ -415,7 +452,12 @@ class RunningDataApp(QWidget):
             sort_field=self.sort_field,
             limit=self.page_size,
             sort_direction=self.sort_direction,
+            filters=self.search_filter,
         )
+        if self.search_filter and activities:
+            first_activity = activities[0]
+            first_id = first_activity.get("activity_id")
+            self.update_activity_view(None, first_id)
         TableBuilder.setup_table(self.tableWidget, ViewMode.ALL, activities, self)
         TableBuilder.update_header_styles(
             self.tableWidget, ViewMode.ALL, self.sort_field, self.sort_direction
@@ -427,37 +469,50 @@ class RunningDataApp(QWidget):
         self.sync_window = None
 
     def load_runs(self):
-        runs = self.db.fetch_runs(
+        activities = self.db.fetch_runs(
             start=self.offset,
             sort_field=self.sort_field,
             limit=self.page_size,
             sort_direction=self.sort_direction,
+            filters=self.search_filter,
         )
-        TableBuilder.setup_table(self.tableWidget, ViewMode.RUN, runs, self)
+        if self.search_filter and activities:
+            first_activity = activities[0]
+            first_id = first_activity.get("activity_id")
+            self.update_activity_view(None, first_id)
+        TableBuilder.setup_table(self.tableWidget, ViewMode.RUN, activities, self)
         TableBuilder.update_header_styles(
             self.tableWidget, ViewMode.RUN, self.sort_field, self.sort_direction
         )
 
     def load_walks(self):
-        runs = self.db.fetch_walks(
+        activities = self.db.fetch_walks(
             start=self.offset,
             sort_field=self.sort_field,
             limit=self.page_size,
             sort_direction=self.sort_direction,
         )
-        TableBuilder.setup_table(self.tableWidget, ViewMode.WALK, runs, self)
+        if self.search_filter and activities:
+            first_activity = activities[0]
+            first_id = first_activity.get("activity_id")
+            self.update_activity_view(None, first_id)
+        TableBuilder.setup_table(self.tableWidget, ViewMode.WALK, activities, self)
         TableBuilder.update_header_styles(
             self.tableWidget, ViewMode.WALK, self.sort_field, self.sort_direction
         )
 
     def load_rides(self):
-        runs = self.db.fetch_rides(
+        activities = self.db.fetch_rides(
             start=self.offset,
             sort_field=self.sort_field,
             limit=self.page_size,
             sort_direction=self.sort_direction,
         )
-        TableBuilder.setup_table(self.tableWidget, ViewMode.CYCLE, runs, self)
+        if self.search_filter and activities:
+            first_activity = activities[0]
+            first_id = first_activity.get("activity_id")
+            self.update_activity_view(None, first_id)
+        TableBuilder.setup_table(self.tableWidget, ViewMode.CYCLE, activities, self)
         TableBuilder.update_header_styles(
             self.tableWidget, ViewMode.CYCLE, self.sort_field, self.sort_direction
         )

@@ -55,7 +55,7 @@ class InfoCard(QWidget):
 
         self.update_info()
 
-    def update_info(self, activity_type=None):
+    def update_info(self, activity_type=None, filters=None):
         """
         Updates the info card with the selected metric.
 
@@ -68,7 +68,7 @@ class InfoCard(QWidget):
             "activities": "COUNT(*)",
         }
         column = column_map.get(self.metric)
-
+        filter_params = None
         if not column:
             return
 
@@ -80,7 +80,14 @@ class InfoCard(QWidget):
             placeholders = ", ".join("?" * len(allowed_types))  # Generate placeholders
             query += f" WHERE activity_type IN ({placeholders})"
             params = tuple(allowed_types)
+        if filters:
+            if "WHERE" not in query:  # ✅ Check if WHERE is already present
+                query += " WHERE 1=1"
+            query = self.db.add_filter_to_query(query, filters)
+            filter_params = self.db.get_filter_params(filters)
 
+        if filter_params:
+            params += tuple(filter_params)
         df = pd.read_sql(query, self.db.conn, params=params)
         value = df.iloc[0, 0] if not df.empty else 0
 

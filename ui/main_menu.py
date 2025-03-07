@@ -65,6 +65,7 @@ class MenuBar(QMenuBar):
 
         search_action = QAction("Search", self)
         search_action.setShortcut(search_shortcut)
+        search_action.triggered.connect(parent.toggle_search)
         view_menu.addAction(search_action)
 
         about_action = QAction("About", self)
