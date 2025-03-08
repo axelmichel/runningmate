@@ -1,3 +1,4 @@
+import locale
 import os
 import sys
 import webbrowser
@@ -79,6 +80,7 @@ class NumericTableWidgetItem(QTableWidgetItem):
 class RunningDataApp(QWidget):
     def __init__(self, db_handler: DatabaseHandler):
         super().__init__()
+        self.total_distance_label = None
         self.activity_widget = None
         self.right_widget = None
         self.heatmap = None
@@ -227,9 +229,11 @@ class RunningDataApp(QWidget):
         self.items_info_label = QLabel()
         self.items_info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        self.total_distance_label = QLabel()
         # Add widgets to layout
         pagination_layout.addWidget(self.prev_button)
         pagination_layout.addWidget(self.page_label)
+        pagination_layout.addWidget(self.total_distance_label)
         pagination_layout.addWidget(self.next_button)
 
         self.center_layout.addLayout(pagination_layout)
@@ -445,6 +449,14 @@ class RunningDataApp(QWidget):
         self.distance_card.update_info(self.view_mode, self.search_filter)
         self.duration_card.update_info(self.view_mode, self.search_filter)
         self.elevation_card.update_info(self.view_mode, self.search_filter)
+
+    def show_total_distance(self, distance):
+        if distance is None or distance == 0.0:
+            self.total_distance_label.setText("")
+            return
+        locale.setlocale(locale.LC_ALL, "")
+        distanceLabel = locale.format_string("%.2f", distance, grouping=True)
+        self.total_distance_label.setText(f"Total Distance: {distanceLabel} km")
 
     def load_activities(self):
         activities = self.db.fetch_activities(
