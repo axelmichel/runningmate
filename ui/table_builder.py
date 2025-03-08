@@ -191,11 +191,39 @@ class TableBuilder:
                     table_widget, row, parent
                 )
             )
+            table_widget.selectionModel().selectionChanged.connect(
+                lambda: TableBuilder.handle_selection_change(
+                    table_widget, activity_type, parent
+                )
+            )
+
             table_widget.horizontalHeader().sectionClicked.connect(
                 lambda index: parent.sort_by_column(
                     activity_type, column=headers[index]
                 )
             )
+
+    @staticmethod
+    def handle_selection_change(table_widget, activity_type, parent):
+        """Handles row selection via keyboard and calculates total distance for multiple selections."""
+        selected_rows = table_widget.selectionModel().selectedRows()
+        parent.show_total_distance(None)
+        if len(selected_rows) == 1:
+            TableBuilder.handle_row_click(table_widget, selected_rows[0].row(), parent)
+        if len(selected_rows) > 0:
+            total_distance = 0.0
+            headers = HEADERS.get(activity_type, [])
+            if "distance" in headers:
+                distance_column_index = headers.index("distance")
+                if distance_column_index is not None:
+                    for row in selected_rows:
+                        item = table_widget.item(row.row(), distance_column_index)
+                        if item:
+                            try:
+                                total_distance += float(item.text())
+                            except ValueError:
+                                pass
+                    parent.show_total_distance(total_distance)
 
     @staticmethod
     def update_header_styles(
@@ -323,9 +351,7 @@ class TableBuilder:
     @staticmethod
     def handle_row_click(table_widget, row, parent):
         """Finds the correct row index after sorting and passes the correct row data."""
-        id_item = table_widget.item(
-            row, table_widget.columnCount() - 3
-        )  # ✅ Get the hidden ID column
+        id_item = table_widget.item(row, table_widget.columnCount() - 3)
         if id_item:
             row_id = id_item.text()
             parent.load_detail(row_id)
