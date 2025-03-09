@@ -31,6 +31,7 @@ from processing.plot_heatmap import PlotHeatmap
 from processing.system_settings import SortOrder, ViewMode, mapActivityTypes
 from ui.activity_widget import ActivityWidget
 from ui.best_performances_widget import BestPerformanceWidget
+from ui.dialog_detail import DialogDetail
 from ui.info_card import InfoCard
 from ui.main_menu import MenuBar
 from ui.side_bar import Sidebar
@@ -38,7 +39,6 @@ from ui.table_builder import TableBuilder
 from ui.widget_search import SearchWidget
 from ui.window_garmin_sync import GarminSyncWindow
 from ui.window_icloud_sync import iCloudSyncDialog
-from ui.window_run_details import RunDetailsWindow
 from ui.window_user_settings import UserSettingsWindow
 from utils.app_mode import is_dark_mode
 from utils.resource_path import resource_path
@@ -533,21 +533,8 @@ class RunningDataApp(QWidget):
         self.update_activity_view(None, activity_id)
 
     def open_detail(self, activity_id, activity_type):
-        if activity_type == ViewMode.RUN:
-            data = self.db.fetch_run_by_activity_id(activity_id)
-            self.details_window = RunDetailsWindow(data, MEDIA_DIR, self.db)
-            self.details_window.exec()
-            self.details_window = None
-        elif activity_type == ViewMode.WALK:
-            data = self.db.fetch_walk_by_activity_id(activity_id)
-            self.details_window = RunDetailsWindow(data, MEDIA_DIR, self.db)
-            self.details_window.exec()
-            self.details_window = None
-        elif activity_type == ViewMode.CYCLE:
-            data = self.db.fetch_ride_by_activity_id(activity_id)
-            self.details_window = RunDetailsWindow(data, MEDIA_DIR, self.db)
-            self.details_window.exec()
-            self.details_window = None
+        self.details_window = DialogDetail(activity_id, activity_type, MEDIA_DIR, self.db, self)
+        self.details_window.exec()
 
     def get_sorting_direction(self, view_mode=ViewMode.ALL):
         if view_mode != self.view_mode:

@@ -10,13 +10,14 @@ from PyQt6.QtWidgets import (
 )
 
 from database.database_handler import DatabaseHandler
+from processing.system_settings import ViewMode
 from ui.side_bar import Sidebar
 from utils.translations import _
 
 
 class DialogDetail(QDialog):
-    def __init__(self, activity_id, activity_type, media_dir, db_handler: DatabaseHandler, parent: None):
-        super().__init__(parent)
+    def __init__(self, activity_id, activity_type, media_dir, db_handler: DatabaseHandler, parent=None):
+        super().__init__()
         self.pages = None
         self.map_page = None
         self.general_page = None
@@ -25,8 +26,10 @@ class DialogDetail(QDialog):
         self.nav_bar = None
         self.left_layout = None
         self.left_widget = None
+        self.parent = parent
         self.db = db_handler
         self.media_dir = media_dir
+        self.activity = self.load_activity(activity_id, activity_type)
 
     def init_ui(self):
         nav_buttons = {
@@ -89,6 +92,16 @@ class DialogDetail(QDialog):
         main_layout.addWidget(splitter)
         self.nav_bar.set_active_action("general")
         self.setLayout(main_layout)
+
+    def load_activity(self, activity_id, activity_type):
+        data = None
+        if activity_type == ViewMode.RUN:
+            data = self.db.fetch_run_by_activity_id(activity_id)
+        elif activity_type == ViewMode.WALK:
+            data = self.db.fetch_walk_by_activity_id(activity_id)
+        elif activity_type == ViewMode.CYCLE:
+            data = self.db.fetch_ride_by_activity_id(activity_id)
+        return data
 
     def set_active_page(self, page) -> None:
         if page == "general":
