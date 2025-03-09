@@ -533,7 +533,9 @@ class RunningDataApp(QWidget):
         self.update_activity_view(None, activity_id)
 
     def open_detail(self, activity_id, activity_type):
-        self.details_window = DialogDetail(activity_id, activity_type, MEDIA_DIR, self.db, self)
+        self.details_window = DialogDetail(
+            activity_id, activity_type, MEDIA_DIR, self.db, self
+        )
         self.details_window.exec()
 
     def get_sorting_direction(self, view_mode=ViewMode.ALL):

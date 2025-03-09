@@ -16,7 +16,14 @@ from utils.translations import _
 
 
 class DialogDetail(QDialog):
-    def __init__(self, activity_id, activity_type, media_dir, db_handler: DatabaseHandler, parent=None):
+    def __init__(
+        self,
+        activity_id,
+        activity_type,
+        media_dir,
+        db_handler: DatabaseHandler,
+        parent=None,
+    ):
         super().__init__()
         self.pages = None
         self.map_page = None
