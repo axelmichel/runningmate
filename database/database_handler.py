@@ -465,7 +465,7 @@ class DatabaseHandler:
         query = f"""
             SELECT
                 id as activity_id,
-                strftime('{_("%d.%m.%Y")}', date, 'unixepoch') AS date_time,  -- YYYY.MM.DD format
+                strftime('{_("%d.%m.%Y %H:%M")}', date, 'unixepoch') AS date_time,  -- YYYY.MM.DD format
                 strftime('%H:%M', date, 'unixepoch') AS time,  -- HH:MM format
                 printf('%02d:%02d:%02d', duration / 3600, (duration % 3600) / 60, duration % 60) AS duration,
                 activity_type,
