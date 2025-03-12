@@ -8,17 +8,19 @@ from database.database_handler import DatabaseHandler
 
 
 class HeartRateZoneWidget(QWidget):
-    def __init__(self, db_handler: DatabaseHandler, user_id: int):
+    def __init__(self, db_handler: DatabaseHandler, user_id: int, activity_id: int):
         """
         Initializes the HeartRateZoneWidget with database path and user ID.
 
         :param db_handler: DatabaseHandler instance.
         :param user_id: ID of the user to fetch heart rate zones.
+        :param activity_id: ID of the activity to fetch heart rate data.
         """
         super().__init__()
         self.user_id = None
         self.db = db_handler
         self.user_id = user_id
+        self.activity_id = activity_id
         self.zones = self._fetch_user_zones()
         self.init_ui()
 
@@ -44,7 +46,7 @@ class HeartRateZoneWidget(QWidget):
         Calculates the total time spent in each heart rate zone as a percentage.
         :return: Dictionary mapping each zone to total percentage of time spent.
         """
-        self.db.cursor.execute("SELECT seg_avg_heart_rate, seg_time_start, seg_time_end FROM activity_details")
+        self.db.cursor.execute("SELECT seg_avg_heart_rate, seg_time_start, seg_time_end FROM activity_details WHERE activity_id = ?", (self.activity_id,))
 
         zone_times = {f'zone_{i}': timedelta() for i in range(1, 6)}
         total_time = timedelta()
