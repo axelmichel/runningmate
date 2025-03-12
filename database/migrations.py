@@ -538,6 +538,13 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
                     "ALTER TABLE users ADD COLUMN birthday TEXT",
                 ],
             ),
+            (
+                50,
+                [
+                    "ALTER TABLE activities ADD COLUMN edited BOOLEAN DEFAULT 0",
+                    "ALTER TABLE activities ADD COLUMN new BOOLEAN DEFAULT 0",
+                ],
+            ),
         ]
     )
 
