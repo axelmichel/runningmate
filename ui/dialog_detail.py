@@ -1,3 +1,4 @@
+# ruff: noqa
 import os
 import time
 import webbrowser
@@ -9,6 +10,7 @@ from PyQt6.QtWidgets import (
     QDialog,
     QDoubleSpinBox,
     QFileDialog,
+    QFormLayout,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -21,13 +23,15 @@ from PyQt6.QtWidgets import (
     QTextEdit,
     QTimeEdit,
     QVBoxLayout,
-    QWidget, QFormLayout,
+    QWidget,
 )
 
 from database.database_handler import DatabaseHandler
+from database.user_settings import UserSettings
 from processing.system_settings import ViewMode
 from ui.dialog_action_bar import DialogActionBar
 from ui.side_bar import Sidebar
+from ui.widget_heart_rate_zones import HeartRateZoneWidget
 from utils.image_thumbnail import image_thumbnail
 from utils.translations import _
 from utils.video_thumbnail import video_thumbnail
@@ -40,6 +44,7 @@ class DialogDetail(QDialog):
         activity_type,
         media_dir,
         db_handler: DatabaseHandler,
+        user_settings: UserSettings,
         parent=None,
     ):
         super().__init__()
@@ -74,6 +79,7 @@ class DialogDetail(QDialog):
         self.media_dir = media_dir
         self.activity = self.load_activity(activity_id, activity_type)
         self.media_files = self.db.get_media_files(activity_id)
+        self.user = user_settings.get_user_data()
         self.init_ui()
 
     def init_ui(self):
@@ -244,28 +250,40 @@ class DialogDetail(QDialog):
         layout = QVBoxLayout()
         layout.setContentsMargins(10, 10, 10, 10)
         layout.addLayout(self.get_page_title(_("Heart Rate Zones")))
+        zones_row = QHBoxLayout()
+        zones_widget = HeartRateZoneWidget(self.db, self.user["id"], self.activity_id)
+        zones_row.addWidget(zones_widget)
+        layout.addLayout(zones_row)
         layout.addStretch(1)
         page.setLayout(layout)
         return page
 
     def get_form_field(self, field, styleObject):
         field.setMinimumWidth(200)
-        field.setStyleSheet(f"""
+        field.setStyleSheet(
+            f"""
             {styleObject} {{
             padding: 5px;
             height: 28px;
-            }}""")
+            }}"""
+        )
         return field
 
     def get_form(self) -> QWidget:
         self.form_container = QWidget()
-        self.form_container.setObjectName("formContainer")  # Set object name for styling
+        self.form_container.setObjectName(
+            "formContainer"
+        )  # Set object name for styling
 
         self.form_layout = QFormLayout(self.form_container)
         self.form_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.form_layout.setSpacing(20)
-        self.form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
-        self.form_layout.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.form_layout.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow
+        )
+        self.form_layout.setFormAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
         self.form_layout.setContentsMargins(0, 10, 0, 10)
         return self.form_container
 
@@ -309,13 +327,15 @@ class DialogDetail(QDialog):
         self.elevation_input.setRange(0, 10000)
         self.elevation_input.setDecimals(2)
 
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             #formContainer QLabel {
                 padding: 5px 0px;
                 min-height: 28px;
                 line-height: 28px;
             }
-        """)
+        """
+        )
 
         form_layout.addRow(_("Distance:"), self.distance_input)
         form_layout.addRow(_("Date:"), self.date_input)
@@ -363,10 +383,16 @@ class DialogDetail(QDialog):
         date_str = self.date_input.date().toString("dd.MM.yyyy")
         time_str = self.time_input.time().toString("HH:mm:ss")
         date_time_str = f"{date_str} {time_str}"
-        unix_timestamp = int(time.mktime(time.strptime(date_time_str, "%d.%m.%Y %H:%M:%S")))
+        unix_timestamp = int(
+            time.mktime(time.strptime(date_time_str, "%d.%m.%Y %H:%M:%S"))
+        )
 
         duration_time = self.duration_input.time()
-        duration_seconds = (duration_time.hour() * 3600) + (duration_time.minute() * 60) + duration_time.second()
+        duration_seconds = (
+            (duration_time.hour() * 3600)
+            + (duration_time.minute() * 60)
+            + duration_time.second()
+        )
 
         data = {
             "title": self.title_input.text(),
@@ -374,14 +400,11 @@ class DialogDetail(QDialog):
             "distance": self.distance_input.value(),
             "date": unix_timestamp,
             "duration": duration_seconds,
-            "calories" : self.calories_input.value(),
-            "elevation" : self.elevation_input.value()
+            "calories": self.calories_input.value(),
+            "elevation": self.elevation_input.value(),
         }
 
-        self.db.update_activity(
-            self.activity_id,
-            data
-        )
+        self.db.update_activity(self.activity_id, data)
         self.activity = self.load_activity(self.activity_id, self.activity_type)
 
     def upload_media(self):

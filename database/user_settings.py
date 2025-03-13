@@ -41,6 +41,7 @@ class UserSettings:
         self,
         id: int,
         vo2max: float,
+        hr_min: int,
         zone1: int,
         zone2: int,
         zone3: int,
@@ -52,8 +53,8 @@ class UserSettings:
         """
         if id:
             self.cursor.execute(
-                "UPDATE users SET vo2max=?, zone1=?, zone2=?, zone3=?, zone4=?, zone5=? WHERE id = ?",
-                (vo2max, zone1, zone2, zone3, zone4, zone5),
+                "UPDATE users SET vo2max=?, hr_min=?, zone1=?, zone2=?, zone3=?, zone4=?, zone5=? WHERE id = ?",
+                (vo2max, hr_min, zone1, zone2, zone3, zone4, zone5, id),
             )
         self.conn.commit()
 
