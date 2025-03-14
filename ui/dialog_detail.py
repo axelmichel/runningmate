@@ -1,7 +1,9 @@
 # ruff: noqa
+import locale
 import os
 import time
 import webbrowser
+from datetime import datetime
 
 from PyQt6.QtCore import QDate, Qt, QTime
 from PyQt6.QtGui import QPixmap
@@ -30,8 +32,9 @@ from database.database_handler import DatabaseHandler
 from database.user_settings import UserSettings
 from processing.system_settings import ViewMode
 from ui.dialog_action_bar import DialogActionBar
+from ui.dialog_detail_pages.page_zones import page_zones
 from ui.side_bar import Sidebar
-from ui.widget_heart_rate_zones import HeartRateZoneWidget
+from ui.themes import THEME
 from utils.image_thumbnail import image_thumbnail
 from utils.translations import _
 from utils.video_thumbnail import video_thumbnail
@@ -93,7 +96,7 @@ class DialogDetail(QDialog):
         }
 
         self.setWindowTitle(_("Activity Details"))
-        self.setGeometry(100, 100, 800, 500)
+        self.setGeometry(100, 100, 800, 700)
 
         main_layout = QHBoxLayout()
 
@@ -246,17 +249,14 @@ class DialogDetail(QDialog):
         return page
 
     def create_zones_page(self):
-        page = QWidget()
-        layout = QVBoxLayout()
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.addLayout(self.get_page_title(_("Heart Rate Zones")))
-        zones_row = QHBoxLayout()
-        zones_widget = HeartRateZoneWidget(self.db, self.user["id"], self.activity_id)
-        zones_row.addWidget(zones_widget)
-        layout.addLayout(zones_row)
-        layout.addStretch(1)
-        page.setLayout(layout)
-        return page
+        return page_zones(
+            self.get_page_title(_("Heart Rate Zones")),
+            self.db,
+            self.user["id"],
+            self.activity_id,
+            self.activity_type,
+            self.activity["raw_date"],
+        )
 
     def get_form_field(self, field, styleObject):
         field.setMinimumWidth(200)
@@ -430,18 +430,41 @@ class DialogDetail(QDialog):
             self.media_files = self.db.get_media_files(self.activity_id)
             self.load_carousel_media()
 
-    def get_page_title(self, title: str) -> QVBoxLayout | QVBoxLayout:
-        title_label = QLabel(f"{self.activity['title']}: {title}")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+    def get_page_title(self, title: str) -> QVBoxLayout:
+        """Creates a formatted title bar with a date, activity title, and right-aligned page title."""
+        locale.setlocale(
+            locale.LC_TIME, "en_US.UTF-8"
+        )  # Ensures month & weekday names are in English
+
+        # Convert Unix timestamp to datetime
+        activity_date = datetime.fromtimestamp(self.activity["raw_date"])
+        formatted_date = activity_date.strftime(
+            "%a, %d.%m.%y"
+        )  # Example: "Monday, 01.01.25"
+
+        # Create labels
+        date_label = QLabel(f"{formatted_date} - {self.activity['title']}")
+        date_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+        date_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        title_label = QLabel(title)
         title_label.setStyleSheet(
-            """
-            font-size: 16px;
-            font-weight: bold;
-        """
+            f"font-size: 14px; font-weight: bold; color:{THEME.ACCENT_COLOR};"
         )
-        title_layout = QVBoxLayout()
-        title_layout.addWidget(title_label)
-        return title_layout
+        title_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+
+        # Layout setup
+        title_layout = QHBoxLayout()
+        title_layout.addWidget(date_label)  # Left side: Date + Activity title
+        title_layout.addStretch()  # Stretch: Pushes right-aligned text
+        title_layout.addWidget(title_label)  # Right side: Page title
+
+        # Wrap layout inside a vertical box (ensures proper margins)
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(title_layout)
+        main_layout.setContentsMargins(0, 0, 0, 10)  # Add bottom margin
+
+        return main_layout
 
     def open_media(self, item):
         """Opens selected media file (image or video)."""

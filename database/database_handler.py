@@ -319,6 +319,7 @@ class DatabaseHandler:
         query = f"""
                 SELECT
                     runs.id,
+                    activities.date as raw_date,
                     strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
                     strftime('%H:%M', activities.date, 'unixepoch') AS time,
                     printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,
@@ -364,6 +365,7 @@ class DatabaseHandler:
         query = f"""
                 SELECT
                     walking.id,
+                    activities.date as raw_date,
                     strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
                     strftime('%H:%M', activities.date, 'unixepoch') AS time,
                     printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,
@@ -404,6 +406,7 @@ class DatabaseHandler:
         query = f"""
                    SELECT
                        cycling.id,
+                       activities.date as raw_date,
                        strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
                        strftime('%H:%M', activities.date, 'unixepoch') AS time,
                        printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,

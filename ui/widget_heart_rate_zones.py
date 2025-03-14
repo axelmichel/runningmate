@@ -39,18 +39,29 @@ class HeartRateZoneWidget(QWidget):
         Initializes the PyQt6 widget UI with properly scaled and colored progress bars.
         """
         layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        title_label = QLabel(_("Heart Rate Zones"))
+        title_label.setStyleSheet(
+            """
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        """
+        )
+        title_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(title_label)
+
         time_per_zone = self.calculate_time_per_zone()
 
         # Get the available screen width
         screen_width = int(QApplication.primaryScreen().availableGeometry().width())
-        dialog_max_width = min(int(screen_width * 0.8), 600)  # Limit dialog width
+        dialog_max_width = min(int(screen_width * 0.8), 600)
         self.setMaximumWidth(dialog_max_width)
 
         label_width = 150  # Fixed width for zone label
         percentage_width = 40  # Fixed width for percentage label
-        bar_max_width = (
-            dialog_max_width - label_width - percentage_width - 30
-        )  # Available space for bars
+        bar_min_width = 200
 
         # Define different colors for each zone
         zone_colors = {
@@ -64,17 +75,16 @@ class HeartRateZoneWidget(QWidget):
         for zone, percentage in time_per_zone.items():
             min_hr, max_hr = self._get_zone_range(zone)  # Get HR range for the zone
 
-            # Create a horizontal layout for each row and center-align vertically
             row_layout = QHBoxLayout()
-            row_layout.setAlignment(
-                Qt.AlignmentFlag.AlignVCenter
-            )  # Center elements vertically
+            row_layout.setContentsMargins(5, 0, 0, 0)
+            row_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
-            # Zone Label (Fixed Width)
-            zone_label = QLabel(f"{_(zone.capitalize())} ({min_hr}-{max_hr} {_("BPM")}) ")
+            zone_label = QLabel(
+                f"{_(zone.capitalize())} ({min_hr}-{max_hr} {_("BPM")}) "
+            )
             zone_label.setFixedWidth(label_width)
             zone_label.setAlignment(
-                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
             )
 
             # Progress Bar (Properly Scaled & Colored)
@@ -83,7 +93,7 @@ class HeartRateZoneWidget(QWidget):
             bar.setValue(int(percentage))
             bar.setTextVisible(False)  # Hide the percentage inside the progress bar
             bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-            bar.setMaximumWidth(bar_max_width)
+            bar.setMinimumWidth(bar_min_width)
             bar.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
             # Apply color based on zone
