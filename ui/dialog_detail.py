@@ -51,6 +51,7 @@ class DialogDetail(QDialog):
         parent=None,
     ):
         super().__init__()
+        self.items_per_page = None
         self.form_container = None
         self.form_layout = None
         self.title_input = None
@@ -66,7 +67,7 @@ class DialogDetail(QDialog):
         self.carousel_layout = None
         self.prev_button = None
         self.next_button = None
-        self.current_page = None
+        self.current_page = 0
         self.pages = None
         self.map_page = None
         self.general_page = None
@@ -380,31 +381,13 @@ class DialogDetail(QDialog):
 
     def update_activity(self):
 
-        date_str = self.date_input.date().toString("dd.MM.yyyy")
-        time_str = self.time_input.time().toString("HH:mm:ss")
-        date_time_str = f"{date_str} {time_str}"
-        unix_timestamp = int(
-            time.mktime(time.strptime(date_time_str, "%d.%m.%Y %H:%M:%S"))
-        )
-
-        duration_time = self.duration_input.time()
-        duration_seconds = (
-            (duration_time.hour() * 3600)
-            + (duration_time.minute() * 60)
-            + duration_time.second()
-        )
-
         data = {
+            "id": self.activity_id,
             "title": self.title_input.text(),
-            "comment": self.comment_input.toPlainText(),
-            "distance": self.distance_input.value(),
-            "date": unix_timestamp,
-            "duration": duration_seconds,
-            "calories": self.calories_input.value(),
-            "elevation": self.elevation_input.value(),
+            "comment": self.comment_input.toPlainText()
         }
 
-        self.db.update_activity(self.activity_id, data)
+        self.db.update_activity_data(data)
         self.activity = self.load_activity(self.activity_id, self.activity_type)
 
     def upload_media(self):
@@ -509,7 +492,7 @@ class DialogDetail(QDialog):
             QMessageBox.warning(self, _("Video Error"), _("Video file not found."))
 
     def load_carousel_media(self):
-        items_per_page = 5
+        self.items_per_page = 5
         while self.carousel_layout.count():
             widget = self.carousel_layout.takeAt(0).widget()
             if widget:
@@ -519,11 +502,11 @@ class DialogDetail(QDialog):
             self.prev_button.setVisible(False)
             self.next_button.setVisible(False)
             return
-
+        print(len(self.media_files))
         self.carousel_layout.setSpacing(10)  #
-        total_pages = (len(self.media_files) + items_per_page - 1) // items_per_page
-        start_index = self.current_page * items_per_page
-        end_index = start_index + items_per_page
+        total_pages = (len(self.media_files) + self.items_per_page - 1)
+        start_index = self.current_page * self.items_per_page
+        end_index = start_index + self.items_per_page
         displayed_media = self.media_files[start_index:end_index]
 
         for media in displayed_media:
