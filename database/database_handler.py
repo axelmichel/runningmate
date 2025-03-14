@@ -200,7 +200,7 @@ class DatabaseHandler:
         update_columns = [col for col in columns if col != id_field]
 
         set_clause = ", ".join([f"{col} = ?" for col in update_columns])
-        values = [data.get(col, None) for col in columns]
+        values = [data.get(col, None) for col in update_columns]
         values.append(data[id_field])
 
         query = f"""
