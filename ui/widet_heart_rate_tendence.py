@@ -172,7 +172,7 @@ class HeartRateTrendWidget(QWidget):
             fig.add_hline(
                 y=min_zone_hr,
                 line_dash="dot",
-                line_color=THEME.MAIN_COLOR_LIGHT,
+                line_color=THEME.MAIN_COLOR,
                 annotation_text=f"{_("MIN HR")}: {min_zone_hr} {_("BPM")}",
                 annotation_position="top right",
             )
