@@ -7,7 +7,9 @@ from utils.logger import logger
 
 
 class ActivityData:
-    def __init__(self, file_path: str, image_path: str, db_handler: DatabaseHandler, parent=None):
+    def __init__(
+        self, file_path: str, image_path: str, db_handler: DatabaseHandler, parent=None
+    ):
         super().__init__()
         self.file_path = file_path
         self.image_path = image_path
@@ -35,7 +37,7 @@ class ActivityData:
                         return parsed
                 elif os.path.exists(tcx_path):
                     parser = TcxFileParser()
-                    parsed, _  = parser.parse_tcx(tcx_path)
+                    parsed, _ = parser.parse_tcx(tcx_path)
                     self.pack_tar(tcx_path)
                     os.remove(tcx_path)
                     return parsed
@@ -73,21 +75,21 @@ class ActivityData:
             return activity.get("activity_type")
         return None
 
-    def save_activity_map(self, activity_id: int, chart_type:str, file_path: str):
-       map = self.get_activity_map(activity_id, chart_type)
-       if map is not None:
-           return map
+    def save_activity_map(self, activity_id: int, chart_type: str, file_path: str):
+        map = self.get_activity_map(activity_id, chart_type)
+        if map is not None:
+            return map
 
-       self.db.cursor.execute(
-           """
+        self.db.cursor.execute(
+            """
             INSERT INTO activity_charts (activity_id, chart_type, file_path) VALUES (?, ?, ?)
            """,
-           (activity_id, chart_type, file_path)
-         )
-       self.db.conn.commit()
-       return self.get_activity_map(activity_id, chart_type)
+            (activity_id, chart_type, file_path),
+        )
+        self.db.conn.commit()
+        return self.get_activity_map(activity_id, chart_type)
 
-    def get_activity_map(self, activity_id: int, chart_type:str):
+    def get_activity_map(self, activity_id: int, chart_type: str):
         """
         Returns the file path for the activity map.
         :param activity_id: The ID of the activity to retrieve.
@@ -97,7 +99,7 @@ class ActivityData:
             """
             SELECT file_path FROM activity_charts WHERE activity_id = ? AND chart_type = ?
             """,
-            (activity_id, chart_type)
+            (activity_id, chart_type),
         )
         row = self.db.cursor.fetchone()
         if row:

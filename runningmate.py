@@ -534,7 +534,14 @@ class RunningDataApp(QWidget):
 
     def open_detail(self, activity_id, activity_type):
         self.details_window = DialogDetail(
-            activity_id, activity_type, MEDIA_DIR, IMG_DIR, FILE_DIR, self.db, self.userSettings, self
+            activity_id,
+            activity_type,
+            MEDIA_DIR,
+            IMG_DIR,
+            FILE_DIR,
+            self.db,
+            self.userSettings,
+            self,
         )
         self.details_window.exec()
 

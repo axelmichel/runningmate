@@ -185,7 +185,8 @@ class TcxFileParser:
 
         df["CleanPace"] = np.where(
             df["CleanDistDiff"].notna() & (df["CleanDistDiff"] > min_dist),
-            (df["TimeDiff"] / df["CleanDistDiff"]) * 16.6667,  # ✅ Correct conversion factor
+            (df["TimeDiff"] / df["CleanDistDiff"])
+            * 16.6667,  # ✅ Correct conversion factor
             np.nan,
         )
 

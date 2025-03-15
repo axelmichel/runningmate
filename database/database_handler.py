@@ -76,7 +76,7 @@ class DatabaseHandler:
             "calories",
             "elevation_gain",
             "new",
-            "edited"
+            "edited",
         ],
         "activity_details": [
             "activity_id",

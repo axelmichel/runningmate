@@ -4,7 +4,6 @@ from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
-    QPushButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -17,7 +16,14 @@ from utils.translations import _
 
 
 class MapWidget(QWidget):
-    def __init__(self, file_path: str, image_path: str, db_handler: DatabaseHandler, activity_id: int, map_type: str):
+    def __init__(
+        self,
+        file_path: str,
+        image_path: str,
+        db_handler: DatabaseHandler,
+        activity_id: int,
+        map_type: str,
+    ):
         super().__init__()
         self.activity_id = activity_id
         self.TrackMap = TrackMap(file_path, image_path, db_handler, self.activity_id)
@@ -39,7 +45,9 @@ class MapWidget(QWidget):
             font-weight: bold;
             """
         )
-        self.title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.title_label.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
 
         # Button Layout
         self.map_buttons_layout = QHBoxLayout()
@@ -54,7 +62,9 @@ class MapWidget(QWidget):
         self.map_buttons_layout.addWidget(self.track_button)
         self.map_buttons_layout.addWidget(self.pace_button)
         self.map_buttons_layout.addWidget(self.heart_rate_button)
-        self.map_buttons_layout.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.map_buttons_layout.setAlignment(
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        )
 
         # Title + Buttons in one row
         title_layout = QHBoxLayout()
@@ -64,10 +74,14 @@ class MapWidget(QWidget):
 
         layout.addLayout(title_layout)
 
-        self.web_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.web_view.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         settings = self.web_view.settings()
         settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, True)
-        settings.setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
+        settings.setAttribute(
+            QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True
+        )
         layout.addWidget(self.web_view)
         self.setLayout(layout)
 
