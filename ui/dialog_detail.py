@@ -520,7 +520,6 @@ class DialogDetail(QDialog):
             self.prev_button.setVisible(False)
             self.next_button.setVisible(False)
             return
-        print(len(self.media_files))
         self.carousel_layout.setSpacing(10)  #
         total_pages = len(self.media_files) + self.items_per_page - 1
         start_index = self.current_page * self.items_per_page
