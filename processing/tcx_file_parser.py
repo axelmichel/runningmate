@@ -138,6 +138,7 @@ class TcxFileParser:
         activity_group = mapActivityTypes(activity_type)
 
         self._mapPower(df, activity_group)
+        self._mapPace(df, activity_group)
         df["Calories"] = df.apply(
             lambda row: self._estimate_calories(row, activity_group), axis=1
         )
@@ -162,6 +163,38 @@ class TcxFileParser:
         df["Power"] = pd.to_numeric(df["Power"], errors="coerce").astype(float)
         df["Power"] = df["Power"].infer_objects(copy=False)
         df.drop(columns=["EstimatedPower"], inplace=True)
+
+    def _mapPace(self, df, activity_group):
+        """
+        Calculates pace (min/km) for each segment and applies different filtering based on activity type.
+        :param df: The DataFrame containing distance and time data.
+        :param activity_group: The detected activity group (ViewMode Enum: CYCLE, RUN, WALK).
+        """
+        # Set pace thresholds based on activity type
+        if activity_group == ViewMode.RUN:
+            min_pace, max_pace, min_dist = 3, 12, 0.5
+        elif activity_group == ViewMode.CYCLE:
+            min_pace, max_pace, min_dist = 0.5, 6, 5
+        elif activity_group == ViewMode.WALK:
+            min_pace, max_pace, min_dist = 8, 25, 0.2
+        else:
+            min_pace, max_pace, min_dist = 2, 20, 0.5
+
+        # Avoid extreme values by filtering based on min distance
+        df["CleanDistDiff"] = df["DistDiff"].replace(0, np.nan)
+
+        df["CleanPace"] = np.where(
+            df["CleanDistDiff"].notna() & (df["CleanDistDiff"] > min_dist),
+            (df["TimeDiff"] / df["CleanDistDiff"]) * 16.6667,  # ✅ Correct conversion factor
+            np.nan,
+        )
+
+        df["CleanPace"] = df["CleanPace"].where(
+            (df["CleanPace"] >= min_pace) & (df["CleanPace"] <= max_pace), np.nan
+        )
+
+        df["CleanPace"] = df["CleanPace"].replace([np.inf, -np.inf], np.nan)
+        return df
 
     @staticmethod
     def _estimate_calories(row: pd.Series, activity_type: ViewMode) -> float:

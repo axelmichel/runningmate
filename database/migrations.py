@@ -545,6 +545,16 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
                     "ALTER TABLE activities ADD COLUMN new BOOLEAN DEFAULT 0",
                 ],
             ),
+            (
+            51,
+            """
+              CREATE TABLE IF NOT EXISTS activity_charts (
+               id INTEGER PRIMARY KEY AUTOINCREMENT,
+               activity_id INTEGER NOT NULL, chart_type TEXT NOT NULL,
+               file_path TEXT NOT NULL, 
+               FOREIGN KEY (activity_id) REFERENCES activities(id))
+           """,
+            ),
         ]
     )
 

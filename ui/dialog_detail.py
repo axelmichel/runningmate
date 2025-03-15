@@ -32,6 +32,7 @@ from database.database_handler import DatabaseHandler
 from database.user_settings import UserSettings
 from processing.system_settings import ViewMode
 from ui.dialog_action_bar import DialogActionBar
+from ui.dialog_detail_pages.page_map import page_map
 from ui.dialog_detail_pages.page_zones import page_zones
 from ui.side_bar import Sidebar
 from ui.themes import THEME
@@ -46,6 +47,8 @@ class DialogDetail(QDialog):
         activity_id,
         activity_type,
         media_dir,
+        img_dir,
+        file_dir,
         db_handler: DatabaseHandler,
         user_settings: UserSettings,
         parent=None,
@@ -81,6 +84,8 @@ class DialogDetail(QDialog):
         self.parent = parent
         self.db = db_handler
         self.media_dir = media_dir
+        self.img_dir = img_dir
+        self.file_dir = file_dir
         self.activity = self.load_activity(activity_id, activity_type)
         self.media_files = self.db.get_media_files(activity_id)
         self.user = user_settings.get_user_data()
@@ -90,7 +95,7 @@ class DialogDetail(QDialog):
         nav_buttons = {
             "general": ("information-line.svg", "General"),
             "segments": ("stack-fill.svg", "Segments"),
-            "map": ("map-pin-fill.svg", "Map"),
+            "map": ("map-line.svg", "Map"),
             "effect": ("timer-flash-fill.svg", "Effect"),
             "zones": ("heart-pulse-line.svg", "Heart Rate Zones"),
             "edit": ("pencil-line.svg", "Edit"),
@@ -223,13 +228,13 @@ class DialogDetail(QDialog):
         return carousel_wrapper
 
     def create_map_page(self):
-        page = QWidget()
-        layout = QVBoxLayout()
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.addLayout(self.get_page_title(_("Map")))
-        layout.addStretch(1)
-        page.setLayout(layout)
-        return page
+        return page_map(
+            self.get_page_title(_("Maps")),
+            self.db,
+            self.activity_id,
+            self.file_dir,
+            self.img_dir,
+        )
 
     def create_effect_page(self):
         page = QWidget()
