@@ -385,15 +385,28 @@ class DialogDetail(QDialog):
         return page
 
     def update_activity(self):
-
         data = {
             "id": self.activity_id,
             "title": self.title_input.text(),
             "comment": self.comment_input.toPlainText(),
         }
 
+        # Update the database
         self.db.update_activity_data(data)
+
+        # Refresh data
         self.activity = self.load_activity(self.activity_id, self.activity_type)
+
+        # Remove old general page and create a new one
+        self.pages.removeWidget(self.general_page)
+        self.general_page.deleteLater()
+
+        self.general_page = self.create_general_page()
+        self.pages.addWidget(self.general_page)
+        self.pages.setCurrentWidget(self.general_page)
+
+        if self.parent:
+            self.parent.trigger_load()
 
     def upload_media(self):
         """Allows the user to upload media files."""
