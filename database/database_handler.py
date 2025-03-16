@@ -71,9 +71,12 @@ class DatabaseHandler:
             "duration",
             "date",
             "title",
+            "comment",
             "file_id",
             "calories",
             "elevation_gain",
+            "new",
+            "edited",
         ],
         "activity_details": [
             "activity_id",
@@ -122,10 +125,14 @@ class DatabaseHandler:
         self.cursor = self.conn.cursor()
 
     def insert_activity(self, data: dict, segment_df=None):
+        data.setdefault("new", 1)
         self.insert("activities", data)
         if segment_df is not None:
             for segment_id, row in segment_df.iterrows():
                 self.insert_activity_details(data["id"], segment_id, row)
+
+    def update_activity_data(self, data: dict):
+        self.update("activities", data, "id")
 
     def update_activity(self, data: dict, segment_df=None):
         self.update("activities", data, "id")
@@ -167,8 +174,10 @@ class DatabaseHandler:
         self.update("weather", data)
 
     def update(self, table, data, id_field="activity_id"):
-        columns = self.TABLE_COLUMNS[table]
-        self.update_data(table, columns, data, id_field)
+        all_columns = self.TABLE_COLUMNS[table]
+        filtered_columns = [col for col in all_columns if col in data]
+        filtered_data = {col: data[col] for col in filtered_columns}
+        self.update_data(table, filtered_columns, filtered_data, id_field)
 
     def insert(self, table, data):
         columns = self.TABLE_COLUMNS[table]
@@ -189,16 +198,17 @@ class DatabaseHandler:
         if id_field not in data:
             raise ValueError("activity_id is required for updates.")
 
-        set_clause = ", ".join([f"{col} = ?" for col in columns])
-        values = [data.get(col, None) for col in columns]
-        values.append(data[id_field])  # Add activity_id for WHERE clause
+        update_columns = [col for col in columns if col != id_field]
+
+        set_clause = ", ".join([f"{col} = ?" for col in update_columns])
+        values = [data.get(col, None) for col in update_columns]
+        values.append(data[id_field])
 
         query = f"""
             UPDATE {table}
             SET {set_clause}
             WHERE {id_field} = ?
         """
-
         self.cursor.execute(query, values)
         self.conn.commit()
 
@@ -319,6 +329,7 @@ class DatabaseHandler:
         query = f"""
                 SELECT
                     runs.id,
+                    activities.date as raw_date,
                     strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
                     strftime('%H:%M', activities.date, 'unixepoch') AS time,
                     printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,
@@ -327,6 +338,7 @@ class DatabaseHandler:
                     activities.comment,
                     activities.activity_type,
                     activities.file_id,
+                    activities.calories,
                     runs.activity_id,
                     runs.elevation_gain,
                     runs.avg_speed,
@@ -363,6 +375,7 @@ class DatabaseHandler:
         query = f"""
                 SELECT
                     walking.id,
+                    activities.date as raw_date,
                     strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
                     strftime('%H:%M', activities.date, 'unixepoch') AS time,
                     printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,
@@ -370,6 +383,7 @@ class DatabaseHandler:
                     activities.title,
                     activities.comment,
                     activities.activity_type,
+                    activities.calories,
                     walking.activity_id,
                     walking.elevation_gain,
                     walking.avg_speed,
@@ -402,6 +416,7 @@ class DatabaseHandler:
         query = f"""
                    SELECT
                        cycling.id,
+                       activities.date as raw_date,
                        strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
                        strftime('%H:%M', activities.date, 'unixepoch') AS time,
                        printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,
@@ -409,6 +424,7 @@ class DatabaseHandler:
                        activities.title,
                        activities.comment,
                        activities.activity_type,
+                       activities.calories,
                        cycling.activity_id,
                        cycling.elevation_gain,
                        cycling.avg_speed,
@@ -462,7 +478,7 @@ class DatabaseHandler:
         query = f"""
             SELECT
                 id as activity_id,
-                strftime('{_("%d.%m.%Y")}', date, 'unixepoch') AS date_time,  -- YYYY.MM.DD format
+                strftime('{_("%d.%m.%Y %H:%M")}', date, 'unixepoch') AS date_time,  -- YYYY.MM.DD format
                 strftime('%H:%M', date, 'unixepoch') AS time,  -- HH:MM format
                 printf('%02d:%02d:%02d', duration / 3600, (duration % 3600) / 60, duration % 60) AS duration,
                 activity_type,

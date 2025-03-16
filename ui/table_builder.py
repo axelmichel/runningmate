@@ -198,10 +198,18 @@ class TableBuilder:
             )
 
             table_widget.horizontalHeader().sectionClicked.connect(
-                lambda index: parent.sort_by_column(
-                    activity_type, column=headers[index]
+                lambda index: TableBuilder.handle_sort_request(
+                    table_widget, activity_type, index, parent
                 )
             )
+
+    @staticmethod
+    def handle_sort_request(table_widget, activity_type, index, parent):
+        headers = HEADERS.get(activity_type, [])
+        if index >= len(headers):
+            return
+
+        parent.sort_by_column(activity_type, column=headers[index])
 
     @staticmethod
     def handle_selection_change(table_widget, activity_type, parent):
