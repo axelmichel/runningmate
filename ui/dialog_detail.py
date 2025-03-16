@@ -1,29 +1,21 @@
 # ruff: noqa
 import locale
 import os
-import time
 import webbrowser
 from datetime import datetime
 
-from PyQt6.QtCore import QDate, Qt, QTime
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
-    QDateEdit,
     QDialog,
-    QDoubleSpinBox,
     QFileDialog,
-    QFormLayout,
     QFrame,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QMessageBox,
     QPushButton,
-    QSpinBox,
     QSplitter,
     QStackedWidget,
-    QTextEdit,
-    QTimeEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -31,7 +23,7 @@ from PyQt6.QtWidgets import (
 from database.database_handler import DatabaseHandler
 from database.user_settings import UserSettings
 from processing.system_settings import ViewMode
-from ui.dialog_action_bar import DialogActionBar
+from ui.dialog_detail_pages.page_edit import PageEdit
 from ui.dialog_detail_pages.page_map import page_map
 from ui.dialog_detail_pages.page_zones import page_zones
 from ui.side_bar import Sidebar
@@ -54,18 +46,9 @@ class DialogDetail(QDialog):
         parent=None,
     ):
         super().__init__()
+        self.edit_page = None
         self.items_per_page = None
-        self.form_container = None
-        self.form_layout = None
         self.title_input = None
-        self.comment_input = None
-        self.upload_button = None
-        self.distance_input = None
-        self.date_input = None
-        self.time_input = None
-        self.duration_input = None
-        self.calories_input = None
-        self.elevation_input = None
         self.segment_page = None
         self.carousel_layout = None
         self.prev_button = None
@@ -155,7 +138,10 @@ class DialogDetail(QDialog):
         )
 
         main_layout.addWidget(splitter)
-        self.nav_bar.set_active_action("general")
+        if self.activity.get("new", 0) == 1:
+            self.nav_bar.set_active_action("edit")
+        else:
+            self.nav_bar.set_active_action("general")
         self.setLayout(main_layout)
 
     def load_activity(self, activity_id, activity_type):
@@ -202,6 +188,9 @@ class DialogDetail(QDialog):
         layout.addLayout(carousel)
 
         layout.addStretch(1)
+
+
+
         page.setLayout(layout)
         self.load_carousel_media()
         return page
@@ -264,125 +253,14 @@ class DialogDetail(QDialog):
             self.activity["raw_date"],
         )
 
-    def get_form_field(self, field, styleObject):
-        field.setMinimumWidth(200)
-        field.setStyleSheet(
-            f"""
-            {styleObject} {{
-            padding: 5px;
-            height: 28px;
-            }}"""
-        )
-        return field
-
-    def get_form(self) -> QWidget:
-        self.form_container = QWidget()
-        self.form_container.setObjectName(
-            "formContainer"
-        )  # Set object name for styling
-
-        self.form_layout = QFormLayout(self.form_container)
-        self.form_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.form_layout.setSpacing(20)
-        self.form_layout.setFieldGrowthPolicy(
-            QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow
-        )
-        self.form_layout.setFormAlignment(
-            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
-        )
-        self.form_layout.setContentsMargins(0, 10, 0, 10)
-        return self.form_container
-
     def create_edit_page(self):
-        page = QWidget()
-        layout = QVBoxLayout()
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.addLayout(self.get_page_title(_("Edit")))
-
-        layout.addWidget(QLabel("Title:"))
-        self.title_input = QLineEdit(self.activity["title"])
-        layout.addWidget(self.title_input)
-
-        layout.addWidget(QLabel("Comment:"))
-        self.comment_input = QTextEdit(self.activity["comment"])
-        layout.addWidget(self.comment_input)
-
-        self.upload_button = QPushButton("Add Media")
-        self.upload_button.clicked.connect(self.upload_media)
-        layout.addWidget(self.upload_button)
-
-        form_box = QVBoxLayout()
-        form_widget = self.get_form()  # Get the QWidget containing the form
-        form_layout = form_widget.layout()  #
-        self.distance_input = self.get_form_field(QDoubleSpinBox(), "QDoubleSpinBox")
-        self.distance_input.setRange(0, 1000)
-        self.distance_input.setDecimals(2)
-
-        self.date_input = self.get_form_field(QDateEdit(), "QDateEdit")
-        self.date_input.setDisplayFormat("dd.MM.yyyy")
-
-        self.time_input = self.get_form_field(QTimeEdit(), "QTimeEdit")
-        self.time_input.setDisplayFormat("HH:mm")
-        self.duration_input = self.get_form_field(QTimeEdit(), "QTimeEdit")
-        self.duration_input.setDisplayFormat("HH:mm:ss")
-
-        self.calories_input = self.get_form_field(QSpinBox(), "QSpinBox")
-        self.calories_input.setRange(0, 10000)
-
-        self.elevation_input = self.get_form_field(QDoubleSpinBox(), "QDoubleSpinBox")
-        self.elevation_input.setRange(0, 10000)
-        self.elevation_input.setDecimals(2)
-
-        self.setStyleSheet(
-            """
-            #formContainer QLabel {
-                padding: 5px 0px;
-                min-height: 28px;
-                line-height: 28px;
-            }
-        """
+        self.edit_page = PageEdit(
+            self.activity,
+            self.get_page_title(_("Edit Activity")),
+            self.media_files,
+            self
         )
-
-        form_layout.addRow(_("Distance:"), self.distance_input)
-        form_layout.addRow(_("Date:"), self.date_input)
-        form_layout.addRow(_("Time:"), self.time_input)
-        form_layout.addRow(_("Duration:"), self.duration_input)
-        form_layout.addRow(_("Elevation:"), self.elevation_input)
-
-        layout.addWidget(QLabel(_("Edit Activity Details")))
-
-        date_str = str(self.activity["date"])
-        qdate = QDate.fromString(date_str, "dd.MM.yyyy")
-        if qdate.isValid():
-            self.date_input.setDate(qdate)
-        else:
-            self.date_input.setDate(QDate.currentDate())
-
-        time_str = str(self.activity["time"])
-        hours, minutes = map(int, time_str.split(":"))
-        self.time_input.setTime(QTime(hours, minutes))
-
-        duration_str = self.activity["duration"]
-        hours, minutes, seconds = map(int, duration_str.split(":"))
-
-        self.duration_input.setTime(QTime(hours, minutes, seconds))
-        self.calories_input.setValue(self.activity["calories"])
-        self.elevation_input.setValue(self.activity["elevation_gain"])
-        self.distance_input.setValue(self.activity["distance"])
-
-        form_box.addWidget(form_widget)
-        form_box.addStretch(1)
-
-        action_bar = DialogActionBar(
-            cancel_action=self.close,
-            submit_action=self.update_activity,
-            submit_label="Save",
-        )
-
-        form_box.addWidget(action_bar)
-        layout.addLayout(form_box)
-        page.setLayout(layout)
-        return page
+        return self.edit_page.get_page()
 
     def update_activity(self):
         data = {
@@ -429,6 +307,7 @@ class DialogDetail(QDialog):
                 self.db.insert_media(self.activity_id, media_type, save_path)
 
             self.media_files = self.db.get_media_files(self.activity_id)
+            self.edit_page.refresh_media(self.media_files)
             self.load_carousel_media()
 
     def get_page_title(self, title: str) -> QVBoxLayout:

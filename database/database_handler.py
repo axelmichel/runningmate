@@ -125,6 +125,7 @@ class DatabaseHandler:
         self.cursor = self.conn.cursor()
 
     def insert_activity(self, data: dict, segment_df=None):
+        data.setdefault("new", 1)
         self.insert("activities", data)
         if segment_df is not None:
             for segment_id, row in segment_df.iterrows():
