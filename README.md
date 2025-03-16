@@ -4,9 +4,9 @@
 
 ![GitHub release](https://img.shields.io/github/v/release/axelmichel/runningmate?include_prereleases)
 
-RunningMate is a Python-based application designed to process, analyze, and visualize activity data. The current release supports cycling, running and walking activity data. The application is built using the [PyQt6](https://pypi.org/project/PyQt6/) library for the GUI, Pandas for data processing, and [folium](https://python-visualization.github.io/folium/latest/) for visualization.
+RunningMate is a Python-based application designed to process, analyze, and visualize activity data. The current release supports cycling, running and walking activity data. The application is built using the [PyQt6](https://pypi.org/project/PyQt6/) library for the GUI, Pandas for data processing, [folium](https://python-visualization.github.io/folium/latest/) and [plotly](https://github.com/plotly) for visualization.
 
-The app does not store any of your data outside of your local machine. All collected data can be found in the `runningData` folder within your home directory. The app uses a [SQLite database](https://www.sqlite.org/) for imported activity data.
+The app does not store any of your data outside your local machine. All collected data can be found in the `runningData` folder within your home directory. The app uses a [SQLite database](https://www.sqlite.org/) for imported activity data.
 Uploaded media files and generated images are stored in the `media` and generated images/charts in the `images` folder. In the current Version this app does not support multiple users.
 
 ## Documentation
@@ -15,14 +15,15 @@ The documentation can be found [here](https://axelmichel.github.io/runningmate).
 ## Features
 - Import activity data from `tcx` files.
 - Import activity data from garmin connect.
-- Map of each track.
-- Elevation graph.
+- Syncing activity data from a directory (e.g., iICloud).
+- Weather data for each activity (also historical data).
+- Search and filter activities.
+- Track, Pace, abd Heart Rate Visualization on a map.
 - Abstract map image of the track to share or use as overlay for images.
 - Calculation and visualization of key metrics such as distance, pace, speed, heart rate, power,and elevation gain.
 
 ### File Import
 The app supports the import of `tcx` files. The files are stored in the `runningData` folder within your home directory. The imported `tcx` files are zipped, and the extracted data is stored in a SQLite database.
-
 
 ### Garmin Connect Synchronization
 To sync your garmin activity data, you need to provide the username and password of your garmin account. The app uses the [garminconnect](https://pypi.org/project/garminconnect/) library to fetch the data. 
@@ -90,17 +91,13 @@ mkdocs serve
 ```
 
 ## Future Enhancements
-- Integration of weather data
-- Search and filter activities
 - Calendar with activities
 - Weekly, monthly, and yearly statistics with comparisons
-- Heatmaps
 - Integration of other activity data formats (e.g. GPX)
 - Integration of other activity data sources (e.g. Strava)
-- Heart-rate zone analysis
 - Activity details (e.g., splits, laps)
 - Tools to clean and repair data (e.g., remove outliers)
-
+- Dashboard with key metrics
 
 ---
 
