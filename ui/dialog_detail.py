@@ -418,6 +418,8 @@ class DialogDetail(QDialog):
     def load_carousel_media(self):
         self.items_per_page = 3
         thumbnail_size = 140
+        if self.carousel_layout is None:
+            return
         while self.carousel_layout.count():
             widget = self.carousel_layout.takeAt(0).widget()
             if widget:
