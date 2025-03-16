@@ -198,7 +198,9 @@ class TableBuilder:
             )
 
             table_widget.horizontalHeader().sectionClicked.connect(
-                lambda index: TableBuilder.handle_sort_request(table_widget, activity_type, index, parent)
+                lambda index: TableBuilder.handle_sort_request(
+                    table_widget, activity_type, index, parent
+                )
             )
 
     @staticmethod

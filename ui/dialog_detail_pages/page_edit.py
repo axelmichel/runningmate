@@ -104,7 +104,6 @@ class PageEdit:
         form_layout.addRow(_("Duration:"), self.duration_input)
         form_layout.addRow(_("Elevation:"), self.elevation_input)
 
-
         sub_title = QLabel(_("Edit Activity Details"))
         layout.addStretch(1)
         layout.addWidget(sub_title)
@@ -113,7 +112,8 @@ class PageEdit:
             font-size: 13px;
             font-weight: bold;
             margin-bottom: 10px;
-        """)
+        """
+        )
 
         date_str = str(self.activity["date"])
         qdate = QDate.fromString(date_str, "dd.MM.yyyy")
@@ -167,8 +167,12 @@ class PageEdit:
         self.form_layout = QFormLayout(self.form_container)
         self.form_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.form_layout.setSpacing(20)
-        self.form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
-        self.form_layout.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.form_layout.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow
+        )
+        self.form_layout.setFormAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
         self.form_layout.setContentsMargins(0, 10, 0, 10)
         return self.form_container
 
@@ -185,7 +189,9 @@ class PageEdit:
 
                 media_frame = QFrame()
                 media_frame.setFixedSize(80, 80)
-                media_frame.setStyleSheet("border: none; background-color: transparent;")
+                media_frame.setStyleSheet(
+                    "border: none; background-color: transparent;"
+                )
 
                 media_label = QLabel()
                 media_label.setFixedSize(80, 80)

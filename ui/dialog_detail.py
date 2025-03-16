@@ -187,7 +187,9 @@ class DialogDetail(QDialog):
 
         # 📌 LEFT SIDE: Activity and Performance Widgets
         left_layout = QVBoxLayout()
-        activity_data = self.activity_info_handler.get_activity_info(self.activity_type, self.activity_id)
+        activity_data = self.activity_info_handler.get_activity_info(
+            self.activity_type, self.activity_id
+        )
 
         if activity_data is not None:
             best_performance_data = self.best_performance_handler.get_best_segments(
@@ -210,7 +212,9 @@ class DialogDetail(QDialog):
             right_layout.addLayout(carousel)
 
         comment_label = QLabel(self.activity.get("comment", ""))  # Safe key access
-        comment_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        comment_label.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
+        )
         comment_label.setWordWrap(True)
 
         right_layout.addWidget(comment_label)
@@ -258,7 +262,7 @@ class DialogDetail(QDialog):
     def create_effect_page(self):
         page = QWidget()
         layout = QVBoxLayout()
-        layout.setContentsMargins(20,0,0,0)
+        layout.setContentsMargins(20, 0, 0, 0)
         layout.addLayout(self.get_page_title(_("Trainings Effect")))
         layout.addStretch(1)
         page.setLayout(layout)
@@ -288,7 +292,7 @@ class DialogDetail(QDialog):
             self.activity,
             self.get_page_title(_("Edit Activity")),
             self.media_files,
-            self
+            self,
         )
         return self.edit_page.get_page()
 
@@ -453,7 +457,9 @@ class DialogDetail(QDialog):
 
             if media_type == "image":
                 pixmap = QPixmap(file_path)
-                processed_pixmap = image_thumbnail(pixmap, thumbnail_size, thumbnail_size)
+                processed_pixmap = image_thumbnail(
+                    pixmap, thumbnail_size, thumbnail_size
+                )
                 media_label.setPixmap(processed_pixmap)
                 media_label.mousePressEvent = (
                     lambda event, path=file_path: self.show_full_image(path)

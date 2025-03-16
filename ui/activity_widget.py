@@ -21,7 +21,7 @@ class ActivityWidget(QWidget):
     A QWidget to display activity information in a structured layout.
     """
 
-    def __init__(self, activity_info: dict, display_title:bool = True, parent=None):
+    def __init__(self, activity_info: dict, display_title: bool = True, parent=None):
         """
         Initialize the activity widget with activity data.
 
