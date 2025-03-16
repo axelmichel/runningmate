@@ -226,7 +226,6 @@ class PageEdit:
         }
 
         # Update the database
-        print(data)
         self.db.update_activity_data(data)
         self.parent.update_activity()
 
