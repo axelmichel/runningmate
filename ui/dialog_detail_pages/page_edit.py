@@ -23,7 +23,7 @@ from utils.video_thumbnail import video_thumbnail
 
 
 class PageEdit:
-    def __init__(self, activity, title, media, parent) -> None:
+    def __init__(self, activity, title, media, db, parent) -> None:
         self.form_layout = None
         self.media_layout = None
         self.form_container = None
@@ -37,6 +37,7 @@ class PageEdit:
         self.comment_input = None
         self.title_input = None
         self.media_files = media
+        self.db = db
         self.parent = parent
         self.activity = activity
         self.title = title
@@ -139,7 +140,7 @@ class PageEdit:
 
         action_bar = DialogActionBar(
             cancel_action=self.parent.close,
-            submit_action=self.parent.update_activity,
+            submit_action=self.update_activity,
             submit_label="Save",
         )
 
@@ -216,6 +217,18 @@ class PageEdit:
             media_layout.addStretch()
 
             self.media_layout.addWidget(media_container)
+
+    def update_activity(self):
+        data = {
+            "id": self.activity["activity_id"],
+            "title": self.title_input.text(),
+            "comment": self.comment_input.toPlainText(),
+        }
+
+        # Update the database
+        print(data)
+        self.db.update_activity_data(data)
+        self.parent.update_activity()
 
     def refresh_media(self, media):
         self.media_files = media

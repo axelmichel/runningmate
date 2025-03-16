@@ -50,6 +50,7 @@ class DialogDetail(QDialog):
         parent=None,
     ):
         super().__init__()
+        self.edit_page_handler = None
         self.edit_page = None
         self.items_per_page = None
         self.title_input = None
@@ -288,24 +289,16 @@ class DialogDetail(QDialog):
         )
 
     def create_edit_page(self):
-        self.edit_page = PageEdit(
+        self.edit_page_handler = PageEdit(
             self.activity,
             self.get_page_title(_("Edit Activity")),
             self.media_files,
+            self.db,
             self,
         )
-        return self.edit_page.get_page()
+        return self.edit_page_handler.get_page()
 
     def update_activity(self):
-        data = {
-            "id": self.activity_id,
-            "title": self.title_input.text(),
-            "comment": self.comment_input.toPlainText(),
-        }
-
-        # Update the database
-        self.db.update_activity_data(data)
-
         # Refresh data
         self.activity = self.load_activity(self.activity_id, self.activity_type)
 
@@ -341,7 +334,7 @@ class DialogDetail(QDialog):
                 self.db.insert_media(self.activity_id, media_type, save_path)
 
             self.media_files = self.db.get_media_files(self.activity_id)
-            self.edit_page.refresh_media(self.media_files)
+            self.edit_page_handler .refresh_media(self.media_files)
             self.load_carousel_media()
 
     def get_page_title(self, title: str) -> QVBoxLayout:
