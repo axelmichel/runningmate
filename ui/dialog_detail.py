@@ -334,7 +334,7 @@ class DialogDetail(QDialog):
                 self.db.insert_media(self.activity_id, media_type, save_path)
 
             self.media_files = self.db.get_media_files(self.activity_id)
-            self.edit_page_handler .refresh_media(self.media_files)
+            self.edit_page_handler.refresh_media(self.media_files)
             self.load_carousel_media()
 
     def get_page_title(self, title: str) -> QVBoxLayout:
