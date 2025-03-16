@@ -22,7 +22,11 @@ from PyQt6.QtWidgets import (
 
 from database.database_handler import DatabaseHandler
 from database.user_settings import UserSettings
+from processing.activity_info import ActivityInfo
+from processing.best_performances import BestSegmentFinder
 from processing.system_settings import ViewMode
+from ui.activity_widget import ActivityWidget
+from ui.best_performances_widget import BestPerformanceWidget
 from ui.dialog_detail_pages.page_edit import PageEdit
 from ui.dialog_detail_pages.page_map import page_map
 from ui.dialog_detail_pages.page_zones import page_zones
@@ -72,6 +76,9 @@ class DialogDetail(QDialog):
         self.activity = self.load_activity(activity_id, activity_type)
         self.media_files = self.db.get_media_files(activity_id)
         self.user = user_settings.get_user_data()
+        self.activity_info_handler = ActivityInfo(self.db, img_dir)
+        self.activity_performance_widget = None
+        self.best_performance_handler = BestSegmentFinder(self.db)
         self.init_ui()
 
     def init_ui(self):
@@ -112,6 +119,7 @@ class DialogDetail(QDialog):
         self.edit_page = self.create_edit_page()
 
         self.pages.addWidget(self.general_page)
+        self.pages.addWidget(self.segment_page)
         self.pages.addWidget(self.map_page)
         self.pages.addWidget(self.effect_page)
         self.pages.addWidget(self.zones_page)
@@ -159,6 +167,8 @@ class DialogDetail(QDialog):
             self.pages.setCurrentWidget(self.general_page)
         elif page == "map":
             self.pages.setCurrentWidget(self.map_page)
+        elif page == "segments":
+            self.pages.setCurrentWidget(self.segment_page)
         elif page == "effect":
             self.pages.setCurrentWidget(self.effect_page)
         elif page == "zones":
@@ -168,38 +178,58 @@ class DialogDetail(QDialog):
 
     def create_general_page(self):
         page = QWidget()
-        layout = QVBoxLayout()
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.addLayout(self.get_page_title(_("Overview")))
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(20, 0, 0, 0)
+        main_layout.addLayout(self.get_page_title(_("Overview")))
 
-        comment_layout = QHBoxLayout()
-        comment_label = QLabel(
-            self.activity["comment"] if self.activity["comment"] else ""
-        )
-        comment_label.setAlignment(
-            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
-        )
+        # Create a horizontal splitter layout
+        content_layout = QHBoxLayout()
+
+        # 📌 LEFT SIDE: Activity and Performance Widgets
+        left_layout = QVBoxLayout()
+        activity_data = self.activity_info_handler.get_activity_info(self.activity_type, self.activity_id)
+
+        if activity_data is not None:
+            best_performance_data = self.best_performance_handler.get_best_segments(
+                activity_data["id"], activity_data["category"]
+            )
+            activity_widget = ActivityWidget(activity_data, False)
+            left_layout.addWidget(activity_widget)
+
+            activity_performance_widget = BestPerformanceWidget(best_performance_data)
+            left_layout.addWidget(activity_performance_widget)
+
+        left_layout.addStretch(1)  # Push content to the top
+        content_layout.addLayout(left_layout, 1)  # Make left side larger
+
+        # 📌 RIGHT SIDE: Comment Section
+        right_layout = QVBoxLayout()
+        # Load carousel (if media exists)
+        if self.media_files:  # Check if media is available
+            carousel = self.get_carousel()
+            right_layout.addLayout(carousel)
+
+        comment_label = QLabel(self.activity.get("comment", ""))  # Safe key access
+        comment_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         comment_label.setWordWrap(True)
-        comment_label.setStyleSheet("border: none; padding: 0")
-        comment_layout.addWidget(comment_label)
-        layout.addLayout(comment_layout)
 
-        carousel = self.get_carousel()
-        layout.addLayout(carousel)
+        right_layout.addWidget(comment_label)
+        right_layout.addStretch(1)  # Push content to the top
+        content_layout.addLayout(right_layout, 2)  # Make right side smaller
 
-        layout.addStretch(1)
+        # Add the content layout to the main layout
+        main_layout.addLayout(content_layout)
 
-
-
-        page.setLayout(layout)
-        self.load_carousel_media()
+        page.setLayout(main_layout)
+        if self.media_files:
+            self.load_carousel_media()
         return page
 
     def get_carousel(self):
         carousel_container = QWidget()  # Main container for carousel items
         self.carousel_layout = QHBoxLayout(carousel_container)
         self.carousel_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.carousel_layout.setContentsMargins(0, 10, 0, 0)
+        self.carousel_layout.setContentsMargins(0, 0, 0, 0)
         self.carousel_layout.setSpacing(0)
 
         carousel_wrapper = QVBoxLayout()  # Wrapper for carousel + navigation buttons
@@ -228,7 +258,7 @@ class DialogDetail(QDialog):
     def create_effect_page(self):
         page = QWidget()
         layout = QVBoxLayout()
-        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setContentsMargins(20,0,0,0)
         layout.addLayout(self.get_page_title(_("Trainings Effect")))
         layout.addStretch(1)
         page.setLayout(layout)
@@ -237,7 +267,7 @@ class DialogDetail(QDialog):
     def create_segments_page(self):
         page = QWidget()
         layout = QVBoxLayout()
-        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setContentsMargins(20, 0, 0, 0)
         layout.addLayout(self.get_page_title(_("Segments")))
         layout.addStretch(1)
         page.setLayout(layout)
@@ -389,7 +419,8 @@ class DialogDetail(QDialog):
             QMessageBox.warning(self, _("Video Error"), _("Video file not found."))
 
     def load_carousel_media(self):
-        self.items_per_page = 5
+        self.items_per_page = 3
+        thumbnail_size = 140
         while self.carousel_layout.count():
             widget = self.carousel_layout.takeAt(0).widget()
             if widget:
@@ -409,20 +440,20 @@ class DialogDetail(QDialog):
             media_type, file_path = media[1], media[2]
 
             media_container = QFrame()
-            media_container.setFixedSize(200, 200)
+            media_container.setFixedSize(thumbnail_size, thumbnail_size)
             media_container.setStyleSheet(
                 "border: none; background-color: transparent; position: relative;"
             )
 
             stacked_layout = QStackedWidget(media_container)
-            stacked_layout.setFixedSize(200, 200)
+            stacked_layout.setFixedSize(thumbnail_size, thumbnail_size)
 
             media_label = QLabel()
-            media_label.setFixedSize(200, 200)
+            media_label.setFixedSize(thumbnail_size, thumbnail_size)
 
             if media_type == "image":
                 pixmap = QPixmap(file_path)
-                processed_pixmap = image_thumbnail(pixmap, 200, 200)
+                processed_pixmap = image_thumbnail(pixmap, thumbnail_size, thumbnail_size)
                 media_label.setPixmap(processed_pixmap)
                 media_label.mousePressEvent = (
                     lambda event, path=file_path: self.show_full_image(path)
@@ -449,7 +480,7 @@ class DialogDetail(QDialog):
             )
 
             delete_btn.setParent(media_container)
-            delete_btn.move(170, 5)
+            delete_btn.move(thumbnail_size - 30, 5)
 
             delete_btn.raise_()
             delete_btn.setAttribute(

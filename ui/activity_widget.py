@@ -21,17 +21,18 @@ class ActivityWidget(QWidget):
     A QWidget to display activity information in a structured layout.
     """
 
-    def __init__(self, activity_info: dict, parent=None):
+    def __init__(self, activity_info: dict, display_title:bool = True, parent=None):
         """
         Initialize the activity widget with activity data.
 
         :param activity_info: dict
             A dictionary containing activity details.
+        :param display_title: bool, optional
         :param parent: QWidget, optional
             The parent widget.
         """
         super().__init__(parent)
-
+        self.display_title = display_title
         self.activity_info = activity_info
         self.init_ui()
 
@@ -43,28 +44,54 @@ class ActivityWidget(QWidget):
         locale = QLocale.system()
 
         # Line 1: Date
-        date_label = QLabel(self.activity_info.get("date", "Unknown Date"))
-        date_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
-        layout.addWidget(date_label)
+        if self.display_title:
+            date_label = QLabel(self.activity_info.get("date", "Unknown Date"))
+            date_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+            layout.addWidget(date_label)
 
-        title_label = QLabel(self.activity_info.get("title", "Untitled Activity"))
-        title_label.setFont(QFont("Arial", 12))
-        layout.addWidget(title_label)
+            title_label = QLabel(self.activity_info.get("title", "Untitled Activity"))
+            title_label.setFont(QFont("Arial", 12))
+            layout.addWidget(title_label)
 
-        duration_pace_layout = QHBoxLayout()
+        # Line 2: Duration (Left) and Pace (Right)
+        duration_pace_layout = QVBoxLayout()
+        duration_pace_container = QHBoxLayout()  # Holds values
+        duration_pace_labels = QHBoxLayout()  # Holds text labels
+
+        # 📌 Duration Value (Left)
         duration_label = QLabel(f"{self.activity_info.get('duration', '00:00:00')}")
         duration_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         duration_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
         duration_label.setStyleSheet(f"color: {value_color};")
 
-        avg_pace = self.activity_info.get("extra", {}).get("avg_pace", None)
-        avg_pace_label = QLabel(f"{avg_pace}" if avg_pace else "--")
+        # 📌 Small "Duration" Label
+        duration_text_label = QLabel("Duration")
+        duration_text_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        duration_text_label.setFont(QFont("Arial", 10))
+
+        avg_pace = self.activity_info.get("extra", {}).get("avg_pace", "--")
+        avg_pace_label = QLabel(f"{avg_pace}")
         avg_pace_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         avg_pace_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
         avg_pace_label.setStyleSheet(f"color: {value_color};")
 
-        duration_pace_layout.addWidget(duration_label)
-        duration_pace_layout.addWidget(avg_pace_label)
+        # 📌 Small "Pace" Label
+        pace_text_label = QLabel("Pace")
+        pace_text_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+        pace_text_label.setFont(QFont("Arial", 10))
+
+        # Add Labels and Texts to Layouts
+        duration_pace_container.addWidget(duration_label)
+        duration_pace_container.addWidget(avg_pace_label)
+
+        duration_pace_labels.addWidget(duration_text_label)
+        duration_pace_labels.addWidget(pace_text_label)
+
+        # Stack both layouts (values + text labels)
+        duration_pace_layout.addLayout(duration_pace_container)
+        duration_pace_layout.addLayout(duration_pace_labels)
+
+        # Add to Main Layout
         layout.addLayout(duration_pace_layout)
 
         # Line 3: Track Image (if available)
