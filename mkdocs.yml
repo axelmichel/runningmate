@@ -9,6 +9,8 @@ nav:
   - Home: index.md
   - App :
       - Main Screen: ui/main-window.md
+      - Detail View: ui/detail-window.md
+      - User Settings: ui/user-settings.md
   - Metrics :
       - Heart Rate Zones: metrics/heart-rate-zones.md
       - Pace: metrics/pace.md

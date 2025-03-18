@@ -48,7 +48,16 @@ Extract the downloaded zip-file to a directory of your choice and navigate to it
    python main.py
    ```
 
+## Copyrights and Licenses
 
+### Icons
+All Icons made by [Remix](https://remixicon.com/). RemixIcon is licensed based on the [Apache License](https://github.com/Remix-Design/remixicon/blob/master/License) and all rights of products are reserved for RemixIcon.
 
+### Maps
+The maps are created with [Folium](https://python-visualization.github.io/folium/latest/index.html), [OpenStreetMap](https://www.openstreetmap.org) and [Leaflet](https://leafletjs.com/).
 
+### Charts
+The charts are created with [Plotly](https://github.com/plotly/plotly.py). `plotly.py` is [MIT](https://github.com/plotly/plotly.py/blob/main/LICENSE.txt) Licensed.
 
+### Weather Data
+The weather data is fetched from [Open-Meteo](https://open-meteo.com/). API data are offered under Attribution 4.0 International (CC BY 4.0), for further details see [here](https://open-meteo.com/en/license).
