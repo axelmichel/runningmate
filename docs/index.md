@@ -48,6 +48,9 @@ Extract the downloaded zip-file to a directory of your choice and navigate to it
    python main.py
    ```
 
+## Contributing
+Feel free to contribute by submitting issues or pull requests on [Github](https://github.com/axelmichel/runningmate). Make sure to follow best practices and include documentation for any new features.
+
 ## Copyrights and Licenses
 
 ### Icons
