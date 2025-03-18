@@ -51,7 +51,7 @@ Extract the downloaded zip-file to a directory of your choice and navigate to it
 ## Copyrights and Licenses
 
 ### Icons
-All Icons made by [Remix](https://remixicon.com/). RemixIcon is licensed based on the [Apache License](https://github.com/Remix-Design/remixicon/blob/master/License) and all rights of products are reserved for RemixIcon.
+All Icons made by [RemixIcon](https://remixicon.com/). RemixIcon is licensed based on the [Apache License](https://github.com/Remix-Design/remixicon/blob/master/License) and all rights of products are reserved for RemixIcon.
 
 ### Maps
 The maps are created with [Folium](https://python-visualization.github.io/folium/latest/index.html), [OpenStreetMap](https://www.openstreetmap.org) and [Leaflet](https://leafletjs.com/).
