@@ -1,11 +1,9 @@
-from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
 from ui.widget_activity_details import ActivityDetailsWidget
 
 
-def page_segments(
-    page_title, db_handler, activity_id, activity_type
-):
+def page_segments(page_title, db_handler, activity_id, activity_type):
     page = QWidget()
     layout = QVBoxLayout()
     layout.setContentsMargins(20, 0, 0, 0)

@@ -1,5 +1,11 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QHeaderView
+from PyQt6.QtWidgets import (
+    QHeaderView,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from processing.system_settings import ViewMode
 from utils.translations import _
@@ -21,7 +27,9 @@ class ActivityDetailsWidget(QWidget):
         self.layout.addWidget(self.table)
         self.setLayout(self.layout)
 
-        self.table.cellChanged.connect(self.update_database)  # Connect signal for updating DB
+        self.table.cellChanged.connect(
+            self.update_database
+        )  # Connect signal for updating DB
         self.load_data()
 
     def load_data(self):
@@ -37,22 +45,42 @@ class ActivityDetailsWidget(QWidget):
         rows = cursor.fetchall()
         cursor.close()
 
-        columns = [_("AVG HR"), _("AVG Power"), _("AVG Speed (km/h)"), _("AVG Pace (min/km)"), _("Distance"), _("Elevation Gain")]
+        columns = [
+            _("AVG HR"),
+            _("AVG Power"),
+            _("AVG Speed (km/h)"),
+            _("AVG Pace (min/km)"),
+            _("Distance"),
+            _("Elevation Gain"),
+        ]
         if self.activity_type != ViewMode.CYCLE:
             columns.append("Avg Steps")
 
         self.table.setColumnCount(len(columns))
         self.table.setHorizontalHeaderLabels(columns)
         self.table.setRowCount(len(rows))
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-
+        self.table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents
+        )
 
         self.rowid_map = {}  # Map row index to segment_id in DB
         for row_idx, row in enumerate(rows):
-            segment_id, seg_avg_heart_rate, seg_avg_power, seg_avg_speed, seg_avg_pace, seg_distance, seg_elevation_gain, seg_avg_steps = row
+            (
+                segment_id,
+                seg_avg_heart_rate,
+                seg_avg_power,
+                seg_avg_speed,
+                seg_avg_pace,
+                seg_distance,
+                seg_elevation_gain,
+                seg_avg_steps,
+            ) = row
 
-            displayed_distance = self.default_distance if seg_distance >= self.default_distance else round(seg_distance,
-                                                                                                           2)
+            displayed_distance = (
+                self.default_distance
+                if seg_distance >= self.default_distance
+                else round(seg_distance, 2)
+            )
             formatted_speed = round(seg_avg_speed * 3.6, 2)  # Convert m/s to km/h
             pace_minutes = int((1000 / seg_avg_speed) // 60)  # Extract whole minutes
             pace_seconds = int((1000 / seg_avg_speed) % 60)  # Extract remaining seconds
@@ -64,7 +92,7 @@ class ActivityDetailsWidget(QWidget):
                 formatted_speed,
                 formatted_pace,
                 displayed_distance,
-                int(seg_elevation_gain * 2)  # Elevation gain doubled
+                int(seg_elevation_gain * 2),  # Elevation gain doubled
             ]
 
             if self.activity_type != ViewMode.CYCLE:
@@ -74,7 +102,9 @@ class ActivityDetailsWidget(QWidget):
 
             for col_idx, value in enumerate(row_data):
                 item = QTableWidgetItem(str(value))
-                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)  # Enable item editing
+                item.setFlags(
+                    item.flags() | Qt.ItemFlag.ItemIsEditable
+                )  # Enable item editing
                 item.setTextAlignment(
                     Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
                 )
@@ -89,7 +119,12 @@ class ActivityDetailsWidget(QWidget):
             return
 
         column_names = [
-            "seg_avg_heart_rate", "seg_avg_power", "seg_avg_speed", "seg_avg_pace", "seg_distance", "seg_elevation_gain"
+            "seg_avg_heart_rate",
+            "seg_avg_power",
+            "seg_avg_speed",
+            "seg_avg_pace",
+            "seg_distance",
+            "seg_elevation_gain",
         ]
         if self.activity_type != ViewMode.CYCLE:
             column_names.append("seg_avg_steps")
