@@ -29,6 +29,7 @@ from ui.activity_widget import ActivityWidget
 from ui.best_performances_widget import BestPerformanceWidget
 from ui.dialog_detail_pages.page_edit import PageEdit
 from ui.dialog_detail_pages.page_map import page_map
+from ui.dialog_detail_pages.page_segments import page_segments
 from ui.dialog_detail_pages.page_zones import page_zones
 from ui.side_bar import Sidebar
 from ui.themes import THEME
@@ -270,13 +271,12 @@ class DialogDetail(QDialog):
         return page
 
     def create_segments_page(self):
-        page = QWidget()
-        layout = QVBoxLayout()
-        layout.setContentsMargins(20, 0, 0, 0)
-        layout.addLayout(self.get_page_title(_("Segments")))
-        layout.addStretch(1)
-        page.setLayout(layout)
-        return page
+        return page_segments(
+            self.get_page_title(_("Segments")),
+            self.db,
+            self.activity_id,
+            self.activity_type,
+        )
 
     def create_zones_page(self):
         return page_zones(
