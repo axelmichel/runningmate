@@ -10,12 +10,18 @@ As in the main window, you'll see the key metrics of the activity, the track-map
 If you uploaded images or videos, you'll see a gallery on the right side of the window, followed by the comments section.
 
 ## Segment Analysis
+![Detail Window; Maps](../images/screens/detail_05.png)
 This section shows the segments of the activity. For running activities, each segment is a kilometer, for cycling activities, each segment is 5 kilometers. 
 For each segment, you'll see the duration, pace, speed, heart rate, and power (if available).
 
 ## Maps
 ![Detail Window; Maps](../images/screens/detail_02.png)
 The map section shows the track of the activity. By using the buttons on the top right, you can switch between different map types (e.g., heart rate or pace).
+
+## Trainings Effect
+![Detail Window; Maps](../images/screens/detail_04.png)
+The training effect section shows the aerobic and anaerobic training effect of the activity, if available. You can edit the calculation by clicking on the corresponding bar. 
+If available, you'll also find a trend chart showing fitness, fatigue and form over the period of 90 days (relative to the activity date).
 
 ## Heart Rate Zones
 ![Detail Window: Heart Rate Zones](../images/screens/detail_03.png)

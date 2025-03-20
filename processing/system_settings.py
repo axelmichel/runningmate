@@ -1,3 +1,7 @@
+from PyQt6.QtGui import QPalette
+from PyQt6.QtWidgets import QApplication
+
+
 class ViewMode:
     RUN = "Running"
     WALK = "Walking"
@@ -55,3 +59,11 @@ def getAllowedTypes(view_type: ViewMode):
         ]
 
     return []
+
+
+def get_system_background_color():
+    """Fetches the system-defined window background color."""
+    app = QApplication.instance() or QApplication([])
+    palette = app.palette()
+    color = palette.color(QPalette.ColorRole.Window)
+    return color.name()

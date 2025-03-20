@@ -40,15 +40,26 @@ class TrainingEffectWidget(QWidget):
         )
         self.start_date = self.end_date - timedelta(days=self.time_range_days)
         self.chart_widget = TrainingEffectChart(self, chart_width)
-
-        self.te_label = QLabel(self)
-        self.te_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.te_label)
+
+        title_label = QLabel(_("Training Effect"))
+        title_label.setStyleSheet(
+            """
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        """
+        )
+        title_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(title_label)
         layout.addSpacing(5)
         layout.addWidget(self.chart_widget, stretch=1)
+        layout.addSpacing(5)
+        self.te_label = QLabel(self)
+        self.te_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(self.te_label)
+
         self.setLayout(layout)
 
         # ✅ Calculate & Update TE
@@ -84,9 +95,7 @@ class TrainingEffectWidget(QWidget):
         baseline_te = max(baseline_te, 0.1)
 
         # Normalize against baseline TE
-        effect_score = (
-            (current_te * zone_factor) / (baseline_te + 1)
-        ) ** 0.8  # Exponential scaling
+        effect_score = ((max(current_te * zone_factor, 0)) / (baseline_te + 1)) ** 0.8
 
         # Ensure TE is in range
         return min(max(round(effect_score * 6), 1), 12)  # Clamp to 1-12 range
