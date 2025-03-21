@@ -1,4 +1,3 @@
-# ruff: noqa
 import locale
 import os
 import webbrowser
@@ -26,7 +25,6 @@ from processing.activity_info import ActivityInfo
 from processing.best_performances import BestSegmentFinder
 from processing.system_settings import ViewMode
 from ui.activity_widget import ActivityWidget
-from ui.best_performances_widget import BestPerformanceWidget
 from ui.dialog_detail_pages.page_edit import PageEdit
 from ui.dialog_detail_pages.page_effect import page_effect
 from ui.dialog_detail_pages.page_map import page_map
@@ -34,6 +32,7 @@ from ui.dialog_detail_pages.page_segments import page_segments
 from ui.dialog_detail_pages.page_zones import page_zones
 from ui.side_bar import Sidebar
 from ui.themes import THEME
+from ui.widget_best_performances import BestPerformanceWidget
 from utils.image_thumbnail import image_thumbnail
 from utils.translations import _
 from utils.video_thumbnail import video_thumbnail

@@ -41,6 +41,9 @@ class BestPerformanceWidget(QWidget):
 
     def init_ui(self):
         """Set up the layout and populate the UI with the best performance data."""
+        if not self.best_performance_data:
+            return
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 0)
         value_color = THEME.ACCENT_COLOR if is_dark_mode() else THEME.MAIN_COLOR
