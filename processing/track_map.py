@@ -50,6 +50,8 @@ class TrackMap:
         Generates the map and colors the track based on the chosen parameter.
         :param map_type: The type of map to generate. Can be "track", "heart_rate", or "pace".
         """
+        if self.df is None or self.df.empty:
+            return
         self.df = self.activityData.get_activity_df(self.activity_id)
         self._validate_dataframe()
 

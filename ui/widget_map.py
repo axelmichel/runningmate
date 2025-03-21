@@ -31,9 +31,11 @@ class MapWidget(QWidget):
         self.title_label = None
         self.web_view = QWebEngineView()
         self._init_ui()
-        self._load_map()
 
     def _init_ui(self):
+        track_map = self.TrackMap.create_map(self.map_type)
+        if not track_map:
+            return
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -84,9 +86,12 @@ class MapWidget(QWidget):
         )
         layout.addWidget(self.web_view)
         self.setLayout(layout)
+        self._load_map(track_map)
 
-    def _load_map(self):
-        track_map = self.TrackMap.create_map(self.map_type)
+    def _load_map(self, track_map=None):
+        """Loads the map based on the map type."""
+        if not track_map:
+            track_map = self.TrackMap.create_map(self.map_type)
         self.web_view.setUrl(QUrl.fromLocalFile(track_map["file_path"]))
 
     def _update_map(self, new_map_type):
