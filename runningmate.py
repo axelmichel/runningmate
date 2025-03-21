@@ -35,6 +35,7 @@ from ui.info_card import InfoCard
 from ui.main_menu import MenuBar
 from ui.side_bar import Sidebar
 from ui.table_builder import TableBuilder
+from ui.weather_widget import WeatherWidget
 from ui.widget_best_performances import BestPerformanceWidget
 from ui.widget_search import SearchWidget
 from ui.window_garmin_sync import GarminSyncWindow
@@ -80,6 +81,7 @@ class NumericTableWidgetItem(QTableWidgetItem):
 class RunningDataApp(QWidget):
     def __init__(self, db_handler: DatabaseHandler):
         super().__init__()
+        self.weather_widget = None
         self.total_distance_label = None
         self.activity_widget = None
         self.right_widget = None
@@ -250,6 +252,7 @@ class RunningDataApp(QWidget):
 
         # Placeholder for ActivityWidget (initialized empty)
         self.activity_widget = None
+        self.weather_widget = None
         self.activity_performance_widget = None
 
         self.right_layout.addStretch()
@@ -354,14 +357,22 @@ class RunningDataApp(QWidget):
             self.activity_performance_widget.deleteLater()
             self.activity_performance_widget = None
 
+        if self.weather_widget:
+            self.right_layout.removeWidget(self.weather_widget)
+            self.weather_widget.deleteLater()
+            self.weather_widget = None
+
         self.activity_widget = ActivityWidget(activity_data)
         self.right_layout.insertWidget(0, self.activity_widget)
+        self.weather_widget = WeatherWidget(self.db, activity_data["id"])
+        self.right_layout.insertWidget(1, self.weather_widget)
+        self.right_layout.setContentsMargins(20,0,0,0)
 
         if best_performance_data:
             self.activity_performance_widget = BestPerformanceWidget(
                 best_performance_data
             )
-            self.right_layout.insertWidget(1, self.activity_performance_widget)
+            self.right_layout.insertWidget(2, self.activity_performance_widget)
 
     def update_heatmap(self, view_mode):
         heatmap_image = self.heatmap.get_heatmap(

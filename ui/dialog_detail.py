@@ -32,6 +32,7 @@ from ui.dialog_detail_pages.page_segments import page_segments
 from ui.dialog_detail_pages.page_zones import page_zones
 from ui.side_bar import Sidebar
 from ui.themes import THEME
+from ui.weather_widget import WeatherWidget
 from ui.widget_best_performances import BestPerformanceWidget
 from utils.image_thumbnail import image_thumbnail
 from utils.translations import _
@@ -199,6 +200,9 @@ class DialogDetail(QDialog):
             )
             activity_widget = ActivityWidget(activity_data, False)
             left_layout.addWidget(activity_widget)
+
+            weather_widget = WeatherWidget(self.db, self.activity_id)
+            left_layout.addWidget(weather_widget)
 
             activity_performance_widget = BestPerformanceWidget(best_performance_data)
             left_layout.addWidget(activity_performance_widget)

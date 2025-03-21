@@ -2,6 +2,9 @@ import gettext
 import locale
 import os
 
+from utils.app_mode import is_dark_mode
+from utils.resource_path import resource_path
+
 default_lang, _ = locale.getlocale()
 
 LOCALE_DIR = os.path.join(os.path.dirname(__file__), "../locales")
@@ -79,3 +82,36 @@ def translate_weather_code(code: int) -> str:
     :return: str, translated weather description
     """
     return _(wmo.get(code, _("unknown")).title())
+
+
+def weather_code_icon(code: int) -> str | None:  # noqa: C901
+    """
+    Get the icon name based on the weather code.
+    :param code: int, WMO weather code
+    :return: str, icon name
+    """
+
+    icon_folder = "light" if is_dark_mode() else "dark"
+
+    if code in (0, 1):
+        return resource_path(f"icons/{icon_folder}/sun-line.svg")
+    elif code == 2:
+        return resource_path(f"icons/{icon_folder}/sun-cloudy-line.svg")
+    elif code in (3, 48):
+        return resource_path(f"icons/{icon_folder}/cloudy-2-line.svg")
+    elif code == 45:
+        return resource_path(f"icons/{icon_folder}/foggy-line.svg")
+    elif code in (51, 53, 55, 56, 57, 61, 63, 65, 66, 67):
+        return resource_path(f"icons/{icon_folder}/drizzle-line.svg")
+    elif code in (71, 73, 75):
+        return resource_path(f"icons/{icon_folder}/snowy-line.svg")
+    elif code == 77:
+        return resource_path(f"icons/{icon_folder}/hail-line.svg")
+    elif code in (80, 81, 82):
+        return resource_path(f"icons/{icon_folder}/showers-line.svg")
+    elif code in (85, 86):
+        return resource_path(f"icons/{icon_folder}/snowy-line.svg")
+    elif code in (95, 96, 99):
+        return resource_path(f"icons/{icon_folder}/thunderstorms-line.svg")
+    else:
+        return None

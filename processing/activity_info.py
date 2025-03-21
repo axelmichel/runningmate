@@ -1,3 +1,4 @@
+import locale
 import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
@@ -37,6 +38,8 @@ class ActivityInfo:
         :return: str
             Formatted date string.
         """
+        locale.setlocale(locale.LC_TIME, 'en_US.UTF-8')
+
         dt = datetime.fromtimestamp(timestamp)
         now = datetime.now()
 

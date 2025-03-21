@@ -39,7 +39,7 @@ class ActivityWidget(QWidget):
     def init_ui(self):
         """Set up the layout and populate the UI with activity data."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 0, 10, 0)
+        layout.setContentsMargins(0, 0, 0, 20)
         value_color = THEME.ACCENT_COLOR if is_dark_mode() else THEME.MAIN_COLOR
         locale = QLocale.system()
 
@@ -58,13 +58,11 @@ class ActivityWidget(QWidget):
         duration_pace_container = QHBoxLayout()  # Holds values
         duration_pace_labels = QHBoxLayout()  # Holds text labels
 
-        # 📌 Duration Value (Left)
         duration_label = QLabel(f"{self.activity_info.get('duration', '00:00:00')}")
         duration_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         duration_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
         duration_label.setStyleSheet(f"color: {value_color};")
 
-        # 📌 Small "Duration" Label
         duration_text_label = QLabel("Duration")
         duration_text_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         duration_text_label.setFont(QFont("Arial", 10))
@@ -75,7 +73,6 @@ class ActivityWidget(QWidget):
         avg_pace_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
         avg_pace_label.setStyleSheet(f"color: {value_color};")
 
-        # 📌 Small "Pace" Label
         pace_text_label = QLabel("Pace")
         pace_text_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         pace_text_label.setFont(QFont("Arial", 10))
@@ -96,7 +93,7 @@ class ActivityWidget(QWidget):
 
         # Line 3: Track Image (if available)
         track_path = self.activity_info.get("track", None)
-        if track_path and os.path.exists(track_path):
+        if os.path.exists(track_path or ""):
             track_label = QLabel()
             pixmap = QPixmap(track_path)
             pixmap = pixmap.scaled(
@@ -141,39 +138,5 @@ class ActivityWidget(QWidget):
         metrics_layout.addWidget(elevation_text_label, 1, 1)
 
         layout.addLayout(metrics_layout)
-
-        # Weather Info (if available)
-        weather_info = self.activity_info.get("weather", None)
-        if weather_info:
-            weather_frame = QFrame()
-            weather_layout = QVBoxLayout(weather_frame)
-            weather_layout.setContentsMargins(0, 20, 0, 0)
-
-            # Weather Code
-            weather_code = weather_info.get("weather_code", WMO_UNKNOWN)
-            weather_code_label = QLabel(translate_weather_code(weather_code))
-            weather_code_label.setFont(QFont("Arial", 14))
-            weather_layout.addWidget(weather_code_label)
-
-            # Temperature & Wind Speed (horizontally split)
-            temp_wind_layout = QHBoxLayout()
-            avg_temp = weather_info.get("avg_temp", "--")
-            wind_speed = weather_info.get("max_wind_speed", "--")
-
-            temp_label = QLabel(
-                f"{avg_temp:.1f}°C" if isinstance(avg_temp, (int, float)) else "--"
-            )
-            wind_label = QLabel(
-                f"{wind_speed} km/h" if isinstance(wind_speed, (int, float)) else "--"
-            )
-
-            temp_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-            wind_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-
-            temp_wind_layout.addWidget(temp_label)
-            temp_wind_layout.addWidget(wind_label)
-
-            weather_layout.addLayout(temp_wind_layout)
-            layout.addWidget(weather_frame)
 
         self.setLayout(layout)

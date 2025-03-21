@@ -45,7 +45,7 @@ class BestPerformanceWidget(QWidget):
             return
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 0)
+        layout.setContentsMargins(0, 0, 0, 20)
         value_color = THEME.ACCENT_COLOR if is_dark_mode() else THEME.MAIN_COLOR
 
         # Sort dictionary items by numeric distance (e.g., "1K" → 1, "5K" → 5)
