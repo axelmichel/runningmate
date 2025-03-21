@@ -34,6 +34,7 @@ from ui.themes import THEME
 from ui.weather_widget import WeatherWidget
 from ui.widget_activity import ActivityWidget
 from ui.widget_best_performances import BestPerformanceWidget
+from ui.widget_run_details import RunDetailsWidget
 from utils.image_thumbnail import image_thumbnail
 from utils.translations import _
 from utils.video_thumbnail import video_thumbnail
@@ -209,6 +210,7 @@ class DialogDetail(QDialog):
 
         left_layout.addStretch(1)  # Push content to the top
         content_layout.addLayout(left_layout, 1)  # Make left side larger
+        content_layout.addSpacing(20)
 
         # 📌 RIGHT SIDE: Comment Section
         right_layout = QVBoxLayout()
@@ -225,6 +227,11 @@ class DialogDetail(QDialog):
 
         right_layout.addWidget(comment_label)
         right_layout.addStretch(1)  # Push content to the top
+
+        if self.activity_type == ViewMode.RUN:
+            activity_detail_widget = RunDetailsWidget(self.db, self.activity_id)
+            right_layout.addWidget(activity_detail_widget)
+
         content_layout.addLayout(right_layout, 2)  # Make right side smaller
 
         # Add the content layout to the main layout
