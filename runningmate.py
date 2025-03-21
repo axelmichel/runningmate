@@ -29,13 +29,13 @@ from processing.activity_info import ActivityInfo
 from processing.best_performances import BestSegmentFinder
 from processing.plot_heatmap import PlotHeatmap
 from processing.system_settings import SortOrder, ViewMode, mapActivityTypes
-from ui.activity_widget import ActivityWidget
 from ui.dialog_detail import DialogDetail
 from ui.info_card import InfoCard
 from ui.main_menu import MenuBar
 from ui.side_bar import Sidebar
 from ui.table_builder import TableBuilder
 from ui.weather_widget import WeatherWidget
+from ui.widget_activity import ActivityWidget
 from ui.widget_best_performances import BestPerformanceWidget
 from ui.widget_search import SearchWidget
 from ui.window_garmin_sync import GarminSyncWindow

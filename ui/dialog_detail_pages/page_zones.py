@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 
-from ui.widet_heart_rate_tendence import HeartRateTrendWidget
+from ui.widget_heart_rate_tendency import HeartRateTrendWidget
 from ui.widget_heart_rate_zones import HeartRateZoneWidget
 
 
