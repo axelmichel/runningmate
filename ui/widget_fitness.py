@@ -147,7 +147,6 @@ class FitnessFatigueWidget(QWidget):
             extra_data = self.fetch_training_load(extended_start_date, dates[0])
 
             if extra_data:
-                print("🔄 Extending data range...")
                 prev_dates, prev_ctl, prev_atl, prev_form = (
                     self.calculate_fitness_fatigue(extra_data, extend_days=0)
                 )
