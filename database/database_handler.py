@@ -364,6 +364,8 @@ class DatabaseHandler:
 
         self.cursor.execute(query, (activity_id,))
         row = self.cursor.fetchone()
+        if row is None:
+            return None
         return dict(row)
 
     def fetch_walk_by_activity_id(self, activity_id):
@@ -405,6 +407,8 @@ class DatabaseHandler:
 
         self.cursor.execute(query, (activity_id,))
         row = self.cursor.fetchone()
+        if row is None:
+            return None
         return dict(row)
 
     def fetch_ride_by_activity_id(self, activity_id):
@@ -444,6 +448,8 @@ class DatabaseHandler:
 
         self.cursor.execute(query, (activity_id,))
         row = self.cursor.fetchone()
+        if row is None:
+            return None
         return dict(row)
 
     def get_next_activity_id(self):

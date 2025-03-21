@@ -7,7 +7,7 @@ from utils.app_mode import is_dark_mode
 from utils.translations import _
 
 
-class RunDetailsWidget(QWidget):
+class WalkDetailsWidget(QWidget):
 
     def __init__(self, db_handler: DatabaseHandler, activity_id: int, parent=None):
         super().__init__(parent)
@@ -64,14 +64,12 @@ class RunDetailsWidget(QWidget):
         Returns:
             dict | None: Dictionary with activity details or None if not found.
         """
-        activity_data = self.db.fetch_run_by_activity_id(self.activity_id)
+        activity_data = self.db.fetch_walk_by_activity_id(self.activity_id)
         if activity_data is None:
             return None
         return {
             "calories": activity_data["calories"],
             "avg_power": activity_data["avg_power"],
-            "avg_steps": activity_data["avg_steps"],
-            "total_steps": activity_data["total_steps"],
             "slowest_pace": activity_data["slowest_pace"],
             "avg_pace": activity_data["avg_pace"],
             "fastest_pace": activity_data["fastest_pace"],

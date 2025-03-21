@@ -34,7 +34,9 @@ from ui.themes import THEME
 from ui.weather_widget import WeatherWidget
 from ui.widget_activity import ActivityWidget
 from ui.widget_best_performances import BestPerformanceWidget
+from ui.widget_ride_details import RideDetailsWidget
 from ui.widget_run_details import RunDetailsWidget
+from ui.widget_walk_details import WalkDetailsWidget
 from utils.image_thumbnail import image_thumbnail
 from utils.translations import _
 from utils.video_thumbnail import video_thumbnail
@@ -228,8 +230,15 @@ class DialogDetail(QDialog):
         right_layout.addWidget(comment_label)
         right_layout.addStretch(1)  # Push content to the top
 
+        activity_detail_widget = None
         if self.activity_type == ViewMode.RUN:
             activity_detail_widget = RunDetailsWidget(self.db, self.activity_id)
+        if self.activity_type == ViewMode.WALK:
+            activity_detail_widget = WalkDetailsWidget(self.db, self.activity_id)
+        if self.activity_type == ViewMode.CYCLE:
+            activity_detail_widget = RideDetailsWidget(self.db, self.activity_id)
+
+        if activity_detail_widget:
             right_layout.addWidget(activity_detail_widget)
 
         content_layout.addLayout(right_layout, 2)  # Make right side smaller

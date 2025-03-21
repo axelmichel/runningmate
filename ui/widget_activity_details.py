@@ -16,7 +16,7 @@ class ActivityDetailsWidget(QWidget):
         super().__init__()
         self.db_handler = db_handler
         self.activity_id = activity_id
-        self.activity_type = activity_type.lower()
+        self.activity_type = activity_type
         self.default_distance = 5 if self.activity_type == ViewMode.CYCLE else 1
 
         self.layout = QVBoxLayout()
