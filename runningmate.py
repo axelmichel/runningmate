@@ -366,7 +366,7 @@ class RunningDataApp(QWidget):
         self.right_layout.insertWidget(0, self.activity_widget)
         self.weather_widget = WeatherWidget(self.db, activity_data["id"])
         self.right_layout.insertWidget(1, self.weather_widget)
-        self.right_layout.setContentsMargins(20,0,0,0)
+        self.right_layout.setContentsMargins(20, 0, 0, 0)
 
         if best_performance_data:
             self.activity_performance_widget = BestPerformanceWidget(

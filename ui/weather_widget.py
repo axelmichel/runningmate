@@ -79,29 +79,29 @@ class WeatherWidget(QWidget):
         if not lat_lon.empty:
             date = lat_lon.iloc[0]["seg_time_start"].split(" ")[0]
             weather_data = WeatherService.get_weather(
-                lat_lon.iloc[0]["seg_latitude"],
-                lat_lon.iloc[0]["seg_longitude"],
-                date
+                lat_lon.iloc[0]["seg_latitude"], lat_lon.iloc[0]["seg_longitude"], date
             )
             if weather_data is not None:
                 self._save_weather_info(weather_data)
         return weather_data
 
     def _save_weather_info(self, weather_info):
-            """Save weather information to the database."""
-            self.db.conn.execute(
-                """
+        """Save weather information to the database."""
+        self.db.conn.execute(
+            """
                 INSERT INTO weather (activity_id, max_temp, min_temp, precipitation, max_wind_speed, weather_code)
                 VALUES (?, ?, ?, ?, ?, ?);
                 """,
-                (self.activity_id,
-                 weather_info["max_temp"],
-                 weather_info["min_temp"],
-                 weather_info["precipitation"],
-                 weather_info["max_wind_speed"],
-                 weather_info["weather_code"])
-            )
-            self.db.conn.commit()
+            (
+                self.activity_id,
+                weather_info["max_temp"],
+                weather_info["min_temp"],
+                weather_info["precipitation"],
+                weather_info["max_wind_speed"],
+                weather_info["weather_code"],
+            ),
+        )
+        self.db.conn.commit()
 
     def init_ui(self):
         """Set up the layout and populate the UI with activity data."""
@@ -134,8 +134,18 @@ class WeatherWidget(QWidget):
         icon_folder = "light" if is_dark_mode() else "dark"
         temp_icon = resource_path(f"icons/{icon_folder}/temp-cold-line.svg")
         wind_icon = resource_path(f"icons/{icon_folder}/windy-line.svg")
-        temp_label = IconLabel(temp_icon, f"{avg_temp:.1f}°C" if isinstance(avg_temp, (int, float)) else "--", Qt.AlignmentFlag.AlignLeft, 20)
-        wind_label = IconLabel(wind_icon, f"{wind_speed} km/h" if isinstance(wind_speed, (int, float)) else "--", Qt.AlignmentFlag.AlignRight, 20)
+        temp_label = IconLabel(
+            temp_icon,
+            f"{avg_temp:.1f}°C" if isinstance(avg_temp, (int, float)) else "--",
+            Qt.AlignmentFlag.AlignLeft,
+            20,
+        )
+        wind_label = IconLabel(
+            wind_icon,
+            f"{wind_speed} km/h" if isinstance(wind_speed, (int, float)) else "--",
+            Qt.AlignmentFlag.AlignRight,
+            20,
+        )
 
         temp_wind_layout.addWidget(temp_label)
         temp_wind_layout.addWidget(wind_label)

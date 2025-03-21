@@ -3,7 +3,6 @@ import os
 from PyQt6.QtCore import QLocale, Qt
 from PyQt6.QtGui import QFont, QPixmap
 from PyQt6.QtWidgets import (
-    QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -13,7 +12,6 @@ from PyQt6.QtWidgets import (
 
 from ui.themes import THEME
 from utils.app_mode import is_dark_mode
-from utils.translations import WMO_UNKNOWN, translate_weather_code
 
 
 class ActivityWidget(QWidget):

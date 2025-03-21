@@ -38,7 +38,7 @@ class ActivityInfo:
         :return: str
             Formatted date string.
         """
-        locale.setlocale(locale.LC_TIME, 'en_US.UTF-8')
+        locale.setlocale(locale.LC_TIME, "en_US.UTF-8")
 
         dt = datetime.fromtimestamp(timestamp)
         now = datetime.now()
