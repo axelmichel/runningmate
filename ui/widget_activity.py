@@ -59,7 +59,8 @@ class ActivityWidget(QWidget):
 
         # Line 2: Duration (Left) and Pace (Right)
         duration_pace_layout = QVBoxLayout()
-        duration_pace_layout.setContentsMargins(0, 10, 0, 10)
+        from_top = self.display_title and 10 or 0
+        duration_pace_layout.setContentsMargins(0, from_top, 0, 10)
         duration_pace_container = QHBoxLayout()  # Holds values
         duration_pace_labels = QHBoxLayout()  # Holds text labels
 
