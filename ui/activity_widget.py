@@ -40,21 +40,26 @@ class ActivityWidget(QWidget):
         """Set up the layout and populate the UI with activity data."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 20)
+        layout.setSpacing(1)
         value_color = THEME.ACCENT_COLOR if is_dark_mode() else THEME.MAIN_COLOR
         locale = QLocale.system()
 
         # Line 1: Date
         if self.display_title:
+            title_layout = QVBoxLayout()
             date_label = QLabel(self.activity_info.get("date", "Unknown Date"))
             date_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
-            layout.addWidget(date_label)
+            title_layout.addWidget(date_label)
 
             title_label = QLabel(self.activity_info.get("title", "Untitled Activity"))
             title_label.setFont(QFont("Arial", 12))
-            layout.addWidget(title_label)
+            title_layout.addWidget(title_label)
+            title_layout.setSpacing(5)
+            layout.addLayout(title_layout)
 
         # Line 2: Duration (Left) and Pace (Right)
         duration_pace_layout = QVBoxLayout()
+        duration_pace_layout.setContentsMargins(0, 10, 0, 10)
         duration_pace_container = QHBoxLayout()  # Holds values
         duration_pace_labels = QHBoxLayout()  # Holds text labels
 
@@ -107,6 +112,7 @@ class ActivityWidget(QWidget):
 
         # Line 5-6: Distance & Elevation Gain (Grid Layout)
         metrics_layout = QGridLayout()
+        metrics_layout.setContentsMargins(0, 10, 0, 0)
 
         distance_value = float(self.activity_info.get("distance", 0))
         elevation_value = float(self.activity_info.get("elevation_gain", 0))
