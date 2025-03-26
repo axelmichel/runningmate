@@ -2,8 +2,10 @@ import cv2
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QImage, QPixmap
 
+from utils.image_thumbnail import image_thumbnail
 
-def video_thumbnail(self, video_path, width=300, height=300):
+
+def video_thumbnail(video_path, width=300, height=300):
     """Extracts the first frame of a video and returns a QPixmap thumbnail."""
     cap = cv2.VideoCapture(video_path)
     success, frame = cap.read()
@@ -16,7 +18,7 @@ def video_thumbnail(self, video_path, width=300, height=300):
         qimage = QImage(frame.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
         pixmap = QPixmap.fromImage(qimage)
 
-        return self.process_image_for_thumbnail(pixmap, width, height)
+        return image_thumbnail(pixmap, width, height)
 
     else:
         # If thumbnail generation fails, return a default icon
