@@ -121,7 +121,7 @@ class WeatherService:
                 "min_temp": data["daily"]["temperature_2m_min"][0],
                 "precipitation": data["daily"]["precipitation_sum"][0],
                 "max_wind_speed": data["daily"]["windspeed_10m_max"][0],
-                "wind_direction": data["daily"]["wind_direction_10m"],
+                "wind_direction": data["daily"]["wind_direction_10m"][0],
                 "weather_code": data["daily"]["weather_code"][0],
                 "source": "historical",
             }
