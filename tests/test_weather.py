@@ -15,7 +15,7 @@ def sample_current_weather():
             "windspeed_10m": 12.4,
             "precipitation": 0.8,
             "weather_code": 2,
-            "wind_direction_10m_dominant": "N",
+            "wind_direction_10m": "N",
         }
     }
 

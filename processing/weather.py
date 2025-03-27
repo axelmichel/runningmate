@@ -76,7 +76,7 @@ class WeatherService:
             "current": [
                 "temperature_2m",
                 "windspeed_10m",
-                "wind_direction_10m_dominant",
+                "wind_direction_10m",
                 "precipitation",
                 "weather_code",
             ],
@@ -93,7 +93,7 @@ class WeatherService:
                 "min_temp": data["current"]["temperature_2m"],
                 "precipitation": data["current"]["precipitation"],
                 "max_wind_speed": data["current"]["windspeed_10m"],
-                "wind_direction": data["current"]["wind_direction_10m_dominant"],
+                "wind_direction": data["current"]["wind_direction_10m"],
                 "weather_code": data["current"]["weather_code"],
                 "source": "current",
             }
