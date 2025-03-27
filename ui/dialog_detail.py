@@ -547,7 +547,7 @@ class DialogDetail(QDialog):
     def next_media(self):
         """Shows the next set of 5 media items."""
         items_per_page = 3
-        total_pages = (len(self.media_files) + items_per_page - 1)
+        total_pages = len(self.media_files) + items_per_page - 1
         if self.current_page < total_pages - 1:
             self.current_page += 1
             self.load_carousel_media()
