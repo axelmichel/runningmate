@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 import requests
@@ -7,21 +8,38 @@ from utils.logger import logger
 
 class WeatherService:
     @staticmethod
-    def fetch_weather_data(url: str, params: dict) -> dict | None:
+    def fetch_weather_data(
+        url: str,
+        params: dict,
+        timeout: float = 2.0,
+        retries: int = 3,
+        backoff: float = 0.5,
+    ) -> dict | None:
         """
-        Generic function to handle API requests.
+        Handles HTTP GET request with retry and timeout.
 
         :param url: API endpoint.
         :param params: Query parameters.
+        :param timeout: Max seconds to wait for a response.
+        :param retries: Number of retry attempts.
+        :param backoff: Multiplier for exponential backoff.
         :return: JSON response as dict or None if request fails.
         """
-        try:
-            response = requests.get(url, params=params)
-            response.raise_for_status()  # Raise exception for HTTP errors
-            return response.json()
-        except requests.RequestException as e:
-            logger.error(f"Failed to fetch weather data: {e}")
-            return None
+        for attempt in range(retries):
+            try:
+                response = requests.get(url, params=params, timeout=timeout)
+                response.raise_for_status()
+                return response.json()
+            except requests.RequestException as e:
+                logger.warning(
+                    f"[Attempt {attempt + 1}] Failed to fetch weather data: {e}"
+                )
+                if attempt < retries - 1:
+                    sleep_time = backoff * (2**attempt)
+                    logger.info(f"Retrying in {sleep_time:.2f}s...")
+                    time.sleep(sleep_time)
+        logger.error("All retry attempts failed for weather data fetch.")
+        return None
 
     @staticmethod
     def get_weather(lat: float, lon: float, date: str) -> dict | None:
