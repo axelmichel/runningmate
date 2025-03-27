@@ -8,12 +8,14 @@ from processing.track_map import TrackMap
 
 @pytest.fixture
 def dummy_df():
-    return pd.DataFrame({
-        "Latitude": [50.0, 50.001, 50.002],
-        "Longitude": [8.0, 8.001, 8.002],
-        "HeartRate": [120, 125, 130],
-        "CleanPace": [5.0, 5.2, 5.1]
-    })
+    return pd.DataFrame(
+        {
+            "Latitude": [50.0, 50.001, 50.002],
+            "Longitude": [8.0, 8.001, 8.002],
+            "HeartRate": [120, 125, 130],
+            "CleanPace": [5.0, 5.2, 5.1],
+        }
+    )
 
 
 @pytest.fixture
@@ -22,7 +24,7 @@ def track_map(tmp_path, test_db):
         file_path=str(tmp_path),
         image_path=str(tmp_path),
         db_handler=test_db,
-        activity_id=1
+        activity_id=1,
     )
 
 
@@ -32,12 +34,14 @@ def test_validate_dataframe_success(track_map, dummy_df):
 
 
 def test_validate_dataframe_missing_column(track_map):
-    track_map.df = pd.DataFrame({
-        "Latitude": [1],
-        "Longitude": [1],
-        "HeartRate": [90]
-        # Missing CleanPace
-    })
+    track_map.df = pd.DataFrame(
+        {
+            "Latitude": [1],
+            "Longitude": [1],
+            "HeartRate": [90],
+            # Missing CleanPace
+        }
+    )
     with pytest.raises(ValueError, match="missing required columns"):
         track_map._validate_dataframe()
 
@@ -64,7 +68,7 @@ def test_create_map_track(mock_activity_data_cls, dummy_df, tmp_path, test_db):
         file_path=str(tmp_path),
         image_path=str(tmp_path),
         db_handler=test_db,
-        activity_id=1
+        activity_id=1,
     )
 
     result = track_map.create_map("track")
@@ -85,7 +89,7 @@ def test_create_map_heart_rate(mock_activity_data_cls, dummy_df, tmp_path, test_
         file_path=str(tmp_path),
         image_path=str(tmp_path),
         db_handler=test_db,
-        activity_id=1
+        activity_id=1,
     )
 
     result = track_map.create_map("heart_rate")

@@ -11,7 +11,12 @@ def user_settings(test_db: DatabaseHandler):
 
 def test_insert_and_get_user(user_settings: UserSettings):
     user_settings.insert_or_update_user(
-        name="Alex", weight=70.5, height=180, hr_min=50, hr_max=190, birthday="1990-01-01"
+        name="Alex",
+        weight=70.5,
+        height=180,
+        hr_min=50,
+        hr_max=190,
+        birthday="1990-01-01",
     )
     user = user_settings.get_user_data()
     assert user is not None
@@ -22,12 +27,22 @@ def test_insert_and_get_user(user_settings: UserSettings):
 
 def test_update_user(user_settings: UserSettings):
     user_settings.insert_or_update_user(
-        name="Alex", weight=70.5, height=180, hr_min=50, hr_max=190, birthday="1990-01-01"
+        name="Alex",
+        weight=70.5,
+        height=180,
+        hr_min=50,
+        hr_max=190,
+        birthday="1990-01-01",
     )
     user = user_settings.get_user_data()
     user_settings.insert_or_update_user(
-        name="Updated Alex", weight=75, height=185, hr_min=55, hr_max=185,
-        birthday="1990-01-01", id=user["id"]
+        name="Updated Alex",
+        weight=75,
+        height=185,
+        hr_min=55,
+        hr_max=185,
+        birthday="1990-01-01",
+        id=user["id"],
     )
     updated_user = user_settings.get_user_data()
     assert updated_user["name"] == "Updated Alex"
@@ -36,12 +51,23 @@ def test_update_user(user_settings: UserSettings):
 
 def test_set_heart_rate_zones(user_settings: UserSettings):
     user_settings.insert_or_update_user(
-        name="Zoner", weight=80, height=170, hr_min=60, hr_max=180, birthday="1985-12-31"
+        name="Zoner",
+        weight=80,
+        height=170,
+        hr_min=60,
+        hr_max=180,
+        birthday="1985-12-31",
     )
     user = user_settings.get_user_data()
     user_settings.set_heart_rates_zones(
-        id=user["id"], vo2max=50.0, hr_min=60,
-        zone1=100, zone2=120, zone3=140, zone4=160, zone5=180
+        id=user["id"],
+        vo2max=50.0,
+        hr_min=60,
+        zone1=100,
+        zone2=120,
+        zone3=140,
+        zone4=160,
+        zone5=180,
     )
     updated = user_settings.get_user_data()
     assert updated["vo2max"] == 50.0

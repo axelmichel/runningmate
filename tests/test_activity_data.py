@@ -12,18 +12,27 @@ from processing.activity_data import ActivityData
 def activity_data(tmp_path, test_db):
     return ActivityData(str(tmp_path), str(tmp_path), test_db)
 
+
 def test_identifier_and_type(activity_data, test_db):
-    test_db.conn.execute("INSERT INTO activities (id, file_id, activity_type) VALUES (?, ?, ?)", (1, "abc123", "running"))
+    test_db.conn.execute(
+        "INSERT INTO activities (id, file_id, activity_type) VALUES (?, ?, ?)",
+        (1, "abc123", "running"),
+    )
     test_db.conn.commit()
     assert activity_data.get_activity_identifier(1) == "abc123"
     assert activity_data.get_activity_type(1) == "running"
 
+
 def test_save_and_get_activity_map(activity_data, test_db):
-    test_db.conn.execute("INSERT INTO activities (id, file_id, activity_type) VALUES (?, ?, ?)", (2, "def456", "cycling"))
+    test_db.conn.execute(
+        "INSERT INTO activities (id, file_id, activity_type) VALUES (?, ?, ?)",
+        (2, "def456", "cycling"),
+    )
     test_db.conn.commit()
     result = activity_data.save_activity_map(2, "path", "/some/path")
     assert isinstance(result, dict)
     assert result["file_path"] == "/some/path"
+
 
 def test_unpack_tar_creates_file(tmp_path):
     tar_path = tmp_path / "test.tar.gz"
@@ -35,9 +44,13 @@ def test_unpack_tar_creates_file(tmp_path):
     assert ActivityData.unpack_tar(str(tar_path))
     assert (tmp_path / "inside.txt").exists()
 
+
 @patch("processing.activity_data.TcxFileParser")
 def test_get_activity_df_with_tcx(mock_parser_class, activity_data, test_db, tmp_path):
-    test_db.conn.execute("INSERT INTO activities (id, file_id, activity_type) VALUES (?, ?, ?)", (3, "datafile", "running"))
+    test_db.conn.execute(
+        "INSERT INTO activities (id, file_id, activity_type) VALUES (?, ?, ?)",
+        (3, "datafile", "running"),
+    )
     test_db.conn.commit()
     tcx_path = tmp_path / "datafile.tcx"
     tcx_path.write_text("<tcx>dummy</tcx>")
@@ -46,7 +59,10 @@ def test_get_activity_df_with_tcx(mock_parser_class, activity_data, test_db, tmp
         tar.add(tcx_path, arcname="datafile.tcx")
     os.remove(tcx_path)
     mock_parser = MagicMock()
-    mock_parser.parse_tcx.return_value = (pd.DataFrame([{"time": 1, "value": 42}]), None)
+    mock_parser.parse_tcx.return_value = (
+        pd.DataFrame([{"time": 1, "value": 42}]),
+        None,
+    )
     mock_parser_class.return_value = mock_parser
     df = activity_data.get_activity_df(3)
     assert isinstance(df, pd.DataFrame)

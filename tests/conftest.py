@@ -15,6 +15,7 @@ def test_db():
     yield db
     db.close()
 
+
 @pytest.fixture()
 def reset_database(test_db):
     """Fully resets the database before each test to ensure a clean state."""
@@ -34,6 +35,4 @@ def reset_database(test_db):
 
     apply_migrations(db)
 
-    db.cursor.execute(
-        "PRAGMA foreign_keys = ON;"
-    )
+    db.cursor.execute("PRAGMA foreign_keys = ON;")

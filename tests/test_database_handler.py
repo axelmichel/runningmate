@@ -6,7 +6,6 @@ import time
 import pytest
 
 from database.database_handler import DatabaseHandler
-from database.migrations import apply_migrations
 from processing.compute_statistics import generate_activity_title
 
 
@@ -917,7 +916,6 @@ def test_close_database(test_db):
     db.close()
     with pytest.raises(sqlite3.ProgrammingError):  # ✅ Ensure connection is closed
         db.cursor.execute("SELECT 1")
-
 
 
 @pytest.fixture(scope="module", autouse=True)

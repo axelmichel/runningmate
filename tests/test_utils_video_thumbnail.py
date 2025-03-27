@@ -12,7 +12,7 @@ def test_video_thumbnail_success(tmp_path: Path, qtbot):
     video_path = tmp_path / "test.avi"
 
     # Create a 1-frame dummy video
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    fourcc = cv2.VideoWriter_fourcc(*"XVID")
     out = cv2.VideoWriter(str(video_path), fourcc, 1.0, (100, 100))
     frame = np.ones((100, 100, 3), dtype=np.uint8) * 128
     out.write(frame)

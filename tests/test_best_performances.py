@@ -1,11 +1,8 @@
 import random
-import sqlite3
 import time
 
 import pytest
 
-from database.database_handler import DatabaseHandler
-from database.migrations import apply_migrations
 from processing.best_performances import BestSegmentFinder
 from processing.system_settings import ViewMode
 
@@ -183,6 +180,3 @@ def test_get_best_segments_run(test_db, best_segment_finder):
     assert "1K" in best_segments
     assert "5K" not in best_segments  # No 5K distance in sample data
     assert best_segments["1K"]["seg_avg_pace"] == 4.9  # Best 1K pace
-
-
-
