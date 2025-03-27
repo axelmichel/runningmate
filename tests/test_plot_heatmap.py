@@ -1,22 +1,9 @@
 import os
-import sqlite3
 from datetime import datetime
 
 import pytest
 
-from database.database_handler import DatabaseHandler
-from database.migrations import apply_migrations
 from processing.plot_heatmap import PlotHeatmap
-
-
-@pytest.fixture()
-def test_db():
-    """Setup an in-memory database with migrations applied for testing."""
-    conn = sqlite3.connect(":memory:", check_same_thread=False)
-    db = DatabaseHandler(conn=conn)
-    apply_migrations(db)
-    yield db
-    db.close()
 
 
 @pytest.fixture

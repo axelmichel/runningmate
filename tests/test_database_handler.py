@@ -10,16 +10,6 @@ from database.migrations import apply_migrations
 from processing.compute_statistics import generate_activity_title
 
 
-@pytest.fixture()
-def test_db():
-    """Setup an in-memory database with migrations applied for testing."""
-    conn = sqlite3.connect(":memory:", check_same_thread=False)
-    db = DatabaseHandler(conn=conn)  # ✅ Inject test connection
-    apply_migrations(db)  # ✅ Run latest migrations
-    yield db  # ✅ Return test database handler
-    db.close()  # ✅ Cleanup after test
-
-
 def generate_test_activity(test_db):
     types = ["Running", "Walking", "Cycling"]
     db = test_db
@@ -29,10 +19,8 @@ def generate_test_activity(test_db):
     duration = random.randint(600, 14400)  # Random duration (10 min to 4 hours)
     timestamp = int(time.time())  # Current Unix timestamp
 
-    # ✅ Generate title based on activity type & timestamp
     title = generate_activity_title(activity_type, timestamp)
 
-    # ✅ Create test data dictionary
     test_data = {
         "id": activity_id,
         "distance": distance,
@@ -508,13 +496,10 @@ def test_fetch_all_rides(test_db):
         db.insert_cycling(ride_data)
         ride_entries.append(ride_data)
 
-    # ✅ Fetch the rides
     rides = db.fetch_rides(start=0, limit=5)
 
-    # ✅ Verify that we retrieved the correct number of rides
     assert len(rides) == 5
 
-    # ✅ Check that the data matches what we inserted
     for i, ride in enumerate(rides):
         assert ride["activity_id"] == ride_entries[i]["activity_id"]
         assert ride["avg_speed"] == ride_entries[i]["avg_speed"]
@@ -523,7 +508,6 @@ def test_fetch_all_rides(test_db):
         assert ride["slowest_pace"] == ride_entries[i]["slowest_pace"]
 
 
-### 🔹 **Test for Lines 106-112: `insert_activity()` (Handles segment_df is None case)** ###
 def test_insert_activity_without_segments(test_db):
     """Test inserting an activity when segment_df is None."""
     db = test_db
@@ -546,7 +530,6 @@ def test_insert_activity_without_segments(test_db):
     assert result["activity_type"] == "Running"
 
 
-### 🔹 **Test for Lines 124, 130: `update_activity()` (Handles segment_df is None case)** ###
 def test_update_activity_without_segments(test_db):
     """Test updating an activity when segment_df is None."""
     db = test_db
@@ -570,7 +553,6 @@ def test_update_activity_without_segments(test_db):
     assert updated_activity["distance"] == 15.0
 
 
-### 🔹 **Test for Lines 136, 142, 145-146: `insert_activity_details()`** ###
 def test_insert_activity_details(test_db):
     """Test inserting activity segment details into the database."""
     db = test_db
@@ -601,7 +583,6 @@ def test_insert_activity_details(test_db):
     assert details["seg_avg_heart_rate"] == 140
 
 
-### 🔹 **Test for Lines 164-178, 181-204: `insert_weather()` & `update_weather()`** ###
 def test_insert_weather(test_db):
     """Test inserting weather data for an activity."""
     db = test_db
@@ -644,7 +625,6 @@ def test_update_weather(test_db):
     assert result["max_temp"] == 20.0
 
 
-### 🔹 **Test for Lines 230-231: `delete_activity()` (Ensure activity deletion works correctly)** ###
 def test_delete_activity(test_db):
     """Test deleting an activity from the database."""
     db = test_db
@@ -666,7 +646,6 @@ def test_delete_activity(test_db):
     assert deleted_activity is None  # ✅ Ensure activity is deleted
 
 
-### 🔹 **Test for Lines 280-283: `get_next_activity_id()`** ###
 def test_get_next_activity_id(test_db):
     """Test retrieving the next activity ID when database has activities."""
     db = test_db
@@ -693,10 +672,9 @@ def test_get_next_activity_id(test_db):
 
     next_id = db.get_next_activity_id()
 
-    assert next_id == 3  # ✅ The next available ID should be 3
+    assert next_id == 3
 
 
-### 🔹 **Test for Lines 500-528: `fetch_activities()`** ###
 def test_fetch_activities(test_db):
     """Test fetching paginated activities sorted by date."""
     db = test_db
@@ -714,11 +692,10 @@ def test_fetch_activities(test_db):
 
     activities = db.fetch_activities(start=0, limit=3)
 
-    assert len(activities) == 3  # ✅ Ensure only 3 results are returned
-    assert activities[0]["activity_id"] == 5  # ✅ Should be sorted by date
+    assert len(activities) == 3
+    assert activities[0]["activity_id"] == 5
 
 
-### 🔹 **Test for Lines 585-595: `get_total_activity_count()`** ###
 def test_get_total_activity_count(test_db):
     """Test retrieving the total count of activities."""
     db = test_db
@@ -734,10 +711,9 @@ def test_get_total_activity_count(test_db):
     )
 
     count = db.get_total_activity_count(None)  # Using None to count all
-    assert count == 1  # ✅ Should be 1 since we added only one activity
+    assert count == 1
 
 
-### **✅ 111-112: Test `insert_activity()` when `segment_df` is empty** ###
 def test_insert_activity_empty_segments(test_db):
     """Test inserting an activity when `segment_df` is an empty DataFrame."""
     db = test_db
@@ -755,10 +731,9 @@ def test_insert_activity_empty_segments(test_db):
     db.cursor.execute("SELECT * FROM activities WHERE id = ?", (activity_data["id"],))
     result = db.cursor.fetchone()
 
-    assert result is not None  # ✅ Ensure activity exists
+    assert result is not None
 
 
-### **✅ 124: Test `update_activity()` deletes old segment details** ###
 def test_update_activity_deletes_old_segments(test_db):
     """Test `update_activity()` deletes old segment details before inserting new ones."""
     db = test_db
@@ -784,10 +759,9 @@ def test_update_activity_deletes_old_segments(test_db):
     db.cursor.execute("SELECT * FROM activity_details WHERE activity_id = ?", (1,))
     details = db.cursor.fetchall()
 
-    assert len(details) == 0  # ✅ Old segments should be deleted
+    assert len(details) == 0
 
 
-### **✅ 130: Test `update_activity()` when `segment_df` is None** ###
 def test_update_activity_no_segments(test_db):
     """Test updating an activity without changing segments."""
     db = test_db
@@ -803,15 +777,14 @@ def test_update_activity_no_segments(test_db):
     db.insert_activity(activity_data)
     activity_data["distance"] = 15.0  # Update distance
 
-    db.update_activity(activity_data, segment_df=None)  # ✅ No segment_df provided
+    db.update_activity(activity_data, segment_df=None)
 
     db.cursor.execute("SELECT * FROM activities WHERE id = ?", (1,))
     updated_activity = db.cursor.fetchone()
 
-    assert updated_activity["distance"] == 15.0  # ✅ Distance should be updated
+    assert updated_activity["distance"] == 15.0
 
 
-### **✅ 136: Test `insert_activity_details()` inserts correctly** ###
 def test_insert_activity_details_valid(test_db):
     """Test inserting activity segment details."""
     db = test_db
@@ -835,7 +808,6 @@ def test_insert_activity_details_valid(test_db):
     assert details["seg_avg_speed"] == 10.5
 
 
-### **✅ 165: Test `insert_weather()` handles missing keys** ###
 def test_insert_weather_missing_keys(test_db):
     """Test inserting weather with missing fields defaults to None."""
     db = test_db
@@ -847,10 +819,9 @@ def test_insert_weather_missing_keys(test_db):
     result = db.cursor.fetchone()
 
     assert result["max_temp"] == 15.0
-    assert result["min_temp"] is None  # ✅ Should default to None
+    assert result["min_temp"] is None
 
 
-### **✅ 183, 191-196: Test `update_weather()` with new values** ###
 def test_update_weather_values(test_db):
     """Test updating weather values."""
     db = test_db
@@ -863,14 +834,14 @@ def test_update_weather_values(test_db):
     }
 
     db.insert_weather(weather_data)
-    weather_data["max_temp"] = 20.0  # ✅ Update max_temp
+    weather_data["max_temp"] = 20.0
 
     db.update_weather(weather_data)
 
     db.cursor.execute("SELECT * FROM weather WHERE activity_id = ?", (1,))
     result = db.cursor.fetchone()
 
-    assert result["max_temp"] == 20.0  # ✅ Should be updated
+    assert result["max_temp"] == 20.0
 
 
 ### **✅ 230-231: Test `delete_activity()` removes all linked records** ###
@@ -910,16 +881,15 @@ def test_delete_activity_removes_related_data(test_db):
     db.delete_activity(1)
 
     db.cursor.execute("SELECT * FROM activities WHERE id = ?", (1,))
-    assert db.cursor.fetchone() is None  # ✅ Activity removed
+    assert db.cursor.fetchone() is None
 
     db.cursor.execute("SELECT * FROM runs WHERE activity_id = ?", (1,))
-    assert db.cursor.fetchone() is None  # ✅ Runs removed
+    assert db.cursor.fetchone() is None
 
     db.cursor.execute("SELECT * FROM weather WHERE activity_id = ?", (1,))
-    assert db.cursor.fetchone() is None  # ✅ Weather removed
+    assert db.cursor.fetchone() is None
 
 
-### **✅ 500-528: Test `fetch_activities()` sorts correctly** ###
 def test_fetch_activities_sort(test_db):
     """Ensure activities are sorted correctly."""
     db = test_db
@@ -948,32 +918,6 @@ def test_close_database(test_db):
     with pytest.raises(sqlite3.ProgrammingError):  # ✅ Ensure connection is closed
         db.cursor.execute("SELECT 1")
 
-
-@pytest.fixture(autouse=True)
-def reset_database(test_db):
-    """Fully resets the database before each test to ensure a clean state."""
-    db = test_db
-
-    # ✅ Disable foreign key checks to avoid integrity constraints
-    db.cursor.execute("PRAGMA foreign_keys = OFF;")
-
-    # ✅ Drop all tables to completely reset IDs and data
-    db.cursor.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-    )
-    tables = db.cursor.fetchall()
-
-    for (table_name,) in tables:
-        db.cursor.execute(f"DROP TABLE {table_name};")  # ✅ Drop the table
-
-    db.conn.commit()
-
-    # ✅ Re-run migrations to recreate tables
-    apply_migrations(db)
-
-    db.cursor.execute(
-        "PRAGMA foreign_keys = ON;"
-    )  # ✅ Re-enable foreign key constraints
 
 
 @pytest.fixture(scope="module", autouse=True)

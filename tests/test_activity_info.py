@@ -1,10 +1,7 @@
-import sqlite3
 import time
 
 import pytest
 
-from database.database_handler import DatabaseHandler
-from database.migrations import apply_migrations
 from processing.activity_info import ActivityInfo
 
 
@@ -63,16 +60,6 @@ def insert_media(db, activity_id, media_type, file_path):
         (activity_id, media_type, file_path),
     )
     db.conn.commit()
-
-
-@pytest.fixture()
-def test_db():
-    """Setup an in-memory database with migrations applied for testing."""
-    conn = sqlite3.connect(":memory:", check_same_thread=False)
-    db = DatabaseHandler(conn=conn)
-    apply_migrations(db)
-    yield db
-    db.close()
 
 
 @pytest.fixture

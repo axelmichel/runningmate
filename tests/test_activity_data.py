@@ -1,24 +1,12 @@
 import os
-import sqlite3
 import tarfile
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
 
-from database.database_handler import DatabaseHandler
-from database.migrations import apply_migrations
 from processing.activity_data import ActivityData
 
-
-@pytest.fixture()
-def test_db():
-    conn = sqlite3.connect(":memory:", check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    db = DatabaseHandler(conn=conn)
-    apply_migrations(db)
-    yield db
-    db.close()
 
 @pytest.fixture
 def activity_data(tmp_path, test_db):

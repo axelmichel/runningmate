@@ -1,5 +1,4 @@
 import os
-import sqlite3
 import tarfile
 import tempfile
 from unittest.mock import patch
@@ -8,8 +7,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from database.database_handler import DatabaseHandler
-from database.migrations import apply_migrations
 from importer.file.tcx_file import TcxFileImporter
 from processing.compute_statistics import generate_activity_title
 from processing.system_settings import ViewMode
@@ -32,16 +29,6 @@ def mock_file_data():
         "Steps": [100, 105, 110, 115, 120, 125, 130, 135, 140, 145],
     }
     return pd.DataFrame(data)
-
-
-@pytest.fixture()
-def test_db():
-    """Setup an in-memory database with migrations applied for testing."""
-    conn = sqlite3.connect(":memory:", check_same_thread=False)
-    db = DatabaseHandler(conn=conn)  # ✅ Inject test connection
-    apply_migrations(db)  # ✅ Run latest migrations
-    yield db  # ✅ Return test database handler
-    db.close()  # ✅ Cleanup after test
 
 
 @pytest.fixture()

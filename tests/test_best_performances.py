@@ -51,16 +51,6 @@ def generate_test_activity(test_db, atype=None):
     return latest_entry_dict
 
 
-@pytest.fixture()
-def test_db():
-    """Setup an in-memory database with migrations applied for testing."""
-    conn = sqlite3.connect(":memory:", check_same_thread=False)
-    db = DatabaseHandler(conn=conn)  # ✅ Inject test connection
-    apply_migrations(db)  # ✅ Run latest migrations
-    yield db  # ✅ Return test database handler
-    db.close()  # ✅ Cleanup after test
-
-
 @pytest.fixture
 def best_segment_finder(test_db):
     """Fixture to create BestSegmentFinder instance."""
@@ -195,28 +185,4 @@ def test_get_best_segments_run(test_db, best_segment_finder):
     assert best_segments["1K"]["seg_avg_pace"] == 4.9  # Best 1K pace
 
 
-@pytest.fixture(autouse=True)
-def reset_database(test_db):
-    """Fully resets the database before each test to ensure a clean state."""
-    db = test_db
 
-    # ✅ Disable foreign key checks to avoid integrity constraints
-    db.cursor.execute("PRAGMA foreign_keys = OFF;")
-
-    # ✅ Drop all tables to completely reset IDs and data
-    db.cursor.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-    )
-    tables = db.cursor.fetchall()
-
-    for (table_name,) in tables:
-        db.cursor.execute(f"DROP TABLE {table_name};")  # ✅ Drop the table
-
-    db.conn.commit()
-
-    # ✅ Re-run migrations to recreate tables
-    apply_migrations(db)
-
-    db.cursor.execute(
-        "PRAGMA foreign_keys = ON;"
-    )  # ✅ Re-enable foreign key constraints

@@ -13,7 +13,7 @@ def mock_qt_application():
     """Ensure QApplication instance exists before running UI-related tests."""
     app = QApplication.instance()
     if not app:
-        app = QApplication([])  # ✅ Create a dummy Qt application if none exists
+        app = QApplication([])
     yield app
 
 
@@ -21,7 +21,7 @@ def mock_qt_application():
 def mock_qmessagebox():
     """Globally mock QMessageBox to prevent actual popups in tests."""
     with patch.object(QMessageBox, "exec", return_value=None) as mock_exec:
-        yield mock_exec  # ✅ Ensure `exec()` does nothing
+        yield mock_exec
 
 
 @pytest.fixture
@@ -108,7 +108,7 @@ def test_prevent_duplicate_handlers():
 @patch.object(QMessageBox, "exec", return_value=None)
 def test_error_popup(mock_exec, temp_logger):
     """Ensure error popup is displayed exactly once when enabled."""
-    mock_exec.reset_mock()  # ✅ Reset call count before test
+    mock_exec.reset_mock()
 
     temp_logger.error("This is an error!", show_popup=True)
 
@@ -118,7 +118,7 @@ def test_error_popup(mock_exec, temp_logger):
 @patch.object(QMessageBox, "exec", return_value=None)
 def test_critical_error_popup(mock_exec, temp_logger):
     """Ensure critical error popup is displayed exactly once when enabled."""
-    mock_exec.reset_mock()  # ✅ Reset call count before test
+    mock_exec.reset_mock()
 
     temp_logger.critical("Critical failure!")
 
