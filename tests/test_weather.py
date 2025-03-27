@@ -15,7 +15,7 @@ def sample_current_weather():
             "windspeed_10m": 12.4,
             "precipitation": 0.8,
             "weather_code": 2,
-            "wind_direction_10m": "N",
+            "wind_direction_10m_dominant": "N",
         }
     }
 
@@ -29,7 +29,7 @@ def sample_historical_weather():
             "temperature_2m_min": [10.2],
             "precipitation_sum": [5.1],
             "windspeed_10m_max": [18.7],
-            "wind_direction_10m": ["N"],
+            "wind_direction_10m_dominant": ["N"],
             "weather_code": [3],
         }
     }
