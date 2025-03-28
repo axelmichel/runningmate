@@ -34,10 +34,10 @@ from ui.info_card import InfoCard
 from ui.main_menu import MenuBar
 from ui.side_bar import Sidebar
 from ui.table_builder import TableBuilder
-from ui.weather_widget import WeatherWidget
 from ui.widget_activity import ActivityWidget
 from ui.widget_best_performances import BestPerformanceWidget
 from ui.widget_search import SearchWidget
+from ui.widget_weather import WeatherWidget
 from ui.window_garmin_sync import GarminSyncWindow
 from ui.window_icloud_sync import iCloudSyncDialog
 from ui.window_user_settings import UserSettingsWindow

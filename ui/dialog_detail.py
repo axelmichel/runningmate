@@ -31,12 +31,12 @@ from ui.dialog_detail_pages.page_segments import page_segments
 from ui.dialog_detail_pages.page_zones import page_zones
 from ui.side_bar import Sidebar
 from ui.themes import THEME
-from ui.weather_widget import WeatherWidget
 from ui.widget_activity import ActivityWidget
 from ui.widget_best_performances import BestPerformanceWidget
 from ui.widget_ride_details import RideDetailsWidget
 from ui.widget_run_details import RunDetailsWidget
 from ui.widget_walk_details import WalkDetailsWidget
+from ui.widget_weather import WeatherWidget
 from utils.image_thumbnail import image_thumbnail
 from utils.translations import _
 from utils.video_thumbnail import video_thumbnail
