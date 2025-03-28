@@ -4,6 +4,7 @@ from typing import Dict, Optional, Tuple
 import numpy as np
 import pandas as pd
 from geopy.distance import geodesic
+from pyproj import Transformer
 
 from processing.system_settings import ViewMode, mapActivityTypes
 
@@ -137,15 +138,15 @@ class TcxFileParser:
         activity_type = self.extract_activity_type(root, namespaces)
         activity_group = mapActivityTypes(activity_type)
 
-        self._mapPower(df, activity_group)
-        self._mapPace(df, activity_group)
+        df = self._map_power(df, activity_group)
+        df = self._map_pace(df, activity_group)
+        df = self._map_distance(df)
         df["Calories"] = df.apply(
             lambda row: self._estimate_calories(row, activity_group), axis=1
         )
-
         return df, activity_type
 
-    def _mapPower(self, df, activity_group):
+    def _map_power(self, df, activity_group):
         """
         Maps power values to the DataFrame based on the activity type.
 
@@ -163,8 +164,31 @@ class TcxFileParser:
         df["Power"] = pd.to_numeric(df["Power"], errors="coerce").astype(float)
         df["Power"] = df["Power"].infer_objects(copy=False)
         df.drop(columns=["EstimatedPower"], inplace=True)
+        return df
 
-    def _mapPace(self, df, activity_group):
+    @staticmethod
+    def _map_distance(df):
+        """Calculates the cumulative distance in kilometers using projected coordinates."""
+        df = df.dropna(subset=["Latitude", "Longitude"])
+        df["Latitude"] = df["Latitude"].astype(float)
+        df["Longitude"] = df["Longitude"].astype(float)
+
+        # Vectorized transformation
+        transformer = Transformer.from_crs("EPSG:4326", "EPSG:32633", always_xy=True)
+        x, y = transformer.transform(df["Longitude"].tolist(), df["Latitude"].tolist())
+        df["X"] = x
+        df["Y"] = y
+
+        diffs_x = np.diff(df["X"], prepend=df["X"].iloc[0])
+        diffs_y = np.diff(df["Y"], prepend=df["Y"].iloc[0])
+
+        distances = np.sqrt(diffs_x**2 + diffs_y**2) / 1000
+        df["DistanceInKm"] = distances.cumsum()
+        return df
+
+
+    @staticmethod
+    def _map_pace(df, activity_group):
         """
         Calculates pace (min/km) for each segment and applies different filtering based on activity type.
         :param df: The DataFrame containing distance and time data.

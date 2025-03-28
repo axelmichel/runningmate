@@ -28,6 +28,7 @@ from ui.dialog_detail_pages.page_edit import PageEdit
 from ui.dialog_detail_pages.page_effect import page_effect
 from ui.dialog_detail_pages.page_map import page_map
 from ui.dialog_detail_pages.page_segments import page_segments
+from ui.dialog_detail_pages.page_stats import page_stats
 from ui.dialog_detail_pages.page_zones import page_zones
 from ui.side_bar import Sidebar
 from ui.themes import THEME
@@ -55,6 +56,7 @@ class DialogDetail(QDialog):
         parent=None,
     ):
         super().__init__()
+        self.stats_page = None
         self.edit_page_handler = None
         self.edit_page = None
         self.items_per_page = None
@@ -92,6 +94,7 @@ class DialogDetail(QDialog):
             "general": ("information-line.svg", "General"),
             "segments": ("stack-fill.svg", "Segments"),
             "map": ("map-line.svg", "Map"),
+            "stats": ("line-chart-line.svg", "Statistics"),
             "effect": ("timer-flash-fill.svg", "Effect"),
             "zones": ("heart-pulse-line.svg", "Heart Rate Zones"),
             "edit": ("pencil-line.svg", "Edit"),
@@ -119,6 +122,7 @@ class DialogDetail(QDialog):
 
         self.general_page = self.create_general_page()
         self.map_page = self.create_map_page()
+        self.stats_page = self.create_stats_page()
         self.segment_page = self.create_segments_page()
         self.effect_page = self.create_effect_page()
         self.zones_page = self.create_zones_page()
@@ -127,6 +131,7 @@ class DialogDetail(QDialog):
         self.pages.addWidget(self.general_page)
         self.pages.addWidget(self.segment_page)
         self.pages.addWidget(self.map_page)
+        self.pages.addWidget(self.stats_page)
         self.pages.addWidget(self.effect_page)
         self.pages.addWidget(self.zones_page)
         self.pages.addWidget(self.edit_page)
@@ -181,6 +186,8 @@ class DialogDetail(QDialog):
             self.pages.setCurrentWidget(self.zones_page)
         elif page == "edit":
             self.pages.setCurrentWidget(self.edit_page)
+        elif page == "stats":
+            self.pages.setCurrentWidget(self.stats_page)
 
     def create_general_page(self):
         page = QWidget()
@@ -277,6 +284,16 @@ class DialogDetail(QDialog):
             self.get_page_title(_("Maps")),
             self.db,
             self.activity_id,
+            self.file_dir,
+            self.img_dir,
+        )
+
+    def create_stats_page(self):
+        return page_stats(
+            self.get_page_title(_("Statics")),
+            self.db,
+            self.activity_id,
+            self.activity_type,
             self.file_dir,
             self.img_dir,
         )
