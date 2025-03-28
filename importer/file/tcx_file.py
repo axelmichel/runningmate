@@ -1,6 +1,7 @@
 import os
 import tarfile
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import pandas as pd
@@ -26,6 +27,7 @@ from utils.logger import logger
 from utils.save_round import safe_round
 from utils.translations import _
 
+weather_executor = ThreadPoolExecutor(max_workers=2)
 
 def get_weather_segment(details):
     if details.empty:
@@ -157,13 +159,14 @@ class TcxFileImporter:
         computed_data["pause"] = format_hour_minute(detect_pauses(df))
 
         segment = get_weather_segment(details)
-        weather_data = WeatherService.get_weather(
-            segment["latitude"], segment["longitude"], segment["time"]
-        )
-
-        if weather_data:
-            identifier = {"activity_id": computed_data["activity_id"]}
-            weather_data = {**weather_data, **identifier}
+        if segment:
+            weather_executor.submit(
+                self.fetch_and_store_weather,
+                segment["latitude"],
+                segment["longitude"],
+                segment["time"],
+                next_id
+            )
 
         if target == ViewMode.RUN:
             computed_data = self.plot_stats(name, df, computed_data)
@@ -182,13 +185,18 @@ class TcxFileImporter:
         if activity_id:
             computed_data["activity_id"] = activity_id
             self.db.update_activity(computed_data, details)
-            if weather_data:
-                self.db.update_weather(weather_data)
         else:
             self.db.insert_activity(computed_data, details)
-            if weather_data:
-                self.db.insert_weather(weather_data)
         return True
+
+    def fetch_and_store_weather(self, lat, lon, date, activity_id):
+        try:
+            weather_data = WeatherService.get_weather(lat, lon, date)
+            if weather_data:
+                weather_data["activity_id"] = activity_id
+                self.db.insert_weather(weather_data)
+        except Exception as e:
+            logger.warning(f"Weather fetch failed for activity {activity_id}: {e}")
 
     def process_run(self, df, computed_data, activity_id=None):
         avg_steps, total_steps = calculate_steps(df)
