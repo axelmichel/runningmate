@@ -186,7 +186,6 @@ class TcxFileParser:
         df["DistanceInKm"] = distances.cumsum()
         return df
 
-
     @staticmethod
     def _map_pace(df, activity_group):
         """

@@ -24,7 +24,9 @@ class HeartRateChartWidget(QWidget):
     ):
         super().__init__()
         self.activity_id = activity_id
-        self.chart = HeartRateChart(file_path, image_path, db_handler, activity_id, activity_type)
+        self.chart = HeartRateChart(
+            file_path, image_path, db_handler, activity_id, activity_type
+        )
         self.web_view = QWebEngineView()
         self._init_ui()
 
@@ -53,5 +55,3 @@ class HeartRateChartWidget(QWidget):
         layout.addWidget(self.web_view)
         self.web_view.setHtml(chart_html)
         self.setLayout(layout)
-
-

@@ -29,6 +29,7 @@ from utils.translations import _
 
 weather_executor = ThreadPoolExecutor(max_workers=2)
 
+
 def get_weather_segment(details):
     if details.empty:
         return None  # Handle empty list case
@@ -165,7 +166,7 @@ class TcxFileImporter:
                 segment["latitude"],
                 segment["longitude"],
                 segment["time"],
-                next_id
+                next_id,
             )
 
         if target == ViewMode.RUN:

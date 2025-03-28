@@ -99,9 +99,7 @@ class ElevationChart:
                 x=self.df["DistanceInKm"],
                 y=self.df["Elevation"],
                 mode="lines",
-                line={
-                    "color": THEME.ACCENT_COLOR_LIGHT, "width": 2, "shape": "spline"
-                },
+                line={"color": THEME.ACCENT_COLOR_LIGHT, "width": 2, "shape": "spline"},
                 hovertemplate=f"{_('Distance (km)')}: %{{x}}<br>{_('Elevation (m)')}: %{{y}}<extra></extra>",
             )
         )

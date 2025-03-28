@@ -4,7 +4,9 @@ from ui.widget_elevation_chart import ElevationChartWidget
 from ui.widget_heart_rate_chart import HeartRateChartWidget
 
 
-def page_stats(page_title, db_handler, activity_id, activity_type, file_path, image_path):
+def page_stats(
+    page_title, db_handler, activity_id, activity_type, file_path, image_path
+):
     page = QWidget()
     layout = QVBoxLayout()
     layout.setContentsMargins(20, 0, 0, 0)
