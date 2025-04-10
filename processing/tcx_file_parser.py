@@ -173,6 +173,10 @@ class TcxFileParser:
         df["Latitude"] = df["Latitude"].astype(float)
         df["Longitude"] = df["Longitude"].astype(float)
 
+        if df.empty:
+            df["DistanceInKm"] = []
+            return df
+
         # Vectorized transformation
         transformer = Transformer.from_crs("EPSG:4326", "EPSG:32633", always_xy=True)
         x, y = transformer.transform(df["Longitude"].tolist(), df["Latitude"].tolist())

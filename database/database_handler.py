@@ -330,8 +330,8 @@ class DatabaseHandler:
                 SELECT
                     runs.id,
                     activities.date as raw_date,
-                    strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
-                    strftime('%H:%M', activities.date, 'unixepoch') AS time,
+                    strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch', 'localtime') AS date,
+                    strftime('%H:%M', activities.date, 'unixepoch', 'localtime') AS time,
                     printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,
                     activities.distance,
                     activities.title,
@@ -378,8 +378,8 @@ class DatabaseHandler:
                 SELECT
                     walking.id,
                     activities.date as raw_date,
-                    strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
-                    strftime('%H:%M', activities.date, 'unixepoch') AS time,
+                    strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch', 'localtime') AS date,
+                    strftime('%H:%M', activities.date, 'unixepoch', 'localtime') AS time,
                     printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,
                     activities.distance,
                     activities.title,
@@ -421,8 +421,8 @@ class DatabaseHandler:
                    SELECT
                        cycling.id,
                        activities.date as raw_date,
-                       strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch') AS date,
-                       strftime('%H:%M', activities.date, 'unixepoch') AS time,
+                       strftime('{_("%d.%m.%Y")}', activities.date, 'unixepoch', 'localtime') AS date,
+                       strftime('%H:%M', activities.date, 'unixepoch', 'localtime') AS time,
                        printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,
                        activities.distance,
                        activities.title,
@@ -484,8 +484,8 @@ class DatabaseHandler:
         query = f"""
             SELECT
                 id as activity_id,
-                strftime('{_("%d.%m.%Y %H:%M")}', date, 'unixepoch') AS date_time,  -- YYYY.MM.DD format
-                strftime('%H:%M', date, 'unixepoch') AS time,  -- HH:MM format
+                strftime('{_("%d.%m.%Y %H:%M")}', date, 'unixepoch', 'localtime') AS date_time,  -- YYYY.MM.DD format
+                strftime('%H:%M', date, 'unixepoch', 'localtime') AS time,  -- HH:MM format
                 printf('%02d:%02d:%02d', duration / 3600, (duration % 3600) / 60, duration % 60) AS duration,
                 activity_type,
                 duration,
@@ -530,7 +530,7 @@ class DatabaseHandler:
                SELECT
                     runs.id,
                     runs.activity_id,
-                    strftime('{_("%d.%m.%Y %H:%M")}', activities.date, 'unixepoch') AS date_time,
+                    strftime('{_("%d.%m.%Y %H:%M")}', activities.date, 'unixepoch', 'localtime') AS date_time,
                     printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,
                     activities.distance,
                     activities.title,
@@ -605,7 +605,7 @@ class DatabaseHandler:
            SELECT
                 walking.id,
                 walking.activity_id,
-                strftime('{_("%d.%m.%Y %H:%M")}', activities.date, 'unixepoch') AS date_time,
+                strftime('{_("%d.%m.%Y %H:%M")}', activities.date, 'unixepoch', 'localtime') AS date_time,
                 printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,
                 activities.distance,
                 activities.title,
@@ -660,7 +660,7 @@ class DatabaseHandler:
               SELECT
                    cycling.id,
                    cycling.activity_id,
-                   strftime('{_("%d.%m.%Y %H:%M")}', activities.date, 'unixepoch') AS date_time,
+                   strftime('{_("%d.%m.%Y %H:%M")}', activities.date, 'unixepoch', 'localtime') AS date_time,
                    printf('%02d:%02d:%02d', activities.duration / 3600, (activities.duration % 3600) / 60, activities.duration % 60) AS duration,
                    activities.distance,
                    activities.title,
