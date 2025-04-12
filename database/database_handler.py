@@ -64,6 +64,7 @@ class DatabaseHandler:
             "track_img",
             "elevation_img",
             "map_html",
+            "shoe_id",
         ],
         "activities": [
             "id",
@@ -410,9 +411,14 @@ class DatabaseHandler:
                     walking.pause,
                     walking.track_img,
                     walking.elevation_img,
-                    walking.map_html
+                    walking.map_html,
+                    walking.shoe_id,
+                    shoes.name as shoe_name,
+                    shoes.distance as shoe_distance,
+                    shoes.status as shoe_status
                 FROM walking
                 JOIN activities ON activities.id = walking.activity_id
+                LEFT JOIN shoes ON shoes.id = walking.shoe_id AND walking.shoe_id IS NOT NULL
                 WHERE walking.activity_id = ?;
             """
 
