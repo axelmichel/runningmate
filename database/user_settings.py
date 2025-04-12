@@ -85,6 +85,19 @@ class UserSettings:
         rows = self.cursor.fetchall()
         return [dict(row) for row in rows]
 
+    def get_shoe(
+        self,
+        shoe_id: int,
+    ) -> Optional[dict[str, Any] | dict[str, str] | dict[bytes, bytes]]:
+        """
+        Retrieves all shoes from the database.
+        """
+        self.cursor.execute(
+            "SELECT id, name, distance, status FROM shoes WHERE id = ?", (shoe_id,)
+        )
+        row = self.cursor.fetchone()
+        return dict(row) if row else None
+
     def insert_bike(self, name: str, weight: float, status: bool) -> None:
         """
         Inserts a new bike into the database.

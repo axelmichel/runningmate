@@ -33,6 +33,7 @@ class DatabaseHandler:
             "track_img",
             "elevation_img",
             "map_html",
+            "shoe_id",
         ],
         "cycling": [
             "activity_id",
@@ -101,6 +102,12 @@ class DatabaseHandler:
             "max_wind_speed",
             "weather_code",
         ],
+        "shoes": [
+            "id",
+            "name",
+            "distance",
+            "status",
+        ],
     }
 
     FILTER_MAPPINGS = {
@@ -154,6 +161,9 @@ class DatabaseHandler:
 
     def update_run(self, data: dict):
         self.update("runs", data)
+
+    def update_shoe(self, data: dict):
+        self.update("shoes", data, "id")
 
     def insert_cycling(self, data: dict):
         self.insert("cycling", data)
@@ -353,6 +363,7 @@ class DatabaseHandler:
                     runs.track_img,
                     runs.elevation_img,
                     runs.map_html,
+                    runs.shoe_id,
                     shoes.name as shoe_name,
                     shoes.distance as shoe_distance,
                     shoes.status as shoe_status
