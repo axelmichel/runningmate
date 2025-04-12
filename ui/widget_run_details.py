@@ -67,7 +67,7 @@ class RunDetailsWidget(QWidget):
         activity_data = self.db.fetch_run_by_activity_id(self.activity_id)
         if activity_data is None:
             return None
-        return {
+        data = {
             "calories": activity_data["calories"],
             "avg_power": activity_data["avg_power"],
             "avg_steps": activity_data["avg_steps"],
@@ -77,3 +77,9 @@ class RunDetailsWidget(QWidget):
             "fastest_pace": activity_data["fastest_pace"],
             "pause": activity_data["pause"],
         }
+
+        shoe_name = activity_data.get("shoe_name")
+        if shoe_name and str(shoe_name).strip():
+            data["shoe"] = shoe_name
+
+        return data
