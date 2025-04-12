@@ -71,7 +71,8 @@ class UserSettings:
         Inserts a new shoe into the database.
         """
         self.cursor.execute(
-            "INSERT INTO shoes (name, status) VALUES (?, ?)", (name, status)
+            "INSERT INTO shoes (name, status, distance) VALUES (?, ?, ?)",
+            (name, status, 0.0),
         )
         self.conn.commit()
 
@@ -103,8 +104,8 @@ class UserSettings:
         Inserts a new bike into the database.
         """
         self.cursor.execute(
-            "INSERT INTO bikes (name, weight, status) VALUES (?, ?, ?)",
-            (name, status, weight),
+            "INSERT INTO bikes (name, weight, status, distance) VALUES (?, ?, ?, ?)",
+            (name, status, weight, 0.0),
         )
         self.conn.commit()
 
