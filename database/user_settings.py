@@ -71,7 +71,8 @@ class UserSettings:
         Inserts a new shoe into the database.
         """
         self.cursor.execute(
-            "INSERT INTO shoes (name, status) VALUES (?, ?)", (name, status)
+            "INSERT INTO shoes (name, status, distance) VALUES (?, ?, ?)",
+            (name, status, 0.0),
         )
         self.conn.commit()
 
@@ -85,13 +86,26 @@ class UserSettings:
         rows = self.cursor.fetchall()
         return [dict(row) for row in rows]
 
+    def get_shoe(
+        self,
+        shoe_id: int,
+    ) -> Optional[dict[str, Any] | dict[str, str] | dict[bytes, bytes]]:
+        """
+        Retrieves all shoes from the database.
+        """
+        self.cursor.execute(
+            "SELECT id, name, distance, status FROM shoes WHERE id = ?", (shoe_id,)
+        )
+        row = self.cursor.fetchone()
+        return dict(row) if row else None
+
     def insert_bike(self, name: str, weight: float, status: bool) -> None:
         """
         Inserts a new bike into the database.
         """
         self.cursor.execute(
-            "INSERT INTO bikes (name, weight, status) VALUES (?, ?, ?)",
-            (name, status, weight),
+            "INSERT INTO bikes (name, weight, status, distance) VALUES (?, ?, ?, ?)",
+            (name, status, weight, 0.0),
         )
         self.conn.commit()
 

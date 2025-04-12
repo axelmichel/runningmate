@@ -64,7 +64,7 @@ pytest==8.3.4
 pytest-cov==6.0.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
-python-markdown-math @ https://github.com/mitya57/python-markdown-math/archive/master.zip#sha256=27290f75e444d7dd85eb2ee6c482884fb759ea0e4527d2c918da34c63c7dd8af
+python-markdown-math @ https://github.com/mitya57/python-markdown-math/archive/master.zip#sha256=86f22483ba74b92e4535bad5dc3da54b1f6963b9a6378c98252923a69db6fc19
 pytz==2025.1
 PyYAML==6.0.2
 pyyaml_env_tag==0.1

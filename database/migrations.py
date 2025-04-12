@@ -555,6 +555,12 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
                FOREIGN KEY (activity_id) REFERENCES activities(id))
            """,
             ),
+            (
+                52,
+                [
+                    "ALTER TABLE walking ADD COLUMN shoe_id INTEGER REFERENCES shoes(id) ON DELETE SET NULL",
+                ],
+            ),
         ]
     )
 

@@ -16,7 +16,10 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from database.user_settings import UserSettings
+from processing.system_settings import ViewMode, mapActivityTypes
 from ui.dialog_action_bar import DialogActionBar
+from ui.widget_shoes import ShoeWidget
 from utils.image_thumbnail import image_thumbnail
 from utils.translations import _
 from utils.video_thumbnail import video_thumbnail
@@ -41,6 +44,7 @@ class PageEdit:
         self.parent = parent
         self.activity = activity
         self.title = title
+        self.userSettings = UserSettings(self.db)
 
     def get_page(self):
         page = QWidget()
@@ -64,19 +68,22 @@ class PageEdit:
         self.comment_input = QTextEdit(self.activity["comment"])
         layout.addWidget(self.comment_input)
 
-        # ✅ Create Media Layout for Thumbnails
+        # Create Media Layout for Thumbnails
         self.media_layout = QHBoxLayout()
         self.media_layout.setSpacing(10)
         layout.addLayout(self.media_layout)
 
         self.list_media()  # Load existing media
 
-        # ✅ Add Media Button
+        # Add Media Button
         self.upload_button = QPushButton("Add Media")
         self.upload_button.clicked.connect(self.parent.upload_media)
         layout.addWidget(self.upload_button)
 
+        # Create Extended Form Layout (Form + Shoe Widget)
+        extended_form_layout = QHBoxLayout()
         form_box = QVBoxLayout()
+        widget_box = QVBoxLayout()
         form_widget = self.get_form()
         form_layout = form_widget.layout()
 
@@ -104,6 +111,33 @@ class PageEdit:
         form_layout.addRow(_("Time:"), self.time_input)
         form_layout.addRow(_("Duration:"), self.duration_input)
         form_layout.addRow(_("Elevation:"), self.elevation_input)
+
+        # Add form_box to extended_form_layout
+        form_box.addWidget(form_widget)
+        form_box.addStretch(1)
+        extended_form_layout.addLayout(form_box)
+
+        activity_type = mapActivityTypes(self.activity["activity_type"])
+        if activity_type == ViewMode.RUN or activity_type == ViewMode.WALK:
+            print("Activity type is RUN or WALK")
+            shoe_widget = ShoeWidget(
+                db=self.db,
+                user_settings=self.userSettings,
+                activity=self.activity,
+                activity_type=activity_type,
+            )
+            widget_title = QLabel(_("Shoe:"))
+            widget_title.setStyleSheet(
+                """
+                font-size: 13px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            """
+            )
+            widget_box.addWidget(widget_title)
+            widget_box.addWidget(shoe_widget)
+            widget_box.addStretch(1)
+            extended_form_layout.addLayout(widget_box)
 
         sub_title = QLabel(_("Edit Activity Details"))
         layout.addStretch(1)
@@ -135,17 +169,21 @@ class PageEdit:
         self.elevation_input.setValue(self.activity["elevation_gain"])
         self.distance_input.setValue(self.activity["distance"])
 
-        form_box.addWidget(form_widget)
-        form_box.addStretch(1)
-
+        # Create Action Bar Layout (Right aligned)
         action_bar = DialogActionBar(
             cancel_action=self.parent.close,
             submit_action=self.update_activity,
             submit_label="Save",
         )
 
-        form_box.addWidget(action_bar)
-        layout.addLayout(form_box)
+        # Right-align the action bar by adding it to a horizontal layout
+        action_bar_layout = QHBoxLayout()
+        action_bar_layout.addStretch(1)  # Push the action bar to the right
+        action_bar_layout.addWidget(action_bar)
+
+        # Add the action bar layout to form_box
+        layout.addLayout(extended_form_layout)
+        layout.addLayout(action_bar_layout)
         page.setLayout(layout)
         return page
 
