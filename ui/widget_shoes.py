@@ -11,20 +11,21 @@ class ShoeWidget(QWidget):
         self,
         db: DatabaseHandler,
         user_settings: UserSettings,
-        activity_id: None,
-        activity_type: None,
+        activity: dict,
+        activity_type: ViewMode,
         parent=None,
     ):
         super().__init__(parent)
         self.layout = None
         self.radio_group = None
-        self.settings = (user_settings,)
+        self.settings = user_settings
         self.db = db
-        self.activity_id = activity_id
+        self.activity = activity
+        self.activity_id = activity.get("activity_id", None)
         self.activity_type = activity_type
-        self.activity = self._load_activity()
         self.shoe_id = self.activity.get("shoe_id", None)
         self.shoe_list = []
+        self._load_shoes()
         if self.activity is None:
             return
         self.init_ui()
@@ -35,6 +36,7 @@ class ShoeWidget(QWidget):
         """
         self.layout = QVBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(10)
         self.setLayout(self.layout)
 
         self.radio_group = QButtonGroup(self)
@@ -74,6 +76,7 @@ class ShoeWidget(QWidget):
         Updates the activity's shoe_id in the database when a shoe is selected.
         """
         selected_shoe_id = button.property("shoe_id")
+        self._update_shoe(selected_shoe_id)
         self._update_distance(
             selected_shoe_id, self.activity.get("distance", 0.0), True
         )
@@ -96,7 +99,7 @@ class ShoeWidget(QWidget):
             shoe = self.settings.get_shoe(shoe_id)
             if shoe:
                 name = shoe.get("name", _("shoe"))
-                distance = shoe.get("distance", "0.0")
+                distance = shoe.get("distance") or 0.0
                 btn.setText(f"{name} ({distance} km)")
 
     def _update_shoe(self, selected_shoe_id: int) -> None:
@@ -112,28 +115,19 @@ class ShoeWidget(QWidget):
     def _update_distance(self, shoe_id: int, distance: float, add=True) -> None:
         shoe = self.settings.get_shoe(shoe_id)
         if shoe:
-            previous_distance = float(shoe.get("distance", 0.0))
+            previous_distance = shoe.get("distance") or 0.0
             if add:
                 updated_distance = previous_distance + distance
             else:
                 updated_distance = previous_distance - distance
             self.db.update_shoe({"id": shoe_id, "distance": updated_distance})
 
-    def _load_activity(self):
-        """
-        Loads the activity data from the database.
-        """
-        if self.activity_id is None:
-            return None
-        activity = self.db.fetch_activity(self.activity_id)
-        return activity
-
     def _load_shoes(self) -> None:
         shoes = self.settings.get_shoes()
         for row_index, row_data in enumerate(shoes):
             id = row_data.get("id", None)
             name = row_data.get("name", f"{_("shoe")} {row_index + 1}")
-            distance = str(row_data.get("distance", "0.0"))
+            distance = row_data.get("distance") or 0.0
             status = row_data.get("status", False)
             shoe_enty = {
                 "id": id,
