@@ -104,7 +104,7 @@ class BikeWidget(QWidget):
 
     def _update_bike(self, selected_bike_id: int) -> None:
         if self.activity_type == ViewMode.CYCLE:
-            self.db.update_bike(
+            self.db.update_cycling(
                 {"activity_id": self.activity_id, "bike_id": selected_bike_id}
             )
 
