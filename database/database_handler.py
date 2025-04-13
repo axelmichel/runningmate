@@ -468,7 +468,7 @@ class DatabaseHandler:
                        cycling.track_img,
                        cycling.elevation_img,
                        cycling.map_html,
-                       cycling.bike_id,
+                       cycling.bike_id
                    FROM cycling
                    JOIN activities ON activities.id = cycling.activity_id
                    LEFT JOIN bikes ON bikes.id = cycling.bike_id = bikes.id AND cycling.bike_id IS NOT NULL
