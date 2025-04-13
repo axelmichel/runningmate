@@ -48,6 +48,7 @@ class DatabaseHandler:
             "track_img",
             "elevation_img",
             "map_html",
+            "bike_id",
         ],
         "walking": [
             "activity_id",
@@ -109,6 +110,12 @@ class DatabaseHandler:
             "distance",
             "status",
         ],
+        "bikes": [
+            "id",
+            "name",
+            "distance",
+            "status",
+        ],
     }
 
     FILTER_MAPPINGS = {
@@ -165,6 +172,9 @@ class DatabaseHandler:
 
     def update_shoe(self, data: dict):
         self.update("shoes", data, "id")
+
+    def update_bike(self, data: dict):
+        self.update("bikes", data, "id")
 
     def insert_cycling(self, data: dict):
         self.insert("cycling", data)
@@ -457,9 +467,14 @@ class DatabaseHandler:
                        cycling.pause,
                        cycling.track_img,
                        cycling.elevation_img,
-                       cycling.map_html
+                       cycling.map_html,
+                       cycling.bike_id,
+                       bikes.name as bike_name,
+                       bikes.distance as bike_distance,
+                       bikes.status as bike_status
                    FROM cycling
                    JOIN activities ON activities.id = cycling.activity_id
+                   LEFT JOIN bikes ON bikes.id = cycling.bike_id = bikes.id AND cycling.bike_id IS NOT NULL
                    WHERE cycling.activity_id = ?;
                """
 

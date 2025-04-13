@@ -8,7 +8,6 @@ from utils.translations import _
 
 
 class RideDetailsWidget(QWidget):
-
     def __init__(self, db_handler: DatabaseHandler, activity_id: int, parent=None):
         super().__init__(parent)
         self.db = db_handler
@@ -23,7 +22,6 @@ class RideDetailsWidget(QWidget):
 
         # loop through the activity data and display the data
         for index, (key, value) in enumerate(self.activity.items()):
-
             key_label = QLabel(_(key.title()))
             font = key_label.font()
             font.setPointSize(14)
@@ -67,7 +65,8 @@ class RideDetailsWidget(QWidget):
         activity_data = self.db.fetch_ride_by_activity_id(self.activity_id)
         if activity_data is None:
             return None
-        return {
+
+        data = {
             "calories": activity_data["calories"],
             "avg_power": activity_data["avg_power"],
             "slowest_pace": activity_data["slowest_pace"],
@@ -75,3 +74,9 @@ class RideDetailsWidget(QWidget):
             "fastest_pace": activity_data["fastest_pace"],
             "pause": activity_data["pause"],
         }
+
+        bike_name = activity_data.get("bike_name")
+        if bike_name and str(bike_name).strip():
+            data["bike"] = bike_name
+
+        return data

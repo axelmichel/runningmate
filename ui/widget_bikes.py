@@ -6,7 +6,7 @@ from processing.system_settings import ViewMode
 from utils.translations import _
 
 
-class ShoeWidget(QWidget):
+class BikeWidget(QWidget):
     def __init__(
         self,
         db: DatabaseHandler,
@@ -23,16 +23,16 @@ class ShoeWidget(QWidget):
         self.activity = activity
         self.activity_id = activity.get("activity_id", None)
         self.activity_type = activity_type
-        self.shoe_id = self.activity.get("shoe_id", None)
-        self.shoe_list = []
-        self._load_shoes()
+        self.bike_id = self.activity.get("bike_id", None)
+        self.bike_list = []
+        self._load_bikes()
         if self.activity is None:
             return
         self.init_ui()
 
     def init_ui(self):
         """
-        Initializes the UI layout for the ShoeWidget.
+        Initializes the UI layout for the BikeWidget.
         """
         self.layout = QVBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -40,30 +40,30 @@ class ShoeWidget(QWidget):
         self.setLayout(self.layout)
 
         self.radio_group = QButtonGroup(self)
-        self.radio_group.buttonClicked.connect(self._on_shoe_selected)
+        self.radio_group.buttonClicked.connect(self._on_bike_selected)
 
-        for shoe in self.shoe_list:
-            shoe_id = shoe["id"]
-            name = shoe["name"]
-            status = shoe["status"]
+        for bike in self.bike_list:
+            bike_id = bike["id"]
+            name = bike["name"]
+            status = bike["status"]
 
             if status:
-                radio = QRadioButton(f"{name} ({shoe['distance']} km)")
-                radio.setProperty("shoe_id", shoe_id)
+                radio = QRadioButton(f"{name} ({bike['distance']} km)")
+                radio.setProperty("bike_id", bike_id)
                 self.radio_group.addButton(radio)
                 self.layout.addWidget(radio)
-                radio.setObjectName(f"shoe_radio_{shoe_id}")
+                radio.setObjectName(f"bike_radio_{bike_id}")
 
-                # Preselect if this is the shoe assigned to the activity
-                if shoe_id == self.shoe_id:
+                # Preselect if this is the bike assigned to the activity
+                if bike_id == self.bike_id:
                     radio.setChecked(True)
                     font = radio.font()
                     font.setBold(True)
                     radio.setFont(font)
             else:
-                if shoe_id == self.shoe_id:
+                if bike_id == self.bike_id:
                     label = QRadioButton(
-                        f"{name} ({shoe['distance']} km {_('not in use')})"
+                        f"{name} ({bike['distance']} km {_('not in use')})"
                     )
                     label.setEnabled(False)
                     font = label.font()
@@ -71,22 +71,22 @@ class ShoeWidget(QWidget):
                     label.setFont(font)
                     self.layout.addWidget(label)
 
-    def _on_shoe_selected(self, button):
+    def _on_bike_selected(self, button):
         """
-        Updates the activity's shoe_id in the database when a shoe is selected.
+        Updates the activity's bike_id in the database when a bike is selected.
         """
-        selected_shoe_id = button.property("shoe_id")
-        self._update_shoe(selected_shoe_id)
+        selected_bike_id = button.property("bike_id")
+        self._update_bike(selected_bike_id)
         self._update_distance(
-            selected_shoe_id, self.activity.get("distance", 0.0), True
+            selected_bike_id, self.activity.get("distance", 0.0), True
         )
 
-        if self.shoe_id is not None and self.shoe_id != selected_shoe_id:
+        if self.bike_id is not None and self.bike_id != selected_bike_id:
             self._update_distance(
-                self.shoe_id, self.activity.get("distance", 0.0), False
+                self.bike_id, self.activity.get("distance", 0.0), False
             )
 
-        self.shoe_id = selected_shoe_id
+        self.bike_id = selected_bike_id
         for btn in self.radio_group.buttons():
             font = btn.font()
             if btn is button:
@@ -95,44 +95,40 @@ class ShoeWidget(QWidget):
                 font.setBold(False)
             btn.setFont(font)
 
-            shoe_id = btn.property("shoe_id")
-            shoe = self.settings.get_shoe(shoe_id)
-            if shoe:
-                name = shoe.get("name", _("shoe"))
-                distance = shoe.get("distance") or 0.0
+            bike_id = btn.property("bike_id")
+            bike = self.settings.get_bike(bike_id)
+            if bike:
+                name = bike.get("name", _("bike"))
+                distance = bike.get("distance") or 0.0
                 btn.setText(f"{name} ({distance} km)")
 
-    def _update_shoe(self, selected_shoe_id: int) -> None:
-        if self.activity_type == ViewMode.RUN:
-            self.db.update_run(
-                {"activity_id": self.activity_id, "shoe_id": selected_shoe_id}
-            )
-        elif self.activity_type == ViewMode.WALK:
-            self.db.update_walking(
-                {"activity_id": self.activity_id, "shoe_id": selected_shoe_id}
+    def _update_bike(self, selected_bike_id: int) -> None:
+        if self.activity_type == ViewMode.CYCLE:
+            self.db.update_cycling(
+                {"activity_id": self.activity_id, "bike_id": selected_bike_id}
             )
 
-    def _update_distance(self, shoe_id: int, distance: float, add=True) -> None:
-        shoe = self.settings.get_shoe(shoe_id)
-        if shoe:
-            previous_distance = shoe.get("distance") or 0.0
+    def _update_distance(self, bike_id: int, distance: float, add=True) -> None:
+        bike = self.settings.get_bike(bike_id)
+        if bike:
+            previous_distance = bike.get("distance") or 0.0
             if add:
                 updated_distance = previous_distance + distance
             else:
                 updated_distance = previous_distance - distance
-            self.db.update_shoe({"id": shoe_id, "distance": updated_distance})
+            self.db.update_bike({"id": bike_id, "distance": updated_distance})
 
-    def _load_shoes(self) -> None:
-        shoes = self.settings.get_shoes()
-        for row_index, row_data in enumerate(shoes):
+    def _load_bikes(self) -> None:
+        bikes = self.settings.get_bikes()
+        for row_index, row_data in enumerate(bikes):
             id = row_data.get("id", None)
-            name = row_data.get("name", f"{_("shoe")} {row_index + 1}")
+            name = row_data.get("name", f"{_("bike")} {row_index + 1}")
             distance = row_data.get("distance") or 0.0
             status = row_data.get("status", False)
-            shoe_enty = {
+            bike_enty = {
                 "id": id,
                 "name": name,
                 "distance": round(distance, 2),
                 "status": status,
             }
-            self.shoe_list.append(shoe_enty)
+            self.bike_list.append(bike_enty)
