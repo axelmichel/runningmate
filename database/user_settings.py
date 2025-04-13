@@ -119,6 +119,19 @@ class UserSettings:
         rows = self.cursor.fetchall()
         return [dict(row) for row in rows]
 
+    def get_bike(
+        self,
+        bike_id: int,
+    ) -> Optional[dict[str, Any] | dict[str, str] | dict[bytes, bytes]]:
+        """
+        Retrieves all bikes from the database.
+        """
+        self.cursor.execute(
+            "SELECT id, name, distance, status FROM bikes WHERE id = ?", (bike_id,)
+        )
+        row = self.cursor.fetchone()
+        return dict(row) if row else None
+
     def update_bike_status(self, name: str, status: bool) -> None:
         """
         Updates the status of a bike.
