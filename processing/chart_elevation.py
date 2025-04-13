@@ -78,7 +78,10 @@ class ElevationChart:
     def _create_chart(self):
         self.df["Elevation"] = self.df["Elevation"].round().astype(int)
         self.df["DistanceInKm"] = self.df["DistanceInKm"].round(2)
-        max_km = math.ceil(self.df["DistanceInKm"].max())
+        distance_max = self.df["DistanceInKm"].max(skipna=True)
+        max_km = math.ceil(distance_max) if not np.isnan(distance_max) else 0
+        if max_km == 0:
+            return
 
         tick = 5 if self.activity_type == ViewMode.CYCLE else 1
         tick_vals = np.arange(0, max_km + tick, tick)
