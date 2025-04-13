@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import (
 from database.user_settings import UserSettings
 from processing.system_settings import ViewMode, mapActivityTypes
 from ui.dialog_action_bar import DialogActionBar
+from ui.widget_bikes import BikeWidget
 from ui.widget_shoes import ShoeWidget
 from utils.image_thumbnail import image_thumbnail
 from utils.translations import _
@@ -118,8 +119,28 @@ class PageEdit:
         extended_form_layout.addLayout(form_box)
 
         activity_type = mapActivityTypes(self.activity["activity_type"])
+
+        if activity_type == ViewMode.CYCLE:
+            bike_widget = BikeWidget(
+                db=self.db,
+                user_settings=self.userSettings,
+                activity=self.activity,
+                activity_type=activity_type,
+            )
+            widget_title = QLabel(_("Bike:"))
+            widget_title.setStyleSheet(
+                """
+                font-size: 13px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            """
+            )
+            widget_box.addWidget(widget_title)
+            widget_box.addWidget(bike_widget)
+            widget_box.addStretch(1)
+            extended_form_layout.addLayout(widget_box)
+
         if activity_type == ViewMode.RUN or activity_type == ViewMode.WALK:
-            print("Activity type is RUN or WALK")
             shoe_widget = ShoeWidget(
                 db=self.db,
                 user_settings=self.userSettings,
