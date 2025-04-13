@@ -128,7 +128,7 @@ class BikeWidget(QWidget):
             bike_enty = {
                 "id": id,
                 "name": name,
-                "distance": distance,
+                "distance": round(distance, 2),
                 "status": status,
             }
             self.bike_list.append(bike_enty)

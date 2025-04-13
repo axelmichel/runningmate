@@ -132,7 +132,7 @@ class ShoeWidget(QWidget):
             shoe_enty = {
                 "id": id,
                 "name": name,
-                "distance": distance,
+                "distance": round(distance, 2),
                 "status": status,
             }
             self.shoe_list.append(shoe_enty)
