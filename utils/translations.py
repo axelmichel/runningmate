@@ -2,11 +2,12 @@ import gettext
 import locale
 import os
 
+from processing.system_settings import get_settings_value
 from utils.app_mode import is_dark_mode
 from utils.resource_path import resource_path
 
-default_lang, _ = locale.getlocale()
-
+lang, _ = locale.getlocale()
+default_lang = lang.split('_')[0] if lang else 'en'
 LOCALE_DIR = os.path.join(os.path.dirname(__file__), "../locales")
 
 WMO_UNKNOWN = 99999
@@ -57,7 +58,9 @@ def set_language(lang_code=None):
     :return: function
         A gettext translation function or a fallback function.
     """
-    lang_code = lang_code or default_lang  # Use provided language or system default
+    user_preferred_lang = get_settings_value("language", default_lang)
+
+    lang_code = lang_code or user_preferred_lang  # Use provided language or system default
     try:
         lang = gettext.translation(
             "messages", localedir=LOCALE_DIR, languages=[lang_code]
