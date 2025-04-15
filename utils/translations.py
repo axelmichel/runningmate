@@ -84,7 +84,7 @@ def translate_weather_code(code: int) -> str:
     :param code: int, WMO weather code
     :return: str, translated weather description
     """
-    return _(wmo.get(code, _("unknown")).title())
+    return _(wmo.get(code, _("unknown"))).title()
 
 
 def weather_code_icon(code: int) -> str | None:  # noqa: C901
