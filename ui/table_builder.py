@@ -108,7 +108,7 @@ class TableBuilder:
             return
 
         headers = HEADERS.get(activity_type, [])
-        translated_headers = [_((header)) for header in headers]
+        translated_headers = [_(header) for header in headers]
 
         table_widget.clear()
         table_widget.setSelectionBehavior(
