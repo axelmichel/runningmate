@@ -36,26 +36,26 @@ class MenuBar(QMenuBar):
             QKeySequence.StandardKey.HelpContents if is_mac else QKeySequence("F1")
         )
 
-        import_action = QAction("Import TCX", self)
+        import_action = QAction(_("Import TCX"), self)
         import_action.setShortcut(import_shortcut)
         import_action.triggered.connect(parent.upload_tcx_file)
         file_menu.addAction(import_action)
 
-        garmin_action = QAction("Garmin Connect", self)
+        garmin_action = QAction(_("Garmin Connect"), self)
         garmin_action.triggered.connect(parent.garmin_connect)
         file_menu.addAction(garmin_action)
 
-        icloud_action = QAction("ICloud Sync", self)
+        icloud_action = QAction(_("ICloud Sync"), self)
         icloud_action.triggered.connect(parent.icloud_sync)
         file_menu.addAction(icloud_action)
 
-        settings_action = QAction("Settings", self)
+        settings_action = QAction(_("Settings"), self)
         settings_action.setShortcut(settings_shortcut)
         file_menu.addAction(settings_action)
 
         file_menu.addSeparator()
 
-        quit_action = QAction("Quit", self)
+        quit_action = QAction(_("Quit"), self)
         quit_action.setShortcut(quit_shortcut)
         quit_action.setMenuRole(QAction.MenuRole.NoRole)  # Ensure it stays in File menu
         quit_action.triggered.connect(
@@ -63,19 +63,19 @@ class MenuBar(QMenuBar):
         )  # Force quit all windows
         file_menu.addAction(quit_action)
 
-        search_action = QAction("Search", self)
+        search_action = QAction(_("Search"), self)
         search_action.setShortcut(search_shortcut)
         search_action.triggered.connect(parent.toggle_search)
         view_menu.addAction(search_action)
 
-        about_action = QAction("About", self)
+        about_action = QAction(_("About"), self)
         about_action.setMenuRole(
             QAction.MenuRole.NoRole
         )  # Prevent it from being hidden
         about_action.triggered.connect(parent.show_about)
         help_menu.addAction(about_action)
 
-        online_help_action = QAction("Online Help", self)
+        online_help_action = QAction(_("Online Help"), self)
         online_help_action.setMenuRole(
             QAction.MenuRole.NoRole
         )  # Prevent it from being hidden

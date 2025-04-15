@@ -38,7 +38,7 @@ class iCloudSyncDialog(QDialog):
         self.log_output = None
         self.progress_bar = None
         self.import_button = None
-        self.setWindowTitle("iCloud Sync Settings")
+        self.setWindowTitle(_("iCloud Sync Settings"))
         self.setGeometry(300, 200, 500, 250)
 
         self.file_dir = file_dir

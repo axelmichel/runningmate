@@ -110,16 +110,16 @@ class RunningDataApp(QWidget):
 
     def init_ui(self):
         nav_buttons = {
-            ViewMode.ALL: ("gallery-view.svg", "All"),
-            ViewMode.RUN: ("run-fill.svg", "Runs"),
-            ViewMode.CYCLE: ("riding-line.svg", "Rides"),
-            ViewMode.WALK: ("walk-fill.svg", "Walks"),
+            ViewMode.ALL: ("gallery-view.svg", _("All")),
+            ViewMode.RUN: ("run-fill.svg", _("Runs")),
+            ViewMode.CYCLE: ("riding-line.svg", _("Rides")),
+            ViewMode.WALK: ("walk-fill.svg", _("Walks")),
         }
 
         tool_buttons = {
-            "search": ("search-line.svg", "Search"),
-            "user": ("user-line.svg", "User"),
-            "settings": ("settings-2-line.svg", "Settings"),
+            "search": ("search-line.svg", _("Search")),
+            "user": ("user-line.svg", _("User")),
+            "settings": ("settings-2-line.svg", _("Settings")),
         }
 
         # 🔹 Main Vertical Layout
@@ -339,7 +339,6 @@ class RunningDataApp(QWidget):
         )
 
         if activity_data is None:
-            print("No activity found!")
             return  # Avoid errors if no data is found
 
         best_performance_data = self.best_performance_handler.get_best_segments(
@@ -467,7 +466,7 @@ class RunningDataApp(QWidget):
             return
         locale.setlocale(locale.LC_ALL, "")
         distanceLabel = locale.format_string("%.2f", distance, grouping=True)
-        self.total_distance_label.setText(f"Total Distance: {distanceLabel} km")
+        self.total_distance_label.setText(f"{_("Total Distance")}: {distanceLabel} km")
 
     def load_activities(self):
         activities = self.db.fetch_activities(
@@ -606,8 +605,10 @@ class RunningDataApp(QWidget):
 
         reply = QMessageBox.question(
             self,
-            "Delete Confirmation",
-            f"Are you sure you want to delete activity {activity_id}?",
+            _("Delete Confirmation"),
+            _("Are you sure you want to delete activity {id}?").format(
+                id=len(activity_id)
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -623,10 +624,11 @@ class RunningDataApp(QWidget):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Icon.Information)
         msg.setWindowTitle("Success")
+        message_text = _("Activity {id} has been processed.").format(id=len(activity_id))
         if activity_id:
-            msg.setText(f"Activity {activity_id} has been processed.")
+            msg.setText(message_text)
         else:
-            msg.setText("The file has been imported.")
+            msg.setText(_("The file has been imported."))
         msg.setStandardButtons(QMessageBox.StandardButton.Ok)
         msg.exec()
 

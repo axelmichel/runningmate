@@ -91,13 +91,13 @@ class DialogDetail(QDialog):
 
     def init_ui(self):
         nav_buttons = {
-            "general": ("information-line.svg", "General"),
-            "segments": ("stack-fill.svg", "Segments"),
-            "map": ("map-line.svg", "Map"),
-            "stats": ("line-chart-line.svg", "Statistics"),
-            "effect": ("timer-flash-fill.svg", "Effect"),
-            "zones": ("heart-pulse-line.svg", "Heart Rate Zones"),
-            "edit": ("pencil-line.svg", "Edit"),
+            "general": ("information-line.svg", _("General")),
+            "segments": ("stack-fill.svg", _("Segments")),
+            "map": ("map-line.svg", _("Map")),
+            "stats": ("line-chart-line.svg", _("Statistics")),
+            "effect": ("timer-flash-fill.svg", _("Effect")),
+            "zones": ("heart-pulse-line.svg", _("Heart Rate Zones")),
+            "edit": ("pencil-line.svg", _("Edit")),
         }
 
         self.setWindowTitle(_("Activity Details"))

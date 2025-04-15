@@ -48,7 +48,7 @@ class Sidebar(QWidget):
         self.buttons = {}
         self.button_states = {}
         for action, (icon_path, text) in self.actions.items():
-            button = OpacityButton(f"  {_(text)}")
+            button = OpacityButton(f"  {text}")
             button.setCheckable(True)
             button.setAutoExclusive(True)
             button.setIcon(QIcon(icon_path))
@@ -104,7 +104,7 @@ class Sidebar(QWidget):
             show_text = panel_width > 100
 
             for action, (__, text) in self.actions.items():
-                self.buttons[action].setText(f"  {_(text)}" if show_text else "")
+                self.buttons[action].setText(f"  {text}" if show_text else "")
 
     def resizeEvent(self, event):
         """Handles window resizing to update button labels dynamically."""

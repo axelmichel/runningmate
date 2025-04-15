@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import (
 
 from ui.themes import THEME
 from utils.app_mode import is_dark_mode
+from utils.translations import _
 
 
 class ActivityWidget(QWidget):
@@ -45,11 +46,11 @@ class ActivityWidget(QWidget):
         # Line 1: Date
         if self.display_title:
             title_layout = QVBoxLayout()
-            date_label = QLabel(self.activity_info.get("date", "Unknown Date"))
+            date_label = QLabel(self.activity_info.get("date", _("Unknown Date")))
             date_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
             title_layout.addWidget(date_label)
 
-            title_label = QLabel(self.activity_info.get("title", "Untitled Activity"))
+            title_label = QLabel(self.activity_info.get("title", _("Untitled Activity")))
             title_label.setFont(QFont("Arial", 12))
             title_layout.addWidget(title_label)
             title_layout.setSpacing(5)
@@ -67,7 +68,7 @@ class ActivityWidget(QWidget):
         duration_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
         duration_label.setStyleSheet(f"color: {value_color};")
 
-        duration_text_label = QLabel("Duration")
+        duration_text_label = QLabel(_("Duration"))
         duration_text_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         duration_text_label.setFont(QFont("Arial", 10))
 
@@ -77,7 +78,7 @@ class ActivityWidget(QWidget):
         avg_pace_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
         avg_pace_label.setStyleSheet(f"color: {value_color};")
 
-        pace_text_label = QLabel("Pace")
+        pace_text_label = QLabel(_("Pace"))
         pace_text_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         pace_text_label.setFont(QFont("Arial", 10))
 
@@ -122,7 +123,7 @@ class ActivityWidget(QWidget):
         distance_label.setStyleSheet(f"color: {value_color};")
         distance_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
-        distance_text_label = QLabel("Distance")
+        distance_text_label = QLabel(_("Distance"))
         distance_text_label.setFont(QFont("Arial", 10))
         distance_text_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
@@ -135,7 +136,7 @@ class ActivityWidget(QWidget):
         elevation_label.setStyleSheet(f"color: {value_color};")
         elevation_label.setAlignment(Qt.AlignmentFlag.AlignRight)
 
-        elevation_text_label = QLabel("Elevation")
+        elevation_text_label = QLabel(_("Elevation"))
         elevation_text_label.setFont(QFont("Arial", 10))
         elevation_text_label.setAlignment(Qt.AlignmentFlag.AlignRight)
 

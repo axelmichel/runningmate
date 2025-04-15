@@ -7,6 +7,7 @@ from database.database_handler import DatabaseHandler
 from processing.system_settings import ViewMode, getAllowedTypes
 from ui.themes import THEME
 from utils.app_mode import is_dark_mode
+from utils.translations import _
 
 
 class InfoCard(QWidget):
@@ -23,12 +24,11 @@ class InfoCard(QWidget):
         self.db = db_handler
         self.metric = metric.lower()  # Ensure lowercase for consistency
 
-        # ✅ Set title based on metric
         metric_titles = {
-            "distance": "Distance",
-            "elevation": "Elevation Gain",
-            "duration": "Duration",
-            "activities": "Activities",
+            "distance": _("Distance"),
+            "elevation": _("Elevation Gain"),
+            "duration": _("Duration"),
+            "activities": _("Activities"),
         }
         self.metric_title = metric_titles.get(self.metric, "")
 

@@ -181,7 +181,7 @@ class TrainingEffectWidget(QWidget):
                 heart_rate, power, speed, pace, baseline_te
             )
             self.te_label.setText(
-                f"{self.get_te_description()} {_("To fully recover you should rest for:")} {self.calculate_recovery_time()}."
+                f"{self.get_te_description()} {_("To fully recover you should rest for {time}.").format(time=self.calculate_recovery_time())}"
             )
             self.chart_widget.set_te_value(self.te_value)
 
