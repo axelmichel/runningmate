@@ -50,7 +50,9 @@ class ActivityWidget(QWidget):
             date_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
             title_layout.addWidget(date_label)
 
-            title_label = QLabel(self.activity_info.get("title", _("Untitled Activity")))
+            title_label = QLabel(
+                self.activity_info.get("title", _("Untitled Activity"))
+            )
             title_label.setFont(QFont("Arial", 12))
             title_layout.addWidget(title_label)
             title_layout.setSpacing(5)

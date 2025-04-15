@@ -624,7 +624,9 @@ class RunningDataApp(QWidget):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Icon.Information)
         msg.setWindowTitle("Success")
-        message_text = _("Activity {id} has been processed.").format(id=len(activity_id))
+        message_text = _("Activity {id} has been processed.").format(
+            id=len(activity_id)
+        )
         if activity_id:
             msg.setText(message_text)
         else:

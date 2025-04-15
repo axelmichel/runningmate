@@ -7,7 +7,7 @@ from utils.app_mode import is_dark_mode
 from utils.resource_path import resource_path
 
 lang, _ = locale.getlocale()
-default_lang = lang.split('_')[0] if lang else 'en'
+default_lang = lang.split("_")[0] if lang else "en"
 LOCALE_DIR = os.path.join(os.path.dirname(__file__), "../locales")
 
 WMO_UNKNOWN = 99999
@@ -60,7 +60,9 @@ def set_language(lang_code=None):
     """
     user_preferred_lang = get_settings_value("language", default_lang)
 
-    lang_code = lang_code or user_preferred_lang  # Use provided language or system default
+    lang_code = (
+        lang_code or user_preferred_lang
+    )  # Use provided language or system default
     try:
         lang = gettext.translation(
             "messages", localedir=LOCALE_DIR, languages=[lang_code]

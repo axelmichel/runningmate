@@ -10,6 +10,7 @@ if not os.path.exists(APPDATA_DIR):
 
 SETTINGS_FILE = os.path.join(APPDATA_DIR, "settings.json")
 
+
 class ViewMode:
     RUN = "Running"
     WALK = "Walking"
@@ -46,18 +47,18 @@ def get_settings_value(key: str, default_value=None):
     return settings.get(key, default_value)
 
 
-def get_settings_locale(default_value='en_US.utf-8'):
+def get_settings_locale(default_value="en_US.utf-8"):
     """
     Get a specific setting value from the settings file.
 
     :param default_value: any, the default value to return if the key is not found
     :return: any, the value of the setting or the default value
     """
-    language = get_settings_value("language", 'en')
-    if language == 'de':
-        return 'de_DE.utf-8'
-    elif language == 'fr':
-        return 'fr_FR.utf-8'
+    language = get_settings_value("language", "en")
+    if language == "de":
+        return "de_DE.utf-8"
+    elif language == "fr":
+        return "fr_FR.utf-8"
     return default_value
 
 
