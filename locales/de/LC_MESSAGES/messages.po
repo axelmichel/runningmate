@@ -20,68 +20,68 @@ msgstr ""
 
 #: ui/window_garmin_sync.py:31
 msgid "Garmin Sync"
-msgstr ""
+msgstr "Garmin-Synchronisierung"
 
 #: ui/window_garmin_sync.py:38
 msgid "Start Sync"
-msgstr ""
+msgstr "Synchronisierung starten"
 
 #: ui/window_garmin_sync.py:66
 msgid "Sync Completed!"
-msgstr ""
+msgstr "Synchronisierung abgeschlossen!"
 
 #: ui/window_garmin_sync.py:73
 msgid "Import Completed!"
-msgstr ""
+msgstr "Import abgeschlossen!"
 
 #: ui/widget_elevation_chart.py:39
 msgid "Elevation over distance"
-msgstr ""
+msgstr "Höhenmeter über Distanz"
 
 #: ui/widget_heart_rate_chart.py:39
 msgid "Heart rate over distance"
-msgstr ""
+msgstr "Herzfrequenz über Distanz"
 
 #: ui/dialog_action_bar.py:75
 msgid "Cancel"
-msgstr ""
+msgstr "Abbrechen"
 
 #: ui/main_menu.py:13
 msgid "File"
-msgstr ""
+msgstr "Datei"
 
 #: ui/main_menu.py:14
 msgid "View"
-msgstr ""
+msgstr "Ansicht"
 
 #: ui/main_menu.py:15
 msgid "Help"
-msgstr ""
+msgstr "Hilfe"
 
 #: ui/window_icloud_sync.py:58
 msgid "iCloud Synchronisation"
-msgstr ""
+msgstr "iCloud-Synchronisierung"
 
 #: ui/window_icloud_sync.py:74
 msgid "Select iCloud Folder"
-msgstr ""
+msgstr "iCloud-Ordner auswählen"
 
 #: ui/window_icloud_sync.py:81
 msgid "No folder selected."
-msgstr ""
+msgstr "Kein Ordner ausgewählt."
 
 #: ui/window_icloud_sync.py:108
 msgid "None"
-msgstr ""
+msgstr "Keine"
 
 #: ui/window_icloud_sync.py:177
 #, python-brace-format
 msgid "Found {count} new files. Press Sync to import."
-msgstr ""
+msgstr "{count} neue Dateien gefunden. Drücke 'Synchronisieren', um zu importieren."
 
 #: ui/window_icloud_sync.py:184
 msgid "No new files found."
-msgstr ""
+msgstr "Keine neuen Dateien gefunden."
 
 #: ui/window_icloud_sync.py:219
 msgid "iCloud Sync Completed!"
@@ -89,550 +89,550 @@ msgstr ""
 
 #: ui/window_icloud_sync.py:227
 msgid "Sync Complete"
-msgstr ""
+msgstr "Synchronisierung abgeschlossen"
 
 #: ui/window_icloud_sync.py:227
 msgid "iCloud sync completed!"
-msgstr ""
+msgstr "iCloud-Synchronisierung abgeschlossen!"
 
 #: ui/widget_fitness.py:53
 msgid "Fitness Trend"
-msgstr ""
+msgstr "Fitness-Trend"
 
 #: ui/table_builder.py:136
 msgid "Actions"
-msgstr ""
+msgstr "Aktionen"
 
 #: ui/table_builder.py:299
 msgid "View Details"
-msgstr ""
+msgstr "Details anzeigen"
 
 #: ui/table_builder.py:309
 msgid "Refresh"
-msgstr ""
+msgstr "Aktualisieren"
 
 #: ui/table_builder.py:320 ui/window_user_settings.py:584
 msgid "Delete"
-msgstr ""
+msgstr "Löschen"
 
 #: ui/window_run_details.py:64
 #, python-brace-format
 msgid "{type} on {date} "
-msgstr ""
+msgstr "{type} am {date} "
 
 #: ui/window_run_details.py:65
 msgid "activity_type"
-msgstr ""
+msgstr "Aktivitätstyp"
 
 #: ui/window_run_details.py:78
 msgid "Show Map"
-msgstr ""
+msgstr "Karte anzeigen"
 
 #: ui/window_run_details.py:79 ui/window_run_details.py:221
 msgid "Edit Comment"
-msgstr ""
+msgstr "Kommentar bearbeiten"
 
 #: ui/window_run_details.py:80
 msgid "Add Media"
-msgstr ""
+msgstr "Medien hinzufügen"
 
 #: ui/dialog_detail.py:272 ui/window_run_details.py:153
 msgid "◀ Previous"
-msgstr ""
+msgstr "◀ Zurück"
 
 #: ui/dialog_detail.py:274 ui/window_run_details.py:155
 msgid "Next ▶"
-msgstr ""
+msgstr "Weiter ▶"
 
 #: ui/dialog_detail.py:419 ui/window_run_details.py:339
 msgid "Media Error"
-msgstr ""
+msgstr "Medienfehler"
 
 #: ui/dialog_detail.py:419 ui/window_run_details.py:339
 msgid "Media file not found."
-msgstr ""
+msgstr "Mediendatei nicht gefunden."
 
 #: ui/dialog_detail.py:424 ui/window_run_details.py:344
 msgid "Image Error"
-msgstr ""
+msgstr "Bildfehler"
 
 #: ui/dialog_detail.py:424 ui/window_run_details.py:344
 msgid "Image file not found."
-msgstr ""
+msgstr "Bilddatei nicht gefunden."
 
 #: ui/dialog_detail.py:428 ui/window_run_details.py:348
 msgid "Media Viewer"
-msgstr ""
+msgstr "Medienanzeige"
 
 #: ui/dialog_detail.py:453 ui/window_run_details.py:373
 msgid "Video Error"
-msgstr ""
+msgstr "Videofehler"
 
 #: ui/dialog_detail.py:453 ui/window_run_details.py:373
 msgid "Video file not found."
-msgstr ""
+msgstr "Videodatei nicht gefunden."
 
 #: ui/dialog_detail.py:546 ui/window_run_details.py:472
 msgid "Delete Media"
-msgstr ""
+msgstr "Medien löschen"
 
 #: ui/dialog_detail.py:547 ui/window_run_details.py:473
 msgid "Are you sure you want to delete this media?"
-msgstr ""
+msgstr "Soll diese Media Datai wirklich gelöscht werden?"
 
 #: ui/widget_bikes.py:66 ui/widget_shoes.py:66
 msgid "not in use"
-msgstr ""
+msgstr "Nicht in Gebrauch"
 
 #: ui/widget_shoes.py:101 ui/widget_shoes.py:129 ui/window_user_settings.py:481
 msgid "shoe"
-msgstr ""
+msgstr "Schuh"
 
 #: ui/widget_bikes.py:101 ui/widget_bikes.py:125 ui/window_user_settings.py:516
 msgid "bike"
-msgstr ""
+msgstr "Fahrrad"
 
 #: ui/widget_trainings_effect.py:46
 msgid "Training Effect"
-msgstr ""
+msgstr "Trainingseffekt"
 
 #: ui/widget_trainings_effect.py:184
 msgid "To fully recover you should rest for:"
-msgstr ""
+msgstr "Um sich vollständig zu erholen, solltest Du dich ausruhen für:"
 
 #: ui/widget_trainings_effect.py:194
 msgid "Recovery - Minimal training stimulus, good for recovery."
-msgstr ""
+msgstr "Erholung – Minimale Trainingsreize, gut zur Regeneration."
 
 #: ui/widget_trainings_effect.py:196
 msgid "Recovery - Very light effort, maintains fitness but doesn’t improve it."
-msgstr ""
+msgstr "Erholung – Sehr leichte Anstrengung, erhält die Fitness, verbessert sie jedoch nicht."
 
 #: ui/widget_trainings_effect.py:198
 msgid "Base - Light training, improves basic endurance."
-msgstr ""
+msgstr "Grundlage – Leichtes Training, verbessert die Grundausdauer."
 
 #: ui/widget_trainings_effect.py:199
 msgid "Base - Moderate training, beneficial for building endurance."
-msgstr ""
+msgstr "Grundlage – Mäßiges Training, förderlich für den Ausdaueraufbau."
 
 #: ui/widget_trainings_effect.py:200
 msgid "Base - Strong endurance training, prepares for harder sessions."
-msgstr ""
+msgstr "Grundlage – Intensives Ausdauertraining, bereitet auf härtere Einheiten vor."
 
 #: ui/widget_trainings_effect.py:201
 msgid "Tempo - Improves aerobic capacity and sustainable speed."
-msgstr ""
+msgstr "Tempo – Verbessert die aerobe Kapazität und nachhaltige Geschwindigkeit."
 
 #: ui/widget_trainings_effect.py:202
 msgid "Tempo - Effective for increasing endurance performance."
-msgstr ""
+msgstr "Tempo – Effektiv zur Steigerung der Ausdauerleistung."
 
 #: ui/widget_trainings_effect.py:203
 msgid "Threshold - High-intensity effort, enhances lactate threshold."
-msgstr ""
+msgstr "Schwelle – Hochintensive Anstrengung, verbessert die Laktatschwelle."
 
 #: ui/widget_trainings_effect.py:205
 msgid "Threshold - Very strong training effect, challenging but sustainable."
-msgstr ""
+msgstr "Schwelle – Sehr starker Trainingseffekt, herausfordernd aber nachhaltig."
 
 #: ui/widget_trainings_effect.py:207
 msgid "VO2 Max - Near-maximal effort, improves oxygen utilization."
-msgstr ""
+msgstr "VO2 Max – Nahezu maximale Anstrengung, verbessert die Sauerstoffverwertung."
 
 #: ui/widget_trainings_effect.py:208
 msgid "VO2 Max - Very high intensity, excellent for performance gains."
-msgstr ""
+msgstr "VO2 Max – Sehr hohe Intensität, ausgezeichnet für Leistungssteigerungen."
 
 #: ui/widget_trainings_effect.py:209
 msgid "Anaerobic - Extreme effort, boosts speed and explosive power."
-msgstr ""
+msgstr "Anaerob – Extreme Anstrengung, steigert Geschwindigkeit und Explosivkraft."
 
 #: ui/widget_trainings_effect.py:211
 msgid "Unknown Training Effect"
-msgstr ""
+msgstr "Unbekannter Trainingseffekt"
 
 #: ui/widget_trainings_effect.py:228
 #, python-brace-format
 msgid "{:d} days"
-msgstr ""
+msgstr "{:d} Tage"
 
 #: ui/widget_trainings_effect.py:231
 #, python-brace-format
 msgid "{:.1f} hours"
-msgstr ""
+msgstr "{:.1f} Stunden"
 
 #: ui/dialog_detail_pages/page_edit.py:110
 msgid "Distance:"
-msgstr ""
+msgstr "Distanz:"
 
 #: ui/dialog_detail_pages/page_edit.py:111
 msgid "Date:"
-msgstr ""
+msgstr "Datum:"
 
 #: ui/dialog_detail_pages/page_edit.py:112
 msgid "Time:"
-msgstr ""
+msgstr "Zeit:"
 
 #: ui/dialog_detail_pages/page_edit.py:113
 msgid "Duration:"
-msgstr ""
+msgstr "Dauer:"
 
 #: ui/dialog_detail_pages/page_edit.py:114
 msgid "Elevation:"
-msgstr ""
+msgstr "Höhenmeter:"
 
 #: ui/dialog_detail_pages/page_edit.py:130
 msgid "Bike:"
-msgstr ""
+msgstr "Fahrrad:"
 
 #: ui/dialog_detail_pages/page_edit.py:150
 msgid "Shoe:"
-msgstr ""
+msgstr "Schuh:"
 
 #: ui/dialog_detail_pages/page_edit.py:163
 msgid "Edit Activity Details"
-msgstr ""
+msgstr "Aktivitätsdetails bearbeiten"
 
 #: ui/widget_search.py:36
 msgid "Search title or comment..."
-msgstr ""
+msgstr "Titel oder Kommentar suchen..."
 
 #: ui/widget_search.py:64
 msgid "Search"
-msgstr ""
+msgstr "Suchen"
 
 #: ui/widget_search.py:68
 msgid "Reset"
-msgstr ""
+msgstr "Zurücksetzen"
 
 #: ui/window_user_settings.py:175
 msgid "Name:"
-msgstr ""
+msgstr "Name:"
 
 #: ui/window_user_settings.py:176
 msgid "Weight (kg):"
-msgstr ""
+msgstr "Gewicht (kg):"
 
 #: ui/window_user_settings.py:177
 msgid "Birthday (DD.MM.YYYY):"
-msgstr ""
+msgstr "Geburtstag (TT.MM.JJJJ):"
 
 #: ui/window_user_settings.py:178
 msgid "Height (cm):"
-msgstr ""
+msgstr "Größe (cm):"
 
 #: ui/window_user_settings.py:179
 msgid "HRmax:"
-msgstr ""
+msgstr "HFmax:"
 
 #: ui/window_user_settings.py:180
 msgid "HRmin:"
-msgstr ""
+msgstr "HFmin:"
 
 #: ui/window_user_settings.py:257
 msgid "Shoe"
-msgstr ""
+msgstr "Schuh"
 
 #: ui/dialog_search_filter.py:56 ui/widget_activity_details.py:53
 #: ui/window_user_settings.py:257 ui/window_user_settings.py:324
 msgid "Distance"
-msgstr ""
+msgstr "Distanz"
 
 #: ui/window_user_settings.py:257 ui/window_user_settings.py:324
 msgid "In Use"
-msgstr ""
+msgstr "In Gebrauch"
 
 #: ui/window_user_settings.py:264
 msgid "Existing Shoes:"
-msgstr ""
+msgstr "Vorhandene Schuhe:"
 
 #: ui/window_user_settings.py:278
 msgid "Add Shoe"
-msgstr ""
+msgstr "Schuh hinzufügen"
 
 #: ui/window_user_settings.py:324
 msgid "Bike"
-msgstr ""
+msgstr "Fahrrad"
 
 #: ui/window_user_settings.py:324
 msgid "Weight"
-msgstr ""
+msgstr "Gewicht"
 
 #: ui/window_user_settings.py:348
 msgid "Add Bike"
-msgstr ""
+msgstr "Fahrrad hinzufügen"
 
 #: ui/widget_heart_rate_tendency.py:43
 msgid "Heart Rate Trend"
-msgstr ""
+msgstr "Herzfrequenz-Trend"
 
 #: ui/widget_heart_rate_tendency.py:89
 #, python-format
 msgid "%Y-%m-%d"
-msgstr ""
+msgstr "%d.%m.%Y"
 
 #: ui/widget_heart_rate_tendency.py:146
 msgid "Avg Heart Rate (BPM)"
-msgstr ""
+msgstr "Durchschnittliche Herzfrequenz (HF)"
 
 #: ui/widget_heart_rate_tendency.py:151 ui/widget_heart_rate_tendency.py:159
 #: ui/widget_heart_rate_tendency.py:167 ui/widget_heart_rate_tendency.py:176
 #: ui/widget_heart_rate_zones.py:83
 msgid "BPM"
-msgstr ""
+msgstr "HF"
 
 #: ui/widget_heart_rate_tendency.py:159
 msgid "Ideal HR"
-msgstr ""
+msgstr "Ideal HF"
 
 #: ui/widget_heart_rate_tendency.py:167
 msgid "MAX HR"
-msgstr ""
+msgstr "MAX HF"
 
 #: ui/widget_heart_rate_tendency.py:176
 msgid "MIN HR"
-msgstr ""
+msgstr "MIN HF"
 
 #: ui/widget_activity_details.py:49
 msgid "AVG HR"
-msgstr ""
+msgstr "Durchschnittliche HF"
 
 #: ui/widget_activity_details.py:50
 msgid "AVG Power"
-msgstr ""
+msgstr "Durchschnittsleistung"
 
 #: ui/widget_activity_details.py:51
 msgid "AVG Speed (km/h)"
-msgstr ""
+msgstr "Durchschnittsgeschwindigkeit (km/h)"
 
 #: ui/widget_activity_details.py:52
 msgid "AVG Pace (min/km)"
-msgstr ""
+msgstr "Durchschnittstempo (min/km)"
 
 #: ui/widget_activity_details.py:54
 msgid "Elevation Gain"
-msgstr ""
+msgstr "Steigung"
 
 #: ui/dialog_detail.py:320 ui/widget_heart_rate_zones.py:44
 msgid "Heart Rate Zones"
-msgstr ""
+msgstr "Herzfrequenzzonen"
 
 #: ui/dialog_search_filter.py:22
 msgid "Search Filters"
-msgstr ""
+msgstr "Suchfilter"
 
 #: ui/dialog_search_filter.py:43
 msgid "Date"
-msgstr ""
+msgstr "Datum"
 
 #: ui/dialog_search_filter.py:74
 msgid "Duration"
-msgstr ""
+msgstr "Dauer"
 
 #: ui/dialog_search_filter.py:99
 msgid "Elevation"
-msgstr ""
+msgstr "Steigung"
 
 #: ui/dialog_search_filter.py:105
 msgid "Set Filters"
-msgstr ""
+msgstr "Filter setzen"
 
 #: ui/dialog_detail.py:103
 msgid "Activity Details"
-msgstr ""
+msgstr "Aktivitätsdetails"
 
 #: ui/dialog_detail.py:196
 msgid "Overview"
-msgstr ""
+msgstr "Übersicht"
 
 #: ui/dialog_detail.py:284
 msgid "Maps"
-msgstr ""
+msgstr "Karten"
 
 #: ui/dialog_detail.py:293
 msgid "Statics"
-msgstr ""
+msgstr "Statistiken"
 
 #: ui/dialog_detail.py:303
 msgid "Trainings Effect"
-msgstr ""
+msgstr "Trainingseffekt"
 
 #: ui/dialog_detail.py:312
 msgid "Segments"
-msgstr ""
+msgstr "Teilstrecken"
 
 #: ui/dialog_detail.py:331
 msgid "Edit Activity"
-msgstr ""
+msgstr "Aktivität bearbeiten"
 
 #: database/database_handler.py:354 database/database_handler.py:403
 #: database/database_handler.py:451
 #, python-format
 msgid "%d.%m.%Y"
-msgstr ""
+msgstr "%d.%m.%Y"
 
 #: database/database_handler.py:519 database/database_handler.py:565
 #: database/database_handler.py:640 database/database_handler.py:695
 #, python-format
 msgid "%d.%m.%Y %H:%M"
-msgstr ""
+msgstr "%d.%m.%Y %H:%M"
 
 #: importer/file/tcx_file.py:140
 msgid "Duplicate File"
-msgstr ""
+msgstr "Doppelte Datei"
 
 #: importer/file/tcx_file.py:141
 msgid "This activity has already been imported."
-msgstr ""
+msgstr "Diese Aktivität wurde bereits importiert."
 
 #: importer/garmin/garmin.py:107
 msgid "Login Failed"
-msgstr ""
+msgstr "Login fehlgeschlagen"
 
 #: importer/garmin/garmin.py:125
 msgid "Garmin Connect Login"
-msgstr ""
+msgstr "Garmin Connect-Login"
 
 #: importer/garmin/garmin.py:129
 msgid "Enter Garmin Credentials"
-msgstr ""
+msgstr "Garmin-Zugangsdaten eingeben"
 
 #: importer/garmin/garmin.py:131
 msgid "Username"
-msgstr ""
+msgstr "Benutzername"
 
 #: importer/garmin/garmin.py:133
 msgid "Password"
-msgstr ""
+msgstr "Passwort"
 
 #: importer/garmin/garmin.py:136
 msgid "Login"
-msgstr ""
+msgstr "Login"
 
 #: importer/garmin/garmin.py:153
 msgid "Input Error"
-msgstr ""
+msgstr "Eingabefehler"
 
 #: importer/garmin/garmin.py:153
 msgid "Both fields are required."
-msgstr ""
+msgstr "Beide Felder sind erforderlich."
 
 #: processing/chart_elevation.py:106 processing/chart_heart_rate.py:113
 msgid "Distance (km)"
-msgstr ""
+msgstr "Distanz (km)"
 
 #: processing/chart_elevation.py:106
 msgid "Elevation (m)"
-msgstr ""
+msgstr "Steigung (m)"
 
 #: processing/compute_statistics.py:86
 msgid "in the Morning"
-msgstr ""
+msgstr "am Morgen"
 
 #: processing/compute_statistics.py:88
 msgid "in the Afternoon"
-msgstr ""
+msgstr "am Nachmittag"
 
 #: processing/compute_statistics.py:90
 msgid "in the Evening"
-msgstr ""
+msgstr "am Abend"
 
 #: processing/compute_statistics.py:92
 msgid "at Night"
-msgstr ""
+msgstr "in der Nacht"
 
 #: processing/compute_statistics.py:96
 msgid "Ride"
-msgstr ""
+msgstr "Radfahrt"
 
 #: processing/compute_statistics.py:98
 msgid "Walk"
-msgstr ""
+msgstr "Spaziergang"
 
 #: processing/compute_statistics.py:100
 msgid "Run"
-msgstr ""
+msgstr "Lauf"
 
 #: processing/chart_heart_rate.py:113
 msgid "Heart rate"
-msgstr ""
+msgstr "Herzfrequenz"
 
 #: translation_hints.py:3
 msgid "date_time"
-msgstr ""
+msgstr "Datum und Uhrzeit"
 
 #: translation_hints.py:4
 msgid "title"
-msgstr ""
+msgstr "Titel"
 
 #: translation_hints.py:5
 msgid "duration"
-msgstr ""
+msgstr "Dauer"
 
 #: translation_hints.py:6
 msgid "distance"
-msgstr ""
+msgstr "Strecke"
 
 #: translation_hints.py:7
 msgid "elevation_gain"
-msgstr ""
+msgstr "Steigung"
 
 #: translation_hints.py:8
 msgid "avg_speed"
-msgstr ""
+msgstr "Durchschnittsgeschwindigkeit"
 
 #: translation_hints.py:9
 msgid "avg_pace"
-msgstr ""
+msgstr "Durchschnittstempo"
 
 #: translation_hints.py:10
 msgid "avg_heart_rate"
-msgstr ""
+msgstr "Durchschnittliche Herzfrequenz"
 
 #: translation_hints.py:11 translation_hints.py:14
 msgid "total_steps"
-msgstr ""
+msgstr "Anzahl Schritte"
 
 #: translation_hints.py:12
 msgid "pause"
-msgstr ""
+msgstr "Pause"
 
 #: translation_hints.py:13
 msgid "calories"
-msgstr ""
+msgstr "Kalorien"
 
 #: runningmate.py:213
 msgid "Previous Page"
-msgstr ""
+msgstr "Vorherige Seite"
 
 #: runningmate.py:221
 msgid "Next Page"
-msgstr ""
+msgstr "Nächste Seite"
 
 #: runningmate.py:436
 msgid "Page"
-msgstr ""
+msgstr "Seite"
 
 #: runningmate.py:436
 msgid "Showing"
-msgstr ""
+msgstr "Anzeigen"
 
 #: runningmate.py:436
 msgid "of"
-msgstr ""
+msgstr "von"
 
 #: runningmate.py:667
 msgid "Initializing database..."
-msgstr ""
+msgstr "Datenbank initialisieren..."
 
 #: runningmate.py:675
 msgid "Loading user interface..."
-msgstr ""
+msgstr "Lade Benutzeroberfläche..."
 
 #: runningmate.py:678
 msgid "Finalizing startup..."
-msgstr ""
+msgstr "Startvorgang abschließen..."
 
 #~ msgid "ate_time"
 #~ msgstr ""
