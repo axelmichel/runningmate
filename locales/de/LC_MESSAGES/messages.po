@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-04-15 09:17+0200\n"
+"POT-Creation-Date: 2025-04-15 11:16+0200\n"
 "PO-Revision-Date: 2025-04-15 09:01+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -58,6 +58,42 @@ msgstr "Ansicht"
 msgid "Help"
 msgstr "Hilfe"
 
+#: ui/main_menu.py:39
+msgid "Import TCX"
+msgstr "Importiere TCX Datei"
+
+#: ui/main_menu.py:44
+msgid "Garmin Connect"
+msgstr "Garmin Connect-Login"
+
+#: ui/main_menu.py:48
+msgid "ICloud Sync"
+msgstr "iCloud-Synchronisierung"
+
+#: runningmate.py:122 ui/main_menu.py:52
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: ui/main_menu.py:58
+msgid "Quit"
+msgstr "Beenden"
+
+#: runningmate.py:120 ui/main_menu.py:66 ui/widget_search.py:64
+msgid "Search"
+msgstr "Suchen"
+
+#: ui/main_menu.py:71
+msgid "About"
+msgstr "Über"
+
+#: ui/main_menu.py:78
+msgid "Online Help"
+msgstr "Online-Hilfe"
+
+#: ui/window_icloud_sync.py:41
+msgid "iCloud Sync Settings"
+msgstr "iCloud-Synchronisierung"
+
 #: ui/window_icloud_sync.py:58
 msgid "iCloud Synchronisation"
 msgstr "iCloud-Synchronisierung"
@@ -85,7 +121,7 @@ msgstr "Keine neuen Dateien gefunden."
 
 #: ui/window_icloud_sync.py:219
 msgid "iCloud Sync Completed!"
-msgstr ""
+msgstr "iCloud-Synchronisierung abgeschlossen!"
 
 #: ui/window_icloud_sync.py:227
 msgid "Sync Complete"
@@ -197,8 +233,8 @@ msgid "Training Effect"
 msgstr "Trainingseffekt"
 
 #: ui/widget_trainings_effect.py:184
-msgid "To fully recover you should rest for:"
-msgstr "Um sich vollständig zu erholen, solltest Du dich ausruhen für:"
+msgid "To fully recover you should rest for {time}."
+msgstr "Um sich vollständig zu erholen, solltest Du dich für {time} ausruhen."
 
 #: ui/widget_trainings_effect.py:194
 msgid "Recovery - Minimal training stimulus, good for recovery."
@@ -298,13 +334,26 @@ msgstr "Aktivitätsdetails bearbeiten"
 msgid "Search title or comment..."
 msgstr "Titel oder Kommentar suchen..."
 
-#: ui/widget_search.py:64
-msgid "Search"
-msgstr "Suchen"
-
 #: ui/widget_search.py:68
 msgid "Reset"
 msgstr "Zurücksetzen"
+
+#: ui/dialog_detail.py:94 ui/window_user_settings.py:83
+msgid "General"
+msgstr "Allgemein"
+
+#: ui/window_user_settings.py:84
+msgid "Shoes"
+msgstr "Schuhe"
+
+#: ui/window_user_settings.py:85
+msgid "Bikes"
+msgstr "Fahrräder"
+
+#: ui/dialog_detail.py:99 ui/dialog_detail.py:320
+#: ui/widget_heart_rate_zones.py:44 ui/window_user_settings.py:86
+msgid "Heart Rate Zones"
+msgstr "Herzfrequenzzonen"
 
 #: ui/window_user_settings.py:175
 msgid "Name:"
@@ -334,8 +383,9 @@ msgstr "HFmin:"
 msgid "Shoe"
 msgstr "Schuh"
 
-#: ui/dialog_search_filter.py:56 ui/widget_activity_details.py:53
-#: ui/window_user_settings.py:257 ui/window_user_settings.py:324
+#: ui/dialog_search_filter.py:56 ui/info_card.py:28 ui/widget_activity.py:126
+#: ui/widget_activity_details.py:53 ui/window_user_settings.py:257
+#: ui/window_user_settings.py:324
 msgid "Distance"
 msgstr "Distanz"
 
@@ -410,13 +460,38 @@ msgstr "Durchschnittsgeschwindigkeit (km/h)"
 msgid "AVG Pace (min/km)"
 msgstr "Durchschnittstempo (min/km)"
 
-#: ui/widget_activity_details.py:54
+#: ui/info_card.py:29 ui/widget_activity_details.py:54
 msgid "Elevation Gain"
 msgstr "Steigung"
 
-#: ui/dialog_detail.py:320 ui/widget_heart_rate_zones.py:44
-msgid "Heart Rate Zones"
-msgstr "Herzfrequenzzonen"
+#: ui/widget_activity_details.py:57
+msgid "Avg Steps"
+msgstr "Anzahl Schritte"
+
+#: ui/dialog_search_filter.py:74 ui/info_card.py:30 ui/widget_activity.py:71
+msgid "Duration"
+msgstr "Dauer"
+
+#: ui/info_card.py:31
+msgid "Activities"
+msgstr "Aktivitäten"
+
+#: ui/widget_activity.py:49
+msgid "Unknown Date"
+msgstr "Ungenanntes Datum"
+
+#: ui/widget_activity.py:53
+msgid "Untitled Activity"
+msgstr "Aktivität bearbeiten"
+
+#: ui/widget_activity.py:81
+msgid "Pace"
+msgstr "Geschwindigkeit"
+
+#: translation_hints.py:54 ui/dialog_search_filter.py:99
+#: ui/widget_activity.py:139
+msgid "Elevation"
+msgstr "Steigung"
 
 #: ui/dialog_search_filter.py:22
 msgid "Search Filters"
@@ -426,17 +501,29 @@ msgstr "Suchfilter"
 msgid "Date"
 msgstr "Datum"
 
-#: ui/dialog_search_filter.py:74
-msgid "Duration"
-msgstr "Dauer"
-
-#: ui/dialog_search_filter.py:99
-msgid "Elevation"
-msgstr "Steigung"
-
 #: ui/dialog_search_filter.py:105
 msgid "Set Filters"
 msgstr "Filter setzen"
+
+#: ui/dialog_detail.py:95 ui/dialog_detail.py:312
+msgid "Segments"
+msgstr "Teilstrecken"
+
+#: ui/dialog_detail.py:96
+msgid "Map"
+msgstr "Karten"
+
+#: ui/dialog_detail.py:97
+msgid "Statistics"
+msgstr "Statistiken"
+
+#: ui/dialog_detail.py:98
+msgid "Effect"
+msgstr "Effekt"
+
+#: ui/dialog_detail.py:100
+msgid "Edit"
+msgstr "Bearbeiten"
 
 #: ui/dialog_detail.py:103
 msgid "Activity Details"
@@ -457,10 +544,6 @@ msgstr "Statistiken"
 #: ui/dialog_detail.py:303
 msgid "Trainings Effect"
 msgstr "Trainingseffekt"
-
-#: ui/dialog_detail.py:312
-msgid "Segments"
-msgstr "Teilstrecken"
 
 #: ui/dialog_detail.py:331
 msgid "Edit Activity"
@@ -602,6 +685,166 @@ msgstr "Pause"
 msgid "calories"
 msgstr "Kalorien"
 
+#: translation_hints.py:17
+msgid "clear sky"
+msgstr "Klarer Himmel"
+
+#: translation_hints.py:18
+msgid "mainly clear"
+msgstr "Überwiegend klar"
+
+#: translation_hints.py:19
+msgid "partly cloudy"
+msgstr "Teils bewölkt"
+
+#: translation_hints.py:20
+msgid "overcast"
+msgstr "Bewölkt"
+
+#: translation_hints.py:21
+msgid "fog"
+msgstr "Nebel"
+
+#: translation_hints.py:22
+msgid "depositing rime fog"
+msgstr "Raureif"
+
+#: translation_hints.py:23
+msgid "light drizzle"
+msgstr "Leichtes Nieseln"
+
+#: translation_hints.py:24
+msgid "moderate drizzle"
+msgstr "Leichtes Nieseln"
+
+#: translation_hints.py:25
+msgid "dense drizzle"
+msgstr "Nieseln"
+
+#: translation_hints.py:26
+msgid "light freezing drizzle"
+msgstr "Leichtes gefrierendes Nieseln"
+
+#: translation_hints.py:27
+msgid "dense freezing drizzle"
+msgstr "Gefrierendes Nieseln"
+
+#: translation_hints.py:28
+msgid "slight rain"
+msgstr "Leichter Regen"
+
+#: translation_hints.py:29
+msgid "moderate rain"
+msgstr "Mäßiger Regen"
+
+#: translation_hints.py:30
+msgid "heavy rain"
+msgstr "Starker Regen"
+
+#: translation_hints.py:31
+msgid "light freezing rain"
+msgstr "Leichter gefrierender Regen"
+
+#: translation_hints.py:32
+msgid "dense freezing rain"
+msgstr "Gefrierender Regen"
+
+#: translation_hints.py:33
+msgid "slight snow fall"
+msgstr "Leichter Schneefall"
+
+#: translation_hints.py:34
+msgid "moderate snow fall"
+msgstr "Mäßiger Schneefall"
+
+#: translation_hints.py:35
+msgid "heavy snow fall"
+msgstr "Starker Schneefall"
+
+#: translation_hints.py:36
+msgid "snow grains"
+msgstr "Hagel"
+
+#: translation_hints.py:37
+msgid "slight rain showers"
+msgstr "Leichte Regenschauer"
+
+#: translation_hints.py:38
+msgid "moderate rain showers"
+msgstr "Mäßige Regenschauer"
+
+#: translation_hints.py:39
+msgid "violent rain showers"
+msgstr "Heftige Regenschauer"
+
+#: translation_hints.py:40
+msgid "slight snow shower"
+msgstr "Leichte Schneeschauer"
+
+#: translation_hints.py:41
+msgid "heavy snow showers"
+msgstr "Schwere Schneeschauer"
+
+#: translation_hints.py:42
+msgid "thunderstorm"
+msgstr "Gewitter"
+
+#: translation_hints.py:43
+msgid "thunderstorm with slight hail"
+msgstr "Gewitter mit leichtem Hagel"
+
+#: translation_hints.py:44
+msgid "thunderstorm with heavy hail"
+msgstr "Gewitter mit starkem Hagel"
+
+#: translation_hints.py:47
+msgid "Avg_Power"
+msgstr "Durchschnittsleistung"
+
+#: translation_hints.py:48
+msgid "Slowest_Pace"
+msgstr "Langsamstes Tempo"
+
+#: translation_hints.py:49
+msgid "Fastest_Pace"
+msgstr "Schnellstes Tempo"
+
+#: translation_hints.py:50
+msgid "Avg_Pace"
+msgstr "Durchschnittstempo"
+
+#: translation_hints.py:51
+msgid "Total_Steps"
+msgstr "Anzahl Schritte"
+
+#: translation_hints.py:52
+msgid "Avg_Steps"
+msgstr "Anzahl Schritte"
+
+#: translation_hints.py:53
+msgid "Calories"
+msgstr "Kalorien"
+
+#: runningmate.py:113
+msgid "All"
+msgstr "Alle"
+
+#: runningmate.py:114
+msgid "Runs"
+msgstr "Läufe"
+
+#: runningmate.py:115
+msgid "Rides"
+msgstr "Radfahrten"
+
+#: runningmate.py:116
+msgid "Walks"
+msgstr "Spaziergänge"
+
+#: runningmate.py:121
+msgid "User"
+msgstr "Benutzername"
+
 #: runningmate.py:213
 msgid "Previous Page"
 msgstr "Vorherige Seite"
@@ -610,27 +853,47 @@ msgstr "Vorherige Seite"
 msgid "Next Page"
 msgstr "Nächste Seite"
 
-#: runningmate.py:436
+#: runningmate.py:435
 msgid "Page"
 msgstr "Seite"
 
-#: runningmate.py:436
+#: runningmate.py:435
 msgid "Showing"
-msgstr "Anzeigen"
+msgstr "Zeige"
 
-#: runningmate.py:436
+#: runningmate.py:435
 msgid "of"
 msgstr "von"
 
-#: runningmate.py:667
+#: runningmate.py:469
+msgid "Total Distance"
+msgstr "Strecke"
+
+#: runningmate.py:608
+msgid "Delete Confirmation"
+msgstr "Bestätigung löschen"
+
+#: runningmate.py:609
+msgid "Are you sure you want to delete activity {id}?"
+msgstr "Soll diese Media Datai {id} wirklich gelöscht werden?"
+
+#: runningmate.py:627
+msgid "Activity {id} has been processed."
+msgstr "Diese Aktivität wurde bereits importiert."
+
+#: runningmate.py:631
+msgid "The file has been imported."
+msgstr "Diese Aktivität wurde bereits importiert."
+
+#: runningmate.py:669
 msgid "Initializing database..."
 msgstr "Datenbank initialisieren..."
 
-#: runningmate.py:675
+#: runningmate.py:677
 msgid "Loading user interface..."
 msgstr "Lade Benutzeroberfläche..."
 
-#: runningmate.py:678
+#: runningmate.py:680
 msgid "Finalizing startup..."
 msgstr "Startvorgang abschließen..."
 
