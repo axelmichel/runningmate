@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-04-15 09:17+0200\n"
+"POT-Creation-Date: 2025-04-15 11:16+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -55,6 +55,42 @@ msgstr ""
 
 #: ui/main_menu.py:15
 msgid "Help"
+msgstr ""
+
+#: ui/main_menu.py:39
+msgid "Import TCX"
+msgstr ""
+
+#: ui/main_menu.py:44
+msgid "Garmin Connect"
+msgstr ""
+
+#: ui/main_menu.py:48
+msgid "ICloud Sync"
+msgstr ""
+
+#: runningmate.py:122 ui/main_menu.py:52
+msgid "Settings"
+msgstr ""
+
+#: ui/main_menu.py:58
+msgid "Quit"
+msgstr ""
+
+#: runningmate.py:120 ui/main_menu.py:66 ui/widget_search.py:64
+msgid "Search"
+msgstr ""
+
+#: ui/main_menu.py:71
+msgid "About"
+msgstr ""
+
+#: ui/main_menu.py:78
+msgid "Online Help"
+msgstr ""
+
+#: ui/window_icloud_sync.py:41
+msgid "iCloud Sync Settings"
 msgstr ""
 
 #: ui/window_icloud_sync.py:58
@@ -196,7 +232,8 @@ msgid "Training Effect"
 msgstr ""
 
 #: ui/widget_trainings_effect.py:184
-msgid "To fully recover you should rest for:"
+#, python-brace-format
+msgid "To fully recover you should rest for {time}."
 msgstr ""
 
 #: ui/widget_trainings_effect.py:194
@@ -297,12 +334,25 @@ msgstr ""
 msgid "Search title or comment..."
 msgstr ""
 
-#: ui/widget_search.py:64
-msgid "Search"
-msgstr ""
-
 #: ui/widget_search.py:68
 msgid "Reset"
+msgstr ""
+
+#: ui/dialog_detail.py:94 ui/window_user_settings.py:83
+msgid "General"
+msgstr ""
+
+#: ui/window_user_settings.py:84
+msgid "Shoes"
+msgstr ""
+
+#: ui/window_user_settings.py:85
+msgid "Bikes"
+msgstr ""
+
+#: ui/dialog_detail.py:99 ui/dialog_detail.py:320
+#: ui/widget_heart_rate_zones.py:44 ui/window_user_settings.py:86
+msgid "Heart Rate Zones"
 msgstr ""
 
 #: ui/window_user_settings.py:175
@@ -333,8 +383,9 @@ msgstr ""
 msgid "Shoe"
 msgstr ""
 
-#: ui/dialog_search_filter.py:56 ui/widget_activity_details.py:53
-#: ui/window_user_settings.py:257 ui/window_user_settings.py:324
+#: ui/dialog_search_filter.py:56 ui/info_card.py:28 ui/widget_activity.py:126
+#: ui/widget_activity_details.py:53 ui/window_user_settings.py:257
+#: ui/window_user_settings.py:324
 msgid "Distance"
 msgstr ""
 
@@ -409,12 +460,37 @@ msgstr ""
 msgid "AVG Pace (min/km)"
 msgstr ""
 
-#: ui/widget_activity_details.py:54
+#: ui/info_card.py:29 ui/widget_activity_details.py:54
 msgid "Elevation Gain"
 msgstr ""
 
-#: ui/dialog_detail.py:320 ui/widget_heart_rate_zones.py:44
-msgid "Heart Rate Zones"
+#: ui/widget_activity_details.py:57
+msgid "Avg Steps"
+msgstr ""
+
+#: ui/dialog_search_filter.py:74 ui/info_card.py:30 ui/widget_activity.py:71
+msgid "Duration"
+msgstr ""
+
+#: ui/info_card.py:31
+msgid "Activities"
+msgstr ""
+
+#: ui/widget_activity.py:49
+msgid "Unknown Date"
+msgstr ""
+
+#: ui/widget_activity.py:53
+msgid "Untitled Activity"
+msgstr ""
+
+#: ui/widget_activity.py:81
+msgid "Pace"
+msgstr ""
+
+#: translation_hints.py:54 ui/dialog_search_filter.py:99
+#: ui/widget_activity.py:139
+msgid "Elevation"
 msgstr ""
 
 #: ui/dialog_search_filter.py:22
@@ -425,16 +501,28 @@ msgstr ""
 msgid "Date"
 msgstr ""
 
-#: ui/dialog_search_filter.py:74
-msgid "Duration"
-msgstr ""
-
-#: ui/dialog_search_filter.py:99
-msgid "Elevation"
-msgstr ""
-
 #: ui/dialog_search_filter.py:105
 msgid "Set Filters"
+msgstr ""
+
+#: ui/dialog_detail.py:95 ui/dialog_detail.py:312
+msgid "Segments"
+msgstr ""
+
+#: ui/dialog_detail.py:96
+msgid "Map"
+msgstr ""
+
+#: ui/dialog_detail.py:97
+msgid "Statistics"
+msgstr ""
+
+#: ui/dialog_detail.py:98
+msgid "Effect"
+msgstr ""
+
+#: ui/dialog_detail.py:100
+msgid "Edit"
 msgstr ""
 
 #: ui/dialog_detail.py:103
@@ -455,10 +543,6 @@ msgstr ""
 
 #: ui/dialog_detail.py:303
 msgid "Trainings Effect"
-msgstr ""
-
-#: ui/dialog_detail.py:312
-msgid "Segments"
 msgstr ""
 
 #: ui/dialog_detail.py:331
@@ -601,6 +685,166 @@ msgstr ""
 msgid "calories"
 msgstr ""
 
+#: translation_hints.py:17
+msgid "clear sky"
+msgstr ""
+
+#: translation_hints.py:18
+msgid "mainly clear"
+msgstr ""
+
+#: translation_hints.py:19
+msgid "partly cloudy"
+msgstr ""
+
+#: translation_hints.py:20
+msgid "overcast"
+msgstr ""
+
+#: translation_hints.py:21
+msgid "fog"
+msgstr ""
+
+#: translation_hints.py:22
+msgid "depositing rime fog"
+msgstr ""
+
+#: translation_hints.py:23
+msgid "light drizzle"
+msgstr ""
+
+#: translation_hints.py:24
+msgid "moderate drizzle"
+msgstr ""
+
+#: translation_hints.py:25
+msgid "dense drizzle"
+msgstr ""
+
+#: translation_hints.py:26
+msgid "light freezing drizzle"
+msgstr ""
+
+#: translation_hints.py:27
+msgid "dense freezing drizzle"
+msgstr ""
+
+#: translation_hints.py:28
+msgid "slight rain"
+msgstr ""
+
+#: translation_hints.py:29
+msgid "moderate rain"
+msgstr ""
+
+#: translation_hints.py:30
+msgid "heavy rain"
+msgstr ""
+
+#: translation_hints.py:31
+msgid "light freezing rain"
+msgstr ""
+
+#: translation_hints.py:32
+msgid "dense freezing rain"
+msgstr ""
+
+#: translation_hints.py:33
+msgid "slight snow fall"
+msgstr ""
+
+#: translation_hints.py:34
+msgid "moderate snow fall"
+msgstr ""
+
+#: translation_hints.py:35
+msgid "heavy snow fall"
+msgstr ""
+
+#: translation_hints.py:36
+msgid "snow grains"
+msgstr ""
+
+#: translation_hints.py:37
+msgid "slight rain showers"
+msgstr ""
+
+#: translation_hints.py:38
+msgid "moderate rain showers"
+msgstr ""
+
+#: translation_hints.py:39
+msgid "violent rain showers"
+msgstr ""
+
+#: translation_hints.py:40
+msgid "slight snow shower"
+msgstr ""
+
+#: translation_hints.py:41
+msgid "heavy snow showers"
+msgstr ""
+
+#: translation_hints.py:42
+msgid "thunderstorm"
+msgstr ""
+
+#: translation_hints.py:43
+msgid "thunderstorm with slight hail"
+msgstr ""
+
+#: translation_hints.py:44
+msgid "thunderstorm with heavy hail"
+msgstr ""
+
+#: translation_hints.py:47
+msgid "Avg_Power"
+msgstr ""
+
+#: translation_hints.py:48
+msgid "Slowest_Pace"
+msgstr ""
+
+#: translation_hints.py:49
+msgid "Fastest_Pace"
+msgstr ""
+
+#: translation_hints.py:50
+msgid "Avg_Pace"
+msgstr ""
+
+#: translation_hints.py:51
+msgid "Total_Steps"
+msgstr ""
+
+#: translation_hints.py:52
+msgid "Avg_Steps"
+msgstr ""
+
+#: translation_hints.py:53
+msgid "Calories"
+msgstr ""
+
+#: runningmate.py:113
+msgid "All"
+msgstr ""
+
+#: runningmate.py:114
+msgid "Runs"
+msgstr ""
+
+#: runningmate.py:115
+msgid "Rides"
+msgstr ""
+
+#: runningmate.py:116
+msgid "Walks"
+msgstr ""
+
+#: runningmate.py:121
+msgid "User"
+msgstr ""
+
 #: runningmate.py:213
 msgid "Previous Page"
 msgstr ""
@@ -609,27 +853,49 @@ msgstr ""
 msgid "Next Page"
 msgstr ""
 
-#: runningmate.py:436
+#: runningmate.py:435
 msgid "Page"
 msgstr ""
 
-#: runningmate.py:436
+#: runningmate.py:435
 msgid "Showing"
 msgstr ""
 
-#: runningmate.py:436
+#: runningmate.py:435
 msgid "of"
 msgstr ""
 
-#: runningmate.py:667
+#: runningmate.py:469
+msgid "Total Distance"
+msgstr ""
+
+#: runningmate.py:608
+msgid "Delete Confirmation"
+msgstr ""
+
+#: runningmate.py:609
+#, python-brace-format
+msgid "Are you sure you want to delete activity {id}?"
+msgstr ""
+
+#: runningmate.py:627
+#, python-brace-format
+msgid "Activity {id} has been processed."
+msgstr ""
+
+#: runningmate.py:631
+msgid "The file has been imported."
+msgstr ""
+
+#: runningmate.py:669
 msgid "Initializing database..."
 msgstr ""
 
-#: runningmate.py:675
+#: runningmate.py:677
 msgid "Loading user interface..."
 msgstr ""
 
-#: runningmate.py:678
+#: runningmate.py:680
 msgid "Finalizing startup..."
 msgstr ""
 
