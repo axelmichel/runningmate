@@ -6,7 +6,12 @@ from typing import Any, Dict, Optional
 import pandas as pd
 
 from database.database_handler import DatabaseHandler
-from processing.system_settings import ViewMode, getAllowedTypes, mapActivityTypes
+from processing.system_settings import (
+    ViewMode,
+    get_settings_locale,
+    getAllowedTypes,
+    mapActivityTypes,
+)
 
 
 class ActivityInfo:
@@ -38,7 +43,8 @@ class ActivityInfo:
         :return: str
             Formatted date string.
         """
-        locale.setlocale(locale.LC_TIME, "en_US.UTF-8")
+        user_locale = get_settings_locale()
+        locale.setlocale(locale.LC_TIME, user_locale)
 
         dt = datetime.fromtimestamp(timestamp)
         now = datetime.now()
@@ -50,7 +56,7 @@ class ActivityInfo:
         elif dt.date() >= (now.date() - timedelta(days=now.weekday())):
             return f"{dt.strftime('%A')} {dt.strftime('%H:%M')}"
         else:
-            return dt.strftime("%d.%m.%Y %H:%M")
+            return dt.strftime("%a, %d.%m.%Y %H:%M")
 
     def get_latest_activity_id(
         self,

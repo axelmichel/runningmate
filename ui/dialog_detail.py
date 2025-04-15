@@ -23,7 +23,7 @@ from database.database_handler import DatabaseHandler
 from database.user_settings import UserSettings
 from processing.activity_info import ActivityInfo
 from processing.best_performances import BestSegmentFinder
-from processing.system_settings import ViewMode
+from processing.system_settings import ViewMode, get_settings_locale
 from ui.dialog_detail_pages.page_edit import PageEdit
 from ui.dialog_detail_pages.page_effect import page_effect
 from ui.dialog_detail_pages.page_map import page_map
@@ -376,9 +376,8 @@ class DialogDetail(QDialog):
 
     def get_page_title(self, title: str) -> QVBoxLayout:
         """Creates a formatted title bar with a date, activity title, and right-aligned page title."""
-        locale.setlocale(
-            locale.LC_TIME, "en_US.UTF-8"
-        )  # Ensures month & weekday names are in English
+        user_locale = get_settings_locale()
+        locale.setlocale(locale.LC_ALL, user_locale)
 
         # Convert Unix timestamp to datetime
         activity_date = datetime.fromtimestamp(self.activity["raw_date"])
