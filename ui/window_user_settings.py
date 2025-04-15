@@ -80,10 +80,10 @@ class UserSettingsWindow(QDialog):
         self.setGeometry(100, 100, 800, 500)
 
         nav_buttons = {
-            "user": ("user-line.svg", "General"),
-            "shoes": ("footprint-fill.svg", "Shoes"),
-            "bikes": ("bike-line.svg", "Bikes"),
-            "zones": ("heart-pulse-line.svg", "Heart Rate Zones"),
+            "user": ("user-line.svg", _("General")),
+            "shoes": ("footprint-fill.svg", _("Shoes")),
+            "bikes": ("bike-line.svg", _("Bikes")),
+            "zones": ("heart-pulse-line.svg", _("Heart Rate Zones")),
         }
 
         main_layout = QHBoxLayout()

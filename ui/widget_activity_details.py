@@ -54,7 +54,7 @@ class ActivityDetailsWidget(QWidget):
             _("Elevation Gain"),
         ]
         if self.activity_type != ViewMode.CYCLE:
-            columns.append("Avg Steps")
+            columns.append(_("Avg Steps"))
 
         self.table.setColumnCount(len(columns))
         self.table.setHorizontalHeaderLabels(columns)
