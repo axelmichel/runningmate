@@ -39,7 +39,7 @@ class NumericTableWidgetItem(QTableWidgetItem):
 
 
 HEADERS = {
-    ViewMode.ALL: ["activity_type", "date_time", "title", "duration", "distance"],
+    ViewMode.ALL: ["type", "date_time", "title", "duration", "distance"],
     ViewMode.RUN: [
         "date_time",
         "title",
