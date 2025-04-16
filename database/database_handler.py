@@ -15,6 +15,7 @@ class DatabaseHandler:
         "duration": "activities.duration",
         "distance": "activities.distance",
         "elevation_gain": "activities.elevation_gain",
+        "type_detail": "activities.type_detail",
     }
 
     TABLE_COLUMNS = {
@@ -524,6 +525,7 @@ class DatabaseHandler:
                 strftime('%H:%M', date, 'unixepoch', 'localtime') AS time,  -- HH:MM format
                 printf('%02d:%02d:%02d', duration / 3600, (duration % 3600) / 60, duration % 60) AS duration,
                 activity_type,
+                type_detail,
                 duration,
                 distance,
                 title
