@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-04-15 11:16+0200\n"
+"POT-Creation-Date: 2025-04-16 13:44+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -179,39 +179,39 @@ msgstr ""
 msgid "Next ▶"
 msgstr ""
 
-#: ui/dialog_detail.py:419 ui/window_run_details.py:339
+#: ui/dialog_detail.py:418 ui/window_run_details.py:339
 msgid "Media Error"
 msgstr ""
 
-#: ui/dialog_detail.py:419 ui/window_run_details.py:339
+#: ui/dialog_detail.py:418 ui/window_run_details.py:339
 msgid "Media file not found."
 msgstr ""
 
-#: ui/dialog_detail.py:424 ui/window_run_details.py:344
+#: ui/dialog_detail.py:423 ui/window_run_details.py:344
 msgid "Image Error"
 msgstr ""
 
-#: ui/dialog_detail.py:424 ui/window_run_details.py:344
+#: ui/dialog_detail.py:423 ui/window_run_details.py:344
 msgid "Image file not found."
 msgstr ""
 
-#: ui/dialog_detail.py:428 ui/window_run_details.py:348
+#: ui/dialog_detail.py:427 ui/window_run_details.py:348
 msgid "Media Viewer"
 msgstr ""
 
-#: ui/dialog_detail.py:453 ui/window_run_details.py:373
+#: ui/dialog_detail.py:452 ui/window_run_details.py:373
 msgid "Video Error"
 msgstr ""
 
-#: ui/dialog_detail.py:453 ui/window_run_details.py:373
+#: ui/dialog_detail.py:452 ui/window_run_details.py:373
 msgid "Video file not found."
 msgstr ""
 
-#: ui/dialog_detail.py:546 ui/window_run_details.py:472
+#: ui/dialog_detail.py:545 ui/window_run_details.py:472
 msgid "Delete Media"
 msgstr ""
 
-#: ui/dialog_detail.py:547 ui/window_run_details.py:473
+#: ui/dialog_detail.py:546 ui/window_run_details.py:473
 msgid "Are you sure you want to delete this media?"
 msgstr ""
 
@@ -298,35 +298,39 @@ msgstr ""
 msgid "{:.1f} hours"
 msgstr ""
 
-#: ui/dialog_detail_pages/page_edit.py:110
+#: ui/dialog_detail_pages/page_edit.py:119
+msgid "Type:"
+msgstr ""
+
+#: ui/dialog_detail_pages/page_edit.py:120
 msgid "Distance:"
 msgstr ""
 
-#: ui/dialog_detail_pages/page_edit.py:111
+#: ui/dialog_detail_pages/page_edit.py:121
 msgid "Date:"
 msgstr ""
 
-#: ui/dialog_detail_pages/page_edit.py:112
+#: ui/dialog_detail_pages/page_edit.py:122
 msgid "Time:"
 msgstr ""
 
-#: ui/dialog_detail_pages/page_edit.py:113
+#: ui/dialog_detail_pages/page_edit.py:123
 msgid "Duration:"
 msgstr ""
 
-#: ui/dialog_detail_pages/page_edit.py:114
+#: ui/dialog_detail_pages/page_edit.py:124
 msgid "Elevation:"
 msgstr ""
 
-#: ui/dialog_detail_pages/page_edit.py:130
+#: ui/dialog_detail_pages/page_edit.py:140
 msgid "Bike:"
 msgstr ""
 
-#: ui/dialog_detail_pages/page_edit.py:150
+#: ui/dialog_detail_pages/page_edit.py:160
 msgid "Shoe:"
 msgstr ""
 
-#: ui/dialog_detail_pages/page_edit.py:163
+#: ui/dialog_detail_pages/page_edit.py:173
 msgid "Edit Activity Details"
 msgstr ""
 
@@ -383,7 +387,7 @@ msgstr ""
 msgid "Shoe"
 msgstr ""
 
-#: ui/dialog_search_filter.py:56 ui/info_card.py:28 ui/widget_activity.py:126
+#: ui/dialog_search_filter.py:56 ui/info_card.py:28 ui/widget_activity.py:128
 #: ui/widget_activity_details.py:53 ui/window_user_settings.py:257
 #: ui/window_user_settings.py:324
 msgid "Distance"
@@ -468,7 +472,7 @@ msgstr ""
 msgid "Avg Steps"
 msgstr ""
 
-#: ui/dialog_search_filter.py:74 ui/info_card.py:30 ui/widget_activity.py:71
+#: ui/dialog_search_filter.py:74 ui/info_card.py:30 ui/widget_activity.py:73
 msgid "Duration"
 msgstr ""
 
@@ -480,16 +484,16 @@ msgstr ""
 msgid "Unknown Date"
 msgstr ""
 
-#: ui/widget_activity.py:53
+#: ui/widget_activity.py:54
 msgid "Untitled Activity"
 msgstr ""
 
-#: ui/widget_activity.py:81
+#: ui/widget_activity.py:83
 msgid "Pace"
 msgstr ""
 
 #: translation_hints.py:54 ui/dialog_search_filter.py:99
-#: ui/widget_activity.py:139
+#: ui/widget_activity.py:141
 msgid "Elevation"
 msgstr ""
 
@@ -549,14 +553,14 @@ msgstr ""
 msgid "Edit Activity"
 msgstr ""
 
-#: database/database_handler.py:354 database/database_handler.py:403
-#: database/database_handler.py:451
+#: database/database_handler.py:356 database/database_handler.py:406
+#: database/database_handler.py:455
 #, python-format
 msgid "%d.%m.%Y"
 msgstr ""
 
-#: database/database_handler.py:519 database/database_handler.py:565
-#: database/database_handler.py:640 database/database_handler.py:695
+#: database/database_handler.py:524 database/database_handler.py:571
+#: database/database_handler.py:646 database/database_handler.py:701
 #, python-format
 msgid "%d.%m.%Y %H:%M"
 msgstr ""
@@ -825,6 +829,86 @@ msgstr ""
 msgid "Calories"
 msgstr ""
 
+#: translation_hints.py:56
+msgid "Running"
+msgstr ""
+
+#: translation_hints.py:57
+msgid "Trail"
+msgstr ""
+
+#: translation_hints.py:58
+msgid "Track"
+msgstr ""
+
+#: translation_hints.py:59 translation_hints.py:77
+msgid "Endurance"
+msgstr ""
+
+#: translation_hints.py:60
+msgid "Interval"
+msgstr ""
+
+#: translation_hints.py:61 translation_hints.py:78
+msgid "Recovery"
+msgstr ""
+
+#: translation_hints.py:62
+msgid "Speed"
+msgstr ""
+
+#: translation_hints.py:63
+msgid "Long Run"
+msgstr ""
+
+#: translation_hints.py:65
+msgid "Walking"
+msgstr ""
+
+#: translation_hints.py:66
+msgid "Hiking"
+msgstr ""
+
+#: translation_hints.py:67
+msgid "Nordic Walking"
+msgstr ""
+
+#: translation_hints.py:68
+msgid "Trekking"
+msgstr ""
+
+#: translation_hints.py:69
+msgid "Power Walking"
+msgstr ""
+
+#: translation_hints.py:70
+msgid "Other"
+msgstr ""
+
+#: translation_hints.py:72
+msgid "Cycling"
+msgstr ""
+
+#: translation_hints.py:73
+msgid "Biking"
+msgstr ""
+
+#: translation_hints.py:74
+msgid "Mountain Biking"
+msgstr ""
+
+#: translation_hints.py:75
+msgid "Gravel Biking"
+msgstr ""
+
+#: translation_hints.py:76
+msgid "E-Bike"
+msgstr ""
+
+#: translation_hints.py:80
+msgid "Unknown"
+msgstr ""
+
 #: runningmate.py:113
 msgid "All"
 msgstr ""
@@ -883,19 +967,19 @@ msgstr ""
 msgid "Activity {id} has been processed."
 msgstr ""
 
-#: runningmate.py:631
+#: runningmate.py:633
 msgid "The file has been imported."
 msgstr ""
 
-#: runningmate.py:669
+#: runningmate.py:671
 msgid "Initializing database..."
 msgstr ""
 
-#: runningmate.py:677
+#: runningmate.py:679
 msgid "Loading user interface..."
 msgstr ""
 
-#: runningmate.py:680
+#: runningmate.py:682
 msgid "Finalizing startup..."
 msgstr ""
 
