@@ -424,7 +424,7 @@ msgstr "%d.%m.%Y"
 
 #: ui/widget_heart_rate_tendency.py:146
 msgid "Avg Heart Rate (BPM)"
-msgstr "Durchschnittliche Herzfrequenz (HF)"
+msgstr "Durchschn. Herzfrequenz (HF)"
 
 #: ui/widget_heart_rate_tendency.py:151 ui/widget_heart_rate_tendency.py:159
 #: ui/widget_heart_rate_tendency.py:167 ui/widget_heart_rate_tendency.py:176
@@ -446,19 +446,19 @@ msgstr "MIN HF"
 
 #: ui/widget_activity_details.py:49
 msgid "AVG HR"
-msgstr "Durchschnittliche HF"
+msgstr "Durchschn. HF"
 
 #: ui/widget_activity_details.py:50
 msgid "AVG Power"
-msgstr "Durchschnittsleistung"
+msgstr "Durchschn. Leistung"
 
 #: ui/widget_activity_details.py:51
 msgid "AVG Speed (km/h)"
-msgstr "Durchschnittsgeschwindigkeit (km/h)"
+msgstr "Durchschn. Geschwindigkeit (km/h)"
 
 #: ui/widget_activity_details.py:52
 msgid "AVG Pace (min/km)"
-msgstr "Durchschnittstempo (min/km)"
+msgstr "Durchschn. Tempo (min/km)"
 
 #: ui/info_card.py:29 ui/widget_activity_details.py:54
 msgid "Elevation Gain"
@@ -663,15 +663,15 @@ msgstr "Steigung"
 
 #: translation_hints.py:8
 msgid "avg_speed"
-msgstr "Durchschnittsgeschwindigkeit"
+msgstr "Durchschn. Geschwindigkeit"
 
 #: translation_hints.py:9
 msgid "avg_pace"
-msgstr "Durchschnittstempo"
+msgstr "Durchschn. Tempo"
 
 #: translation_hints.py:10
 msgid "avg_heart_rate"
-msgstr "Durchschnittliche Herzfrequenz"
+msgstr "Durchschn. Herzfrequenz"
 
 #: translation_hints.py:11 translation_hints.py:14
 msgid "total_steps"
@@ -799,7 +799,7 @@ msgstr "Gewitter mit starkem Hagel"
 
 #: translation_hints.py:47
 msgid "Avg_Power"
-msgstr "Durchschnittsleistung"
+msgstr "Leistung"
 
 #: translation_hints.py:48
 msgid "Slowest_Pace"
@@ -811,7 +811,7 @@ msgstr "Schnellstes Tempo"
 
 #: translation_hints.py:50
 msgid "Avg_Pace"
-msgstr "Durchschnittstempo"
+msgstr "Durchschn. Tempo"
 
 #: translation_hints.py:51
 msgid "Total_Steps"
