@@ -561,6 +561,12 @@ def apply_migrations(db: DatabaseHandler, custom_migrations=None):
                     "ALTER TABLE walking ADD COLUMN shoe_id INTEGER REFERENCES shoes(id) ON DELETE SET NULL",
                 ],
             ),
+            (
+                53,
+                [
+                    "ALTER TABLE activities ADD COLUMN type_detail TEXT",
+                ],
+            ),
         ]
     )
 

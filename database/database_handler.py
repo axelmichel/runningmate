@@ -15,6 +15,7 @@ class DatabaseHandler:
         "duration": "activities.duration",
         "distance": "activities.distance",
         "elevation_gain": "activities.elevation_gain",
+        "type": "COALESCE(NULLIF(type_detail, ''), activity_type)",
     }
 
     TABLE_COLUMNS = {
@@ -80,6 +81,7 @@ class DatabaseHandler:
             "elevation_gain",
             "new",
             "edited",
+            "type_detail",
         ],
         "activity_details": [
             "activity_id",
@@ -360,6 +362,7 @@ class DatabaseHandler:
                     activities.activity_type,
                     activities.file_id,
                     activities.calories,
+                    activities.type_detail,
                     runs.activity_id,
                     runs.elevation_gain,
                     runs.avg_speed,
@@ -408,6 +411,7 @@ class DatabaseHandler:
                     activities.comment,
                     activities.activity_type,
                     activities.calories,
+                    activities.type_detail,
                     walking.activity_id,
                     walking.elevation_gain,
                     walking.avg_speed,
@@ -456,6 +460,7 @@ class DatabaseHandler:
                        activities.comment,
                        activities.activity_type,
                        activities.calories,
+                       activities.type_detail,
                        cycling.activity_id,
                        cycling.elevation_gain,
                        cycling.avg_speed,
@@ -522,7 +527,8 @@ class DatabaseHandler:
                 activity_type,
                 duration,
                 distance,
-                title
+                title,
+                COALESCE(NULLIF(type_detail, ''), activity_type) AS type
             FROM activities
             """
         if filters:

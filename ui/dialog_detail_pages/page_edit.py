@@ -1,6 +1,7 @@
 from PyQt6.QtCore import QDate, Qt, QTime
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
+    QComboBox,
     QDateEdit,
     QDoubleSpinBox,
     QFormLayout,
@@ -17,7 +18,7 @@ from PyQt6.QtWidgets import (
 )
 
 from database.user_settings import UserSettings
-from processing.system_settings import ViewMode, mapActivityTypes
+from processing.system_settings import ViewMode, get_type_details, mapActivityTypes
 from ui.dialog_action_bar import DialogActionBar
 from ui.widget_bikes import BikeWidget
 from ui.widget_shoes import ShoeWidget
@@ -28,6 +29,7 @@ from utils.video_thumbnail import video_thumbnail
 
 class PageEdit:
     def __init__(self, activity, title, media, db, parent) -> None:
+        self.type_detail_input = None
         self.form_layout = None
         self.media_layout = None
         self.form_container = None
@@ -107,6 +109,14 @@ class PageEdit:
         self.elevation_input.setRange(0, 10000)
         self.elevation_input.setDecimals(2)
 
+        activity_type = mapActivityTypes(self.activity["activity_type"])
+        type_detail_items = get_type_details(activity_type)
+        self.type_detail_input = self.get_form_field(QComboBox(), "QComboBox")
+        # loop through the list of activity types and add them to the combo box
+        for item in type_detail_items:
+            self.type_detail_input.addItem(_(item), userData=item)
+
+        form_layout.addRow(_("Type:"), self.type_detail_input)
         form_layout.addRow(_("Distance:"), self.distance_input)
         form_layout.addRow(_("Date:"), self.date_input)
         form_layout.addRow(_("Time:"), self.time_input)
@@ -189,6 +199,13 @@ class PageEdit:
         self.calories_input.setValue(self.activity["calories"])
         self.elevation_input.setValue(self.activity["elevation_gain"])
         self.distance_input.setValue(self.activity["distance"])
+        self.type_detail_input.setCurrentIndex(0)
+
+        if self.activity["type_detail"]:
+            for i in range(self.type_detail_input.count()):
+                if self.type_detail_input.itemData(i) == self.activity["type_detail"]:
+                    self.type_detail_input.setCurrentIndex(i)
+                    break
 
         # Create Action Bar Layout (Right aligned)
         action_bar = DialogActionBar(
@@ -282,6 +299,7 @@ class PageEdit:
             "id": self.activity["activity_id"],
             "title": self.title_input.text(),
             "comment": self.comment_input.toPlainText(),
+            "type_detail": self.type_detail_input.currentData(),
         }
 
         # Update the database
