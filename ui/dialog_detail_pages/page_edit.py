@@ -1,6 +1,7 @@
 from PyQt6.QtCore import QDate, Qt, QTime
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
+    QComboBox,
     QDateEdit,
     QDoubleSpinBox,
     QFormLayout,
@@ -14,11 +15,10 @@ from PyQt6.QtWidgets import (
     QTimeEdit,
     QVBoxLayout,
     QWidget,
-    QComboBox,
 )
 
 from database.user_settings import UserSettings
-from processing.system_settings import ViewMode, mapActivityTypes, get_type_details
+from processing.system_settings import ViewMode, get_type_details, mapActivityTypes
 from ui.dialog_action_bar import DialogActionBar
 from ui.widget_bikes import BikeWidget
 from ui.widget_shoes import ShoeWidget
