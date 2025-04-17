@@ -78,3 +78,4 @@ _("Endurance")
 _("Recovery")
 
 _("Unknown")
+_("type")

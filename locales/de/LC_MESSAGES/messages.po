@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-04-16 13:44+0200\n"
+"POT-Creation-Date: 2025-04-17 08:14+0200\n"
 "PO-Revision-Date: 2025-04-15 09:01+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -918,6 +918,10 @@ msgstr "E-Bike"
 #: translation_hints.py:80
 msgid "Unknown"
 msgstr "Ungenannte Aktivität"
+
+#: translation_hints.py:81
+msgid "type"
+msgstr "Aktivitätstyp"
 
 #: runningmate.py:113
 msgid "All"
