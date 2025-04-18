@@ -76,7 +76,7 @@ class UserSettingsWindow(QDialog):
         """
         Initializes the UI components and menu navigation with a real vertical sidebar.
         """
-        self.setWindowTitle("User Settings")
+        self.setWindowTitle(_("User Settings"))
         self.setGeometry(100, 100, 800, 500)
 
         nav_buttons = {
@@ -160,7 +160,7 @@ class UserSettingsWindow(QDialog):
         page = QWidget()
         layout = QVBoxLayout()
         layout.setContentsMargins(10, 10, 10, 10)
-        self.set_page_title(layout, "General Settings")
+        self.set_page_title(layout, _("General Settings"))
 
         form_box = QVBoxLayout()
         form_layout = self.get_form()
@@ -249,7 +249,7 @@ class UserSettingsWindow(QDialog):
     def create_shoes_page(self) -> QWidget:
         page = QWidget()
         layout = QVBoxLayout()
-        self.set_page_title(layout, "Shoes")
+        self.set_page_title(layout, _("Shoes"))
 
         self.shoes_table = self.get_table()
         self.shoes_table.setColumnCount(4)
@@ -297,7 +297,7 @@ class UserSettingsWindow(QDialog):
         return page
 
     def set_page_title(self, layout, title: str) -> None:
-        title_label = QLabel(_(title))
+        title_label = QLabel(title)
         title_label.setStyleSheet(
             """
                 font-size: 16px;
@@ -316,7 +316,7 @@ class UserSettingsWindow(QDialog):
         page = QWidget()
         layout = QVBoxLayout()
 
-        self.set_page_title(layout, "Bikes")
+        self.set_page_title(layout, _("Bikes"))
 
         self.bikes_table = self.get_table()
         self.bikes_table.setColumnCount(5)
@@ -339,9 +339,9 @@ class UserSettingsWindow(QDialog):
         self.bike_weight = self.get_form_field()
         self.bike_status = QCheckBox("In Use")
         self.bike_status.setChecked(True)
-        form_layout.addRow("Name:", self.bike_name)
-        form_layout.addRow("Weight (KG):", self.bike_weight)
-        form_layout.addRow("Status:", self.bike_status)
+        form_layout.addRow(_("Name:"), self.bike_name)
+        form_layout.addRow(_("Weight (KG):"), self.bike_weight)
+        form_layout.addRow(_("Status:"), self.bike_status)
 
         form_box = QVBoxLayout()
         form_box.setSpacing(10)
@@ -357,7 +357,7 @@ class UserSettingsWindow(QDialog):
         form_box.addStretch(1)
 
         action_bar = DialogActionBar(
-            cancel_action=self.close, submit_action=self.save_bike, submit_label="Add"
+            cancel_action=self.close, submit_action=self.save_bike, submit_label=_("Add")
         )
 
         form_box.addWidget(action_bar)
@@ -378,7 +378,7 @@ class UserSettingsWindow(QDialog):
         page = QWidget()
         layout = QVBoxLayout()
 
-        self.set_page_title(layout, "Heart Rate Zones")
+        self.set_page_title(layout, _("Heart Rate Zones"))
 
         form_layout = self.get_form()
         self.vo2max_input = self.get_form_field()
@@ -390,19 +390,19 @@ class UserSettingsWindow(QDialog):
 
         form_box = QVBoxLayout()
 
-        form_layout.addRow("VO2max:", self.vo2max_input)
-        form_layout.addRow("Zone 1 MAX:", self.zone1_input)
-        form_layout.addRow("Zone 2 MAX:", self.zone2_input)
-        form_layout.addRow("Zone 3 MAX:", self.zone3_input)
-        form_layout.addRow("Zone 4 MAX:", self.zone4_input)
-        form_layout.addRow("Zone 5 MAX:", self.zone5_input)
+        form_layout.addRow(_("VO2max:"), self.vo2max_input)
+        form_layout.addRow(_("Zone 1 MAX:"), self.zone1_input)
+        form_layout.addRow(_("Zone 2 MAX:"), self.zone2_input)
+        form_layout.addRow(_("Zone 3 MAX:"), self.zone3_input)
+        form_layout.addRow(_("Zone 4 MAX:"), self.zone4_input)
+        form_layout.addRow(_("Zone 5 MAX:"), self.zone5_input)
         form_box.addLayout(form_layout)
         form_box.addStretch(1)
 
         action_bar = DialogActionBar(
             cancel_action=self.close,
             submit_action=self.save_heart_rate_zones,
-            submit_label="Set",
+            submit_label=_("Set"),
         )
 
         form_box.addWidget(action_bar)

@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 from processing.system_settings import (
     ViewMode,
     get_system_background_color,
-    mapActivityTypes,
+    map_activity_types,
 )
 from ui.themes import THEME
 from utils.translations import _
@@ -100,7 +100,7 @@ class FitnessFatigueWidget(QWidget):
             activity_date, activity_type, tl_value = row
             display_date = pd.to_datetime(activity_date, unit="s").strftime("%Y-%m-%d")
 
-            check_type = mapActivityTypes(activity_type)
+            check_type = map_activity_types(activity_type)
             if check_type in self.ACTIVITY_WEIGHTS:
                 weighted_tl = (tl_value or 0) * self.ACTIVITY_WEIGHTS[
                     check_type

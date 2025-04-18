@@ -18,7 +18,7 @@ from processing.data_processing import (
     convert_to_utm,
     detect_pauses,
 )
-from processing.system_settings import ViewMode, mapActivityTypes
+from processing.system_settings import ViewMode, map_activity_types
 from processing.tcx_file_parser import TcxFileParser
 from processing.tcx_segment_parser import TcxSegmentParser
 from processing.visualization import plot_activity_map, plot_elevation, plot_track
@@ -126,7 +126,7 @@ class TcxFileImporter:
         df = convert_to_utm(df)
         df = calculate_distance(df)
 
-        target = mapActivityTypes(activity_type)
+        target = map_activity_types(activity_type)
         df, avg_pace, fastest_pace, slowest_pace = calculate_pace(df, target)
 
         name = os.path.basename(file_path).replace(".tcx", "")
@@ -150,7 +150,7 @@ class TcxFileImporter:
 
         computed_data = self.compute_data(df, name)
         computed_data["title"] = generate_activity_title(
-            mapActivityTypes(activity_type), computed_data["date"]
+            map_activity_types(activity_type), computed_data["date"]
         )
         computed_data["activity_id"] = next_id
         computed_data["activity_type"] = activity_type

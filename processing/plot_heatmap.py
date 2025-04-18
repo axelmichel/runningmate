@@ -8,7 +8,7 @@ from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtWidgets import QSizePolicy
 
 from database.database_handler import DatabaseHandler
-from processing.system_settings import getAllowedTypes
+from processing.system_settings import get_allowed_types
 
 # Cache directory for storing heatmap images
 CACHE_DIR = os.path.expanduser("~/RunningData/temp")
@@ -133,7 +133,7 @@ class PlotHeatmap:
         df = pd.read_sql(query, self.db.conn, params=filter_params)
 
         if activity_type is not None and activity_type != "All":
-            allowed_types = getAllowedTypes(activity_type)
+            allowed_types = get_allowed_types(activity_type)
             df = df[df["activity_type"].isin(allowed_types)]
 
         # Convert timestamp to pandas datetime format

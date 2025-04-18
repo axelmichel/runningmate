@@ -28,7 +28,7 @@ from importer.garmin.garmin import garmin_connect_login
 from processing.activity_info import ActivityInfo
 from processing.best_performances import BestSegmentFinder
 from processing.plot_heatmap import PlotHeatmap
-from processing.system_settings import SortOrder, ViewMode, mapActivityTypes
+from processing.system_settings import SortOrder, ViewMode, map_activity_types
 from ui.dialog_detail import DialogDetail
 from ui.info_card import InfoCard
 from ui.main_menu import MenuBar
@@ -40,6 +40,7 @@ from ui.widget_search import SearchWidget
 from ui.widget_weather import WeatherWidget
 from ui.window_garmin_sync import GarminSyncWindow
 from ui.window_icloud_sync import iCloudSyncDialog
+from ui.window_system_settings import SystemSettingsWindow
 from ui.window_user_settings import UserSettingsWindow
 from utils.app_mode import is_dark_mode
 from utils.resource_path import resource_path
@@ -81,6 +82,7 @@ class NumericTableWidgetItem(QTableWidgetItem):
 class RunningDataApp(QWidget):
     def __init__(self, db_handler: DatabaseHandler):
         super().__init__()
+        self.system_window = None
         self.weather_widget = None
         self.total_distance_label = None
         self.activity_widget = None
@@ -386,6 +388,10 @@ class RunningDataApp(QWidget):
             self.user_window = UserSettingsWindow(self.userSettings, self)
             self.user_window.exec()
             self.user_window = None
+        elif action == "settings":
+            self.system_window = SystemSettingsWindow(self)
+            self.system_window.exec()
+            self.system_window = None
         elif action == "search":
             self.toggle_search()
 
@@ -566,7 +572,7 @@ class RunningDataApp(QWidget):
     def sort_by_column(self, activity_type, column):
         self.offset = 0
         self.current_page = 0
-        activity_type = mapActivityTypes(activity_type)
+        activity_type = map_activity_types(activity_type)
         self.sort_direction = self.get_sorting_direction(activity_type)
         self.sort_field = column
         self.trigger_load()
