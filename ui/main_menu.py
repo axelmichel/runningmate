@@ -51,6 +51,7 @@ class MenuBar(QMenuBar):
 
         settings_action = QAction(_("Settings"), self)
         settings_action.setShortcut(settings_shortcut)
+        settings_action.triggered.connect(parent.system_settings)
         file_menu.addAction(settings_action)
 
         file_menu.addSeparator()

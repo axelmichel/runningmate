@@ -649,6 +649,12 @@ class RunningDataApp(QWidget):
         # Simulate loading process (2 seconds)
         QTimer.singleShot(2000, self.hide_splash_screen)
 
+    def system_settings(self):
+        """Open the system settings window"""
+        self.system_window = SystemSettingsWindow(self)
+        self.system_window.exec()
+        self.system_window = None
+
     def online_help(self):
         webbrowser.open(
             "https://axelmichel.github.io/runningmate/"
