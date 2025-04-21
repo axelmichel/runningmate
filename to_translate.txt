@@ -10,6 +10,7 @@
 ./ui/widget_fitness.py
 ./ui/table_builder.py
 ./ui/window_run_details.py
+./ui/window_system_settings.py
 ./ui/widget_shoes.py
 ./ui/icon_label.py
 ./ui/__init__.py
@@ -67,7 +68,9 @@
 ./utils/save_round.py
 ./utils/__init__.py
 ./utils/logger.py
+./utils/media_stats.py
 ./utils/calculate_age.py
+./utils/folder_size.py
 ./utils/app_mode.py
 ./translation_hints.py
 ./runningmate.py

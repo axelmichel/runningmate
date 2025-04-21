@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-04-17 08:14+0200\n"
+"POT-Creation-Date: 2025-04-21 12:35+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -69,23 +69,23 @@ msgstr ""
 msgid "ICloud Sync"
 msgstr ""
 
-#: runningmate.py:122 ui/main_menu.py:52
+#: runningmate.py:124 ui/main_menu.py:52
 msgid "Settings"
 msgstr ""
 
-#: ui/main_menu.py:58
+#: ui/main_menu.py:59
 msgid "Quit"
 msgstr ""
 
-#: runningmate.py:120 ui/main_menu.py:66 ui/widget_search.py:64
+#: runningmate.py:122 ui/main_menu.py:67 ui/widget_search.py:64
 msgid "Search"
 msgstr ""
 
-#: ui/main_menu.py:71
+#: ui/main_menu.py:72
 msgid "About"
 msgstr ""
 
-#: ui/main_menu.py:78
+#: ui/main_menu.py:79
 msgid "Online Help"
 msgstr ""
 
@@ -215,6 +215,63 @@ msgstr ""
 msgid "Are you sure you want to delete this media?"
 msgstr ""
 
+#: ui/window_system_settings.py:39
+msgid "English"
+msgstr ""
+
+#: ui/window_system_settings.py:40
+msgid "German"
+msgstr ""
+
+#: ui/window_system_settings.py:41
+msgid "French"
+msgstr ""
+
+#: ui/window_system_settings.py:44
+msgid "System"
+msgstr ""
+
+#: ui/window_system_settings.py:45
+msgid "Light"
+msgstr ""
+
+#: ui/window_system_settings.py:46
+msgid "Dark"
+msgstr ""
+
+#: ui/window_system_settings.py:59
+msgid "System Settings"
+msgstr ""
+
+#: ui/dialog_detail.py:94 ui/window_system_settings.py:63
+#: ui/window_user_settings.py:83
+msgid "General"
+msgstr ""
+
+#: ui/window_system_settings.py:64
+msgid "Info"
+msgstr ""
+
+#: ui/window_system_settings.py:124 ui/window_user_settings.py:163
+msgid "General Settings"
+msgstr ""
+
+#: ui/window_system_settings.py:137
+msgid "Language:"
+msgstr ""
+
+#: ui/window_system_settings.py:138
+msgid "Layout:"
+msgstr ""
+
+#: ui/window_system_settings.py:159
+msgid "System Info"
+msgstr ""
+
+#: ui/window_system_settings.py:249
+msgid "files"
+msgstr ""
+
 #: ui/widget_bikes.py:66 ui/widget_shoes.py:66
 msgid "not in use"
 msgstr ""
@@ -342,24 +399,25 @@ msgstr ""
 msgid "Reset"
 msgstr ""
 
-#: ui/dialog_detail.py:94 ui/window_user_settings.py:83
-msgid "General"
+#: ui/window_user_settings.py:79
+msgid "User Settings"
 msgstr ""
 
-#: ui/window_user_settings.py:84
+#: ui/window_user_settings.py:84 ui/window_user_settings.py:252
 msgid "Shoes"
 msgstr ""
 
-#: ui/window_user_settings.py:85
+#: ui/window_user_settings.py:85 ui/window_user_settings.py:319
 msgid "Bikes"
 msgstr ""
 
 #: ui/dialog_detail.py:99 ui/dialog_detail.py:320
 #: ui/widget_heart_rate_zones.py:44 ui/window_user_settings.py:86
+#: ui/window_user_settings.py:381
 msgid "Heart Rate Zones"
 msgstr ""
 
-#: ui/window_user_settings.py:175
+#: ui/window_user_settings.py:175 ui/window_user_settings.py:342
 msgid "Name:"
 msgstr ""
 
@@ -413,8 +471,48 @@ msgstr ""
 msgid "Weight"
 msgstr ""
 
+#: ui/window_user_settings.py:343
+msgid "Weight (KG):"
+msgstr ""
+
+#: ui/window_user_settings.py:344
+msgid "Status:"
+msgstr ""
+
 #: ui/window_user_settings.py:348
 msgid "Add Bike"
+msgstr ""
+
+#: ui/window_user_settings.py:360
+msgid "Add"
+msgstr ""
+
+#: ui/window_user_settings.py:393
+msgid "VO2max:"
+msgstr ""
+
+#: ui/window_user_settings.py:394
+msgid "Zone 1 MAX:"
+msgstr ""
+
+#: ui/window_user_settings.py:395
+msgid "Zone 2 MAX:"
+msgstr ""
+
+#: ui/window_user_settings.py:396
+msgid "Zone 3 MAX:"
+msgstr ""
+
+#: ui/window_user_settings.py:397
+msgid "Zone 4 MAX:"
+msgstr ""
+
+#: ui/window_user_settings.py:398
+msgid "Zone 5 MAX:"
+msgstr ""
+
+#: ui/window_user_settings.py:405
+msgid "Set"
 msgstr ""
 
 #: ui/widget_heart_rate_tendency.py:43
@@ -913,77 +1011,93 @@ msgstr ""
 msgid "type"
 msgstr ""
 
-#: runningmate.py:113
-msgid "All"
+#: translation_hints.py:83
+msgid "app_path"
 msgstr ""
 
-#: runningmate.py:114
-msgid "Runs"
+#: translation_hints.py:84
+msgid "media_count"
+msgstr ""
+
+#: translation_hints.py:85
+msgid "media_size"
+msgstr ""
+
+#: translation_hints.py:86
+msgid "total_size"
 msgstr ""
 
 #: runningmate.py:115
-msgid "Rides"
+msgid "All"
 msgstr ""
 
 #: runningmate.py:116
+msgid "Runs"
+msgstr ""
+
+#: runningmate.py:117
+msgid "Rides"
+msgstr ""
+
+#: runningmate.py:118
 msgid "Walks"
 msgstr ""
 
-#: runningmate.py:121
+#: runningmate.py:123
 msgid "User"
 msgstr ""
 
-#: runningmate.py:213
+#: runningmate.py:215
 msgid "Previous Page"
 msgstr ""
 
-#: runningmate.py:221
+#: runningmate.py:223
 msgid "Next Page"
 msgstr ""
 
-#: runningmate.py:435
+#: runningmate.py:441
 msgid "Page"
 msgstr ""
 
-#: runningmate.py:435
+#: runningmate.py:441
 msgid "Showing"
 msgstr ""
 
-#: runningmate.py:435
+#: runningmate.py:441
 msgid "of"
 msgstr ""
 
-#: runningmate.py:469
+#: runningmate.py:475
 msgid "Total Distance"
 msgstr ""
 
-#: runningmate.py:608
+#: runningmate.py:614
 msgid "Delete Confirmation"
 msgstr ""
 
-#: runningmate.py:609
+#: runningmate.py:615
 #, python-brace-format
 msgid "Are you sure you want to delete activity {id}?"
 msgstr ""
 
-#: runningmate.py:627
+#: runningmate.py:633
 #, python-brace-format
 msgid "Activity {id} has been processed."
 msgstr ""
 
-#: runningmate.py:633
+#: runningmate.py:639
 msgid "The file has been imported."
 msgstr ""
 
-#: runningmate.py:671
+#: runningmate.py:683
 msgid "Initializing database..."
 msgstr ""
 
-#: runningmate.py:679
+#: runningmate.py:691
 msgid "Loading user interface..."
 msgstr ""
 
-#: runningmate.py:682
+#: runningmate.py:694
 msgid "Finalizing startup..."
 msgstr ""
 

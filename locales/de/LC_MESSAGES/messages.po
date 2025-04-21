@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-04-17 08:14+0200\n"
+"POT-Creation-Date: 2025-04-21 12:35+0200\n"
 "PO-Revision-Date: 2025-04-15 09:01+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -70,23 +70,23 @@ msgstr "Garmin Connect-Login"
 msgid "ICloud Sync"
 msgstr "iCloud-Synchronisierung"
 
-#: runningmate.py:122 ui/main_menu.py:52
+#: runningmate.py:124 ui/main_menu.py:52
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: ui/main_menu.py:58
+#: ui/main_menu.py:59
 msgid "Quit"
 msgstr "Beenden"
 
-#: runningmate.py:120 ui/main_menu.py:66 ui/widget_search.py:64
+#: runningmate.py:122 ui/main_menu.py:67 ui/widget_search.py:64
 msgid "Search"
 msgstr "Suchen"
 
-#: ui/main_menu.py:71
+#: ui/main_menu.py:72
 msgid "About"
 msgstr "Über"
 
-#: ui/main_menu.py:78
+#: ui/main_menu.py:79
 msgid "Online Help"
 msgstr "Online-Hilfe"
 
@@ -218,6 +218,63 @@ msgstr "Medien löschen"
 msgid "Are you sure you want to delete this media?"
 msgstr "Soll diese Media Datai wirklich gelöscht werden?"
 
+#: ui/window_system_settings.py:39
+msgid "English"
+msgstr "English"
+
+#: ui/window_system_settings.py:40
+msgid "German"
+msgstr "Deutsch"
+
+#: ui/window_system_settings.py:41
+msgid "French"
+msgstr "Francais"
+
+#: ui/window_system_settings.py:44
+msgid "System"
+msgstr "System"
+
+#: ui/window_system_settings.py:45
+msgid "Light"
+msgstr "Hell"
+
+#: ui/window_system_settings.py:46
+msgid "Dark"
+msgstr "Dunkel"
+
+#: ui/window_system_settings.py:59
+msgid "System Settings"
+msgstr "System Einstellungen"
+
+#: ui/dialog_detail.py:94 ui/window_system_settings.py:63
+#: ui/window_user_settings.py:83
+msgid "General"
+msgstr "Allgemein"
+
+#: ui/window_system_settings.py:64
+msgid "Info"
+msgstr "System Info"
+
+#: ui/window_system_settings.py:124 ui/window_user_settings.py:163
+msgid "General Settings"
+msgstr "Einstellungen"
+
+#: ui/window_system_settings.py:137
+msgid "Language:"
+msgstr "Sprache"
+
+#: ui/window_system_settings.py:138
+msgid "Layout:"
+msgstr "Darstellung"
+
+#: ui/window_system_settings.py:159
+msgid "System Info"
+msgstr "System Info"
+
+#: ui/window_system_settings.py:249
+msgid "files"
+msgstr "Datei(en)"
+
 #: ui/widget_bikes.py:66 ui/widget_shoes.py:66
 msgid "not in use"
 msgstr "Nicht in Gebrauch"
@@ -308,7 +365,6 @@ msgid "{:.1f} hours"
 msgstr "{:.1f} Stunden"
 
 #: ui/dialog_detail_pages/page_edit.py:119
-#, fuzzy
 msgid "Type:"
 msgstr "Zeit:"
 
@@ -352,24 +408,25 @@ msgstr "Titel oder Kommentar suchen..."
 msgid "Reset"
 msgstr "Zurücksetzen"
 
-#: ui/dialog_detail.py:94 ui/window_user_settings.py:83
-msgid "General"
-msgstr "Allgemein"
+#: ui/window_user_settings.py:79
+msgid "User Settings"
+msgstr "Benutzer Einstellungen"
 
-#: ui/window_user_settings.py:84
+#: ui/window_user_settings.py:84 ui/window_user_settings.py:252
 msgid "Shoes"
 msgstr "Schuhe"
 
-#: ui/window_user_settings.py:85
+#: ui/window_user_settings.py:85 ui/window_user_settings.py:319
 msgid "Bikes"
 msgstr "Fahrräder"
 
 #: ui/dialog_detail.py:99 ui/dialog_detail.py:320
 #: ui/widget_heart_rate_zones.py:44 ui/window_user_settings.py:86
+#: ui/window_user_settings.py:381
 msgid "Heart Rate Zones"
 msgstr "Herzfrequenzzonen"
 
-#: ui/window_user_settings.py:175
+#: ui/window_user_settings.py:175 ui/window_user_settings.py:342
 msgid "Name:"
 msgstr "Name:"
 
@@ -423,9 +480,49 @@ msgstr "Fahrrad"
 msgid "Weight"
 msgstr "Gewicht"
 
+#: ui/window_user_settings.py:343
+msgid "Weight (KG):"
+msgstr "Gewicht (kg):"
+
+#: ui/window_user_settings.py:344
+msgid "Status:"
+msgstr "Status:"
+
 #: ui/window_user_settings.py:348
 msgid "Add Bike"
 msgstr "Fahrrad hinzufügen"
+
+#: ui/window_user_settings.py:360
+msgid "Add"
+msgstr "Hinzufügen"
+
+#: ui/window_user_settings.py:393
+msgid "VO2max:"
+msgstr "VO2max:"
+
+#: ui/window_user_settings.py:394
+msgid "Zone 1 MAX:"
+msgstr "Zone 1 MAX:"
+
+#: ui/window_user_settings.py:395
+msgid "Zone 2 MAX:"
+msgstr "Zone 2 MAX:"
+
+#: ui/window_user_settings.py:396
+msgid "Zone 3 MAX:"
+msgstr "Zone 3 MAX:"
+
+#: ui/window_user_settings.py:397
+msgid "Zone 4 MAX:"
+msgstr "Zone 4 MAX:"
+
+#: ui/window_user_settings.py:398
+msgid "Zone 5 MAX:"
+msgstr "Zone 5 MAX:"
+
+#: ui/window_user_settings.py:405
+msgid "Set"
+msgstr "Festlegen"
 
 #: ui/widget_heart_rate_tendency.py:43
 msgid "Heart Rate Trend"
@@ -881,7 +978,7 @@ msgstr "Hiking"
 
 #: translation_hints.py:67
 msgid "Nordic Walking"
-msgstr ""
+msgstr "Nordic Walking"
 
 #: translation_hints.py:68
 msgid "Trekking"
@@ -923,77 +1020,93 @@ msgstr "Ungenannte Aktivität"
 msgid "type"
 msgstr "Aktivitätstyp"
 
-#: runningmate.py:113
+#: translation_hints.py:83
+msgid "app_path"
+msgstr "Daten-Ordner"
+
+#: translation_hints.py:84
+msgid "media_count"
+msgstr "Anzahl Medien"
+
+#: translation_hints.py:85
+msgid "media_size"
+msgstr "Speicherplatz Medien"
+
+#: translation_hints.py:86
+msgid "total_size"
+msgstr "Speicherplatz Gesamt"
+
+#: runningmate.py:115
 msgid "All"
 msgstr "Alle"
 
-#: runningmate.py:114
+#: runningmate.py:116
 msgid "Runs"
 msgstr "Läufe"
 
-#: runningmate.py:115
+#: runningmate.py:117
 msgid "Rides"
 msgstr "Radfahrten"
 
-#: runningmate.py:116
+#: runningmate.py:118
 msgid "Walks"
 msgstr "Spaziergänge"
 
-#: runningmate.py:121
+#: runningmate.py:123
 msgid "User"
 msgstr "Benutzername"
 
-#: runningmate.py:213
+#: runningmate.py:215
 msgid "Previous Page"
 msgstr "Vorherige Seite"
 
-#: runningmate.py:221
+#: runningmate.py:223
 msgid "Next Page"
 msgstr "Nächste Seite"
 
-#: runningmate.py:435
+#: runningmate.py:441
 msgid "Page"
 msgstr "Seite"
 
-#: runningmate.py:435
+#: runningmate.py:441
 msgid "Showing"
 msgstr "Zeige"
 
-#: runningmate.py:435
+#: runningmate.py:441
 msgid "of"
 msgstr "von"
 
-#: runningmate.py:469
+#: runningmate.py:475
 msgid "Total Distance"
 msgstr "Strecke"
 
-#: runningmate.py:608
+#: runningmate.py:614
 msgid "Delete Confirmation"
 msgstr "Bestätigung löschen"
 
-#: runningmate.py:609
+#: runningmate.py:615
 #, python-brace-format
 msgid "Are you sure you want to delete activity {id}?"
 msgstr "Soll diese Media Datai {id} wirklich gelöscht werden?"
 
-#: runningmate.py:627
+#: runningmate.py:633
 #, python-brace-format
 msgid "Activity {id} has been processed."
 msgstr "Diese Aktivität wurde bereits importiert."
 
-#: runningmate.py:633
+#: runningmate.py:639
 msgid "The file has been imported."
 msgstr "Diese Aktivität wurde bereits importiert."
 
-#: runningmate.py:671
+#: runningmate.py:683
 msgid "Initializing database..."
 msgstr "Datenbank initialisieren..."
 
-#: runningmate.py:679
+#: runningmate.py:691
 msgid "Loading user interface..."
 msgstr "Lade Benutzeroberfläche..."
 
-#: runningmate.py:682
+#: runningmate.py:694
 msgid "Finalizing startup..."
 msgstr "Startvorgang abschließen..."
 
