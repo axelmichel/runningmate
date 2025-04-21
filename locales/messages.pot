@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-04-21 12:35+0200\n"
+"POT-Creation-Date: 2025-04-21 17:38+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -146,7 +146,7 @@ msgstr ""
 msgid "Refresh"
 msgstr ""
 
-#: ui/table_builder.py:320 ui/window_user_settings.py:584
+#: ui/table_builder.py:320 ui/window_user_settings.py:586
 msgid "Delete"
 msgstr ""
 
@@ -276,11 +276,11 @@ msgstr ""
 msgid "not in use"
 msgstr ""
 
-#: ui/widget_shoes.py:101 ui/widget_shoes.py:129 ui/window_user_settings.py:481
+#: ui/widget_shoes.py:101 ui/widget_shoes.py:129 ui/window_user_settings.py:483
 msgid "shoe"
 msgstr ""
 
-#: ui/widget_bikes.py:101 ui/widget_bikes.py:125 ui/window_user_settings.py:516
+#: ui/widget_bikes.py:101 ui/widget_bikes.py:125 ui/window_user_settings.py:518
 msgid "bike"
 msgstr ""
 
@@ -413,7 +413,7 @@ msgstr ""
 
 #: ui/dialog_detail.py:99 ui/dialog_detail.py:320
 #: ui/widget_heart_rate_zones.py:44 ui/window_user_settings.py:86
-#: ui/window_user_settings.py:381
+#: ui/window_user_settings.py:383
 msgid "Heart Rate Zones"
 msgstr ""
 
@@ -483,35 +483,35 @@ msgstr ""
 msgid "Add Bike"
 msgstr ""
 
-#: ui/window_user_settings.py:360
+#: ui/window_user_settings.py:362
 msgid "Add"
 msgstr ""
 
-#: ui/window_user_settings.py:393
+#: ui/window_user_settings.py:395
 msgid "VO2max:"
 msgstr ""
 
-#: ui/window_user_settings.py:394
+#: ui/window_user_settings.py:396
 msgid "Zone 1 MAX:"
 msgstr ""
 
-#: ui/window_user_settings.py:395
+#: ui/window_user_settings.py:397
 msgid "Zone 2 MAX:"
 msgstr ""
 
-#: ui/window_user_settings.py:396
+#: ui/window_user_settings.py:398
 msgid "Zone 3 MAX:"
 msgstr ""
 
-#: ui/window_user_settings.py:397
+#: ui/window_user_settings.py:399
 msgid "Zone 4 MAX:"
 msgstr ""
 
-#: ui/window_user_settings.py:398
+#: ui/window_user_settings.py:400
 msgid "Zone 5 MAX:"
 msgstr ""
 
-#: ui/window_user_settings.py:405
+#: ui/window_user_settings.py:407
 msgid "Set"
 msgstr ""
 
@@ -1025,6 +1025,10 @@ msgstr ""
 
 #: translation_hints.py:86
 msgid "total_size"
+msgstr ""
+
+#: translation_hints.py:88
+msgid "avg_power"
 msgstr ""
 
 #: runningmate.py:115

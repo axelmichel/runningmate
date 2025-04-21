@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-04-21 12:35+0200\n"
+"POT-Creation-Date: 2025-04-21 17:38+0200\n"
 "PO-Revision-Date: 2025-04-15 09:01+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -149,7 +149,7 @@ msgstr "Details anzeigen"
 msgid "Refresh"
 msgstr "Aktualisieren"
 
-#: ui/table_builder.py:320 ui/window_user_settings.py:584
+#: ui/table_builder.py:320 ui/window_user_settings.py:586
 msgid "Delete"
 msgstr "Löschen"
 
@@ -279,11 +279,11 @@ msgstr "Datei(en)"
 msgid "not in use"
 msgstr "Nicht in Gebrauch"
 
-#: ui/widget_shoes.py:101 ui/widget_shoes.py:129 ui/window_user_settings.py:481
+#: ui/widget_shoes.py:101 ui/widget_shoes.py:129 ui/window_user_settings.py:483
 msgid "shoe"
 msgstr "Schuh"
 
-#: ui/widget_bikes.py:101 ui/widget_bikes.py:125 ui/window_user_settings.py:516
+#: ui/widget_bikes.py:101 ui/widget_bikes.py:125 ui/window_user_settings.py:518
 msgid "bike"
 msgstr "Fahrrad"
 
@@ -422,7 +422,7 @@ msgstr "Fahrräder"
 
 #: ui/dialog_detail.py:99 ui/dialog_detail.py:320
 #: ui/widget_heart_rate_zones.py:44 ui/window_user_settings.py:86
-#: ui/window_user_settings.py:381
+#: ui/window_user_settings.py:383
 msgid "Heart Rate Zones"
 msgstr "Herzfrequenzzonen"
 
@@ -492,35 +492,35 @@ msgstr "Status:"
 msgid "Add Bike"
 msgstr "Fahrrad hinzufügen"
 
-#: ui/window_user_settings.py:360
+#: ui/window_user_settings.py:362
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: ui/window_user_settings.py:393
+#: ui/window_user_settings.py:395
 msgid "VO2max:"
 msgstr "VO2max:"
 
-#: ui/window_user_settings.py:394
+#: ui/window_user_settings.py:396
 msgid "Zone 1 MAX:"
 msgstr "Zone 1 MAX:"
 
-#: ui/window_user_settings.py:395
+#: ui/window_user_settings.py:397
 msgid "Zone 2 MAX:"
 msgstr "Zone 2 MAX:"
 
-#: ui/window_user_settings.py:396
+#: ui/window_user_settings.py:398
 msgid "Zone 3 MAX:"
 msgstr "Zone 3 MAX:"
 
-#: ui/window_user_settings.py:397
+#: ui/window_user_settings.py:399
 msgid "Zone 4 MAX:"
 msgstr "Zone 4 MAX:"
 
-#: ui/window_user_settings.py:398
+#: ui/window_user_settings.py:400
 msgid "Zone 5 MAX:"
 msgstr "Zone 5 MAX:"
 
-#: ui/window_user_settings.py:405
+#: ui/window_user_settings.py:407
 msgid "Set"
 msgstr "Festlegen"
 
@@ -1035,6 +1035,10 @@ msgstr "Speicherplatz Medien"
 #: translation_hints.py:86
 msgid "total_size"
 msgstr "Speicherplatz Gesamt"
+
+#: translation_hints.py:88
+msgid "avg_power"
+msgstr "Leistung"
 
 #: runningmate.py:115
 msgid "All"

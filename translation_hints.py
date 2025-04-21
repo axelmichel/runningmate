@@ -84,3 +84,5 @@ _("app_path")
 _("media_count")
 _("media_size")
 _("total_size")
+
+_("avg_power")
