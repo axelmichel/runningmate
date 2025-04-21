@@ -120,7 +120,7 @@ class ShoeWidget(QWidget):
                 updated_distance = previous_distance + distance
             else:
                 updated_distance = previous_distance - distance
-            self.db.update_shoe({"id": shoe_id, "distance": updated_distance})
+            self.db.update_shoe({"id": shoe_id, "distance": round(updated_distance, 2)})
 
     def _load_shoes(self) -> None:
         shoes = self.settings.get_shoes()
