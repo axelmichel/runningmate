@@ -910,7 +910,7 @@ msgstr "Gewitter mit starkem Hagel"
 
 #: translation_hints.py:47
 msgid "Avg_Power"
-msgstr "Leistung"
+msgstr "Durchschn. Leistung"
 
 #: translation_hints.py:48
 msgid "Slowest_Pace"
@@ -1038,7 +1038,7 @@ msgstr "Speicherplatz Gesamt"
 
 #: translation_hints.py:88
 msgid "avg_power"
-msgstr "Leistung"
+msgstr "Durchschn. Leistung"
 
 #: runningmate.py:115
 msgid "All"
