@@ -12,8 +12,8 @@ def media_stats(folder_path: str) -> Tuple[int, float]:
     Returns:
         Tuple[int, float]: A tuple containing the count of media files and their total size in MB.
     """
-    image_exits = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp'}
-    video_exits = {'.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm'}
+    image_exits = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"}
+    video_exits = {".mp4", ".avi", ".mov", ".wmv", ".flv", ".mkv", ".webm"}
     media_exits = image_exits.union(video_exits)
 
     media_count = 0

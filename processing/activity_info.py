@@ -8,8 +8,8 @@ import pandas as pd
 from database.database_handler import DatabaseHandler
 from processing.system_settings import (
     ViewMode,
-    get_settings_locale,
     get_allowed_types,
+    get_settings_locale,
     map_activity_types,
 )
 

@@ -357,7 +357,9 @@ class UserSettingsWindow(QDialog):
         form_box.addStretch(1)
 
         action_bar = DialogActionBar(
-            cancel_action=self.close, submit_action=self.save_bike, submit_label=_("Add")
+            cancel_action=self.close,
+            submit_action=self.save_bike,
+            submit_label=_("Add"),
         )
 
         form_box.addWidget(action_bar)

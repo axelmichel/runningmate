@@ -5,13 +5,13 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QDialog,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QSplitter,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
-    QFrame,
 )
 
 from processing.system_settings import load_settings_config, save_settings
@@ -161,7 +161,7 @@ class SystemSettingsWindow(QDialog):
         infos = self.get_infos()
         # loop through the activity data and display the data
         for index, (key, value) in enumerate(infos.items()):
-            key_label = QLabel(_(key.title()))
+            key_label = QLabel(_(key))
             font = key_label.font()
             font.setPointSize(14)
             key_label.setFont(font)
@@ -246,9 +246,9 @@ class SystemSettingsWindow(QDialog):
         total_size_mb = folder_size(os.path.expanduser("~/RunningData"))
         info = {
             "app_path": os.path.expanduser("~/RunningData"),
-            "media_count": media_count,
-            "media_size": round(media_size_mb, 2),
-            "total_size": round(total_size_mb, 2),
+            "media_count": f"{media_count} {_('files')}",
+            "media_size": f"{round(media_size_mb, 2)} MB",
+            "total_size": f"{round(total_size_mb, 2)} MB",
         }
         return info
 

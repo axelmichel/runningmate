@@ -23,7 +23,7 @@ class SortOrder:
     DESC = "DESC"
 
 
-def load_settings_config()-> dict:
+def load_settings_config() -> dict:
     """
     Load all stored system settings from the JSON file.
 
@@ -38,6 +38,7 @@ def load_settings_config()-> dict:
         "layout": "system",
     }
 
+
 def save_settings_value(setting: str, value: str):
     """
     :param setting: str, the setting to save (e.g., 'language', 'measures')
@@ -49,8 +50,9 @@ def save_settings_value(setting: str, value: str):
     with open(SETTINGS_FILE, "w") as f:
         json.dump(data, f)
 
+
 def save_settings(settings: dict[str, str]) -> None:
-    """"
+    """ "
     Save the settings to the settings file.
     :param settings: dict, the settings to save (e.g., {'language': 'en', 'measures': 'metric'})
     """
@@ -60,6 +62,7 @@ def save_settings(settings: dict[str, str]) -> None:
 
     with open(SETTINGS_FILE, "w") as f:
         json.dump(data, f)
+
 
 def get_settings_value(key: str, default_value=None):
     """
