@@ -1,7 +1,7 @@
 import os
 import sqlite3
 
-from processing.system_settings import ViewMode, mapActivityTypes
+from processing.system_settings import ViewMode, map_activity_types
 from utils.logger import logger
 from utils.translations import _
 
@@ -240,7 +240,7 @@ class DatabaseHandler:
         if not activity:
             return
 
-        target = mapActivityTypes(activity["activity_type"])
+        target = map_activity_types(activity["activity_type"])
 
         if target == ViewMode.RUN:
             self.cursor.execute(

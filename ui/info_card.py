@@ -4,7 +4,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 from database.database_handler import DatabaseHandler
-from processing.system_settings import ViewMode, getAllowedTypes
+from processing.system_settings import ViewMode, get_allowed_types
 from ui.themes import THEME
 from utils.app_mode import is_dark_mode
 from utils.translations import _
@@ -76,7 +76,7 @@ class InfoCard(QWidget):
         params = ()
 
         if activity_type is not None and activity_type != ViewMode.ALL:
-            allowed_types = getAllowedTypes(activity_type)
+            allowed_types = get_allowed_types(activity_type)
             placeholders = ", ".join("?" * len(allowed_types))  # Generate placeholders
             query += f" WHERE activity_type IN ({placeholders})"
             params = tuple(allowed_types)

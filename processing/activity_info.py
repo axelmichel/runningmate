@@ -8,9 +8,9 @@ import pandas as pd
 from database.database_handler import DatabaseHandler
 from processing.system_settings import (
     ViewMode,
+    get_allowed_types,
     get_settings_locale,
-    getAllowedTypes,
-    mapActivityTypes,
+    map_activity_types,
 )
 
 
@@ -84,7 +84,7 @@ class ActivityInfo:
         params = []
 
         if activity_type is not None and activity_type != ViewMode.ALL:
-            allowed_types = getAllowedTypes(activity_type)
+            allowed_types = get_allowed_types(activity_type)
             placeholders = ", ".join("?" * len(allowed_types))  # Generate placeholders
             query += f" WHERE activity_type IN ({placeholders})"
             params = tuple(allowed_types)
@@ -213,7 +213,7 @@ class ActivityInfo:
         # Default extra data
         extra_data = {}
 
-        current_type = mapActivityTypes(activity["activity_type"])
+        current_type = map_activity_types(activity["activity_type"])
 
         # Query extra info based on activity type
         if current_type in [ViewMode.RUN, ViewMode.CYCLE, ViewMode.WALK]:

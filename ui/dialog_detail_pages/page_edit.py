@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
 )
 
 from database.user_settings import UserSettings
-from processing.system_settings import ViewMode, get_type_details, mapActivityTypes
+from processing.system_settings import ViewMode, get_type_details, map_activity_types
 from ui.dialog_action_bar import DialogActionBar
 from ui.widget_bikes import BikeWidget
 from ui.widget_shoes import ShoeWidget
@@ -109,7 +109,7 @@ class PageEdit:
         self.elevation_input.setRange(0, 10000)
         self.elevation_input.setDecimals(2)
 
-        activity_type = mapActivityTypes(self.activity["activity_type"])
+        activity_type = map_activity_types(self.activity["activity_type"])
         type_detail_items = get_type_details(activity_type)
         self.type_detail_input = self.get_form_field(QComboBox(), "QComboBox")
         # loop through the list of activity types and add them to the combo box
@@ -128,7 +128,7 @@ class PageEdit:
         form_box.addStretch(1)
         extended_form_layout.addLayout(form_box)
 
-        activity_type = mapActivityTypes(self.activity["activity_type"])
+        activity_type = map_activity_types(self.activity["activity_type"])
 
         if activity_type == ViewMode.CYCLE:
             bike_widget = BikeWidget(

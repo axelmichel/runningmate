@@ -6,7 +6,7 @@ import pandas as pd
 from geopy.distance import geodesic
 from pyproj import Transformer
 
-from processing.system_settings import ViewMode, mapActivityTypes
+from processing.system_settings import ViewMode, map_activity_types
 
 
 class TcxFileParser:
@@ -136,7 +136,7 @@ class TcxFileParser:
         df["Speed"] = df["DistDiff"] / df["TimeDiff"]
 
         activity_type = self.extract_activity_type(root, namespaces)
-        activity_group = mapActivityTypes(activity_type)
+        activity_group = map_activity_types(activity_type)
 
         df = self._map_power(df, activity_group)
         df = self._map_pace(df, activity_group)

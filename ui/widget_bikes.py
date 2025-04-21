@@ -116,7 +116,7 @@ class BikeWidget(QWidget):
                 updated_distance = previous_distance + distance
             else:
                 updated_distance = previous_distance - distance
-            self.db.update_bike({"id": bike_id, "distance": updated_distance})
+            self.db.update_bike({"id": bike_id, "distance": round(updated_distance, 2)})
 
     def _load_bikes(self) -> None:
         bikes = self.settings.get_bikes()

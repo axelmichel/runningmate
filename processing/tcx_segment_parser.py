@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from geopy.distance import geodesic
 
-from processing.system_settings import ViewMode, mapActivityTypes
+from processing.system_settings import ViewMode, map_activity_types
 from utils.logger import logger
 from utils.save_avg import safe_avg
 from utils.save_round import safe_round
@@ -26,7 +26,7 @@ class TcxSegmentParser:
 
         df["DistDiff"] = df["DistDiff"].replace(np.nan, 0)
 
-        type_group = mapActivityTypes(activity_type)
+        type_group = map_activity_types(activity_type)
         segment_length = TcxSegmentParser._get_segment_length(type_group)
         segments = []
         current_distance = 0.0

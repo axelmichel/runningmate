@@ -5,7 +5,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QMouseEvent, QPainter
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
 
-from processing.system_settings import ViewMode, getAllowedTypes
+from processing.system_settings import ViewMode, get_allowed_types
 from ui.themes import THEME
 from utils.translations import _
 
@@ -106,7 +106,7 @@ class TrainingEffectWidget(QWidget):
 
         :return: Baseline TE (float)
         """
-        allowed_types = getAllowedTypes(self.activity_type)
+        allowed_types = get_allowed_types(self.activity_type)
         placeholders = ", ".join("?" * len(allowed_types))  # Generate placeholders
 
         query = f"""

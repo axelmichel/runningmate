@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from processing.system_settings import SortOrder, ViewMode, mapActivityTypes
+from processing.system_settings import SortOrder, ViewMode, map_activity_types
 from ui.themes import THEME
 from utils.app_mode import is_dark_mode
 from utils.resource_path import resource_path
@@ -352,7 +352,7 @@ class TableBuilder:
                     ),
                     None,
                 )
-                activity_type = mapActivityTypes(correct_row_data["activity_type"])
+                activity_type = map_activity_types(correct_row_data["activity_type"])
                 if correct_row_data:
                     parent.open_detail(activity_id=row_id, activity_type=activity_type)
 
