@@ -1,3 +1,5 @@
+import os
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QComboBox,
@@ -9,12 +11,16 @@ from PyQt6.QtWidgets import (
     QStackedWidget,
     QVBoxLayout,
     QWidget,
+    QFrame,
 )
 
 from processing.system_settings import load_settings_config, save_settings
 from ui.dialog_action_bar import DialogActionBar
 from ui.side_bar import Sidebar
+from ui.themes import THEME
 from utils.app_mode import is_dark_mode
+from utils.folder_size import folder_size
+from utils.media_stats import media_stats
 from utils.translations import _
 
 
@@ -151,8 +157,42 @@ class SystemSettingsWindow(QDialog):
         layout = QVBoxLayout()
 
         self.set_page_title(layout, _("System Info"))
-        page.setLayout(layout)
+        value_color = THEME.ACCENT_COLOR if is_dark_mode() else THEME.MAIN_COLOR
+        infos = self.get_infos()
+        # loop through the activity data and display the data
+        for index, (key, value) in enumerate(infos.items()):
+            key_label = QLabel(_(key.title()))
+            font = key_label.font()
+            font.setPointSize(14)
+            key_label.setFont(font)
+            key_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
+            value_label = QLabel(str(value))
+            font = value_label.font()
+            font.setPointSize(14)
+            value_label.setFont(font)
+            value_label.setStyleSheet(f"color: {value_color};")
+            value_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+            row_layout = QHBoxLayout()
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.addWidget(key_label)
+            row_layout.addStretch()
+            row_layout.addWidget(value_label)
+
+            row_widget = QWidget()
+            row_widget.setLayout(row_layout)
+            layout.addWidget(row_widget)
+
+            # Add a fine separator line (except after the last row)
+            if index < len(infos.items()) - 1:
+                separator = QFrame()
+                separator.setFrameShape(QFrame.Shape.HLine)
+                separator.setFrameShadow(QFrame.Shadow.Sunken)
+                separator.setStyleSheet(f"color: {THEME.SYSTEM_BUTTON}")
+                layout.addWidget(separator)
+        layout.addStretch(1)
+        page.setLayout(layout)
         return page
 
     @staticmethod
@@ -198,6 +238,19 @@ class SystemSettingsWindow(QDialog):
             """
         )
         layout.addWidget(title_label)
+
+    @staticmethod
+    def get_infos():
+        folder = os.path.expanduser("~/RunningData/media")
+        media_count, media_size_mb = media_stats(folder)
+        total_size_mb = folder_size(os.path.expanduser("~/RunningData"))
+        info = {
+            "app_path": os.path.expanduser("~/RunningData"),
+            "media_count": media_count,
+            "media_size": round(media_size_mb, 2),
+            "total_size": round(total_size_mb, 2),
+        }
+        return info
 
     def _set_form_data(self):
         settings = load_settings_config()
