@@ -113,7 +113,7 @@ mod tests {
         let db = Db::open_in_memory().unwrap();
         let conn = db.conn().unwrap();
 
-        assert_eq!(current_version(&conn).unwrap(), 58);
+        assert_eq!(current_version(&conn).unwrap(), 59);
         assert_eq!(
             columns(&conn, "activities"),
             [

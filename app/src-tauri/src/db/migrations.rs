@@ -527,4 +527,12 @@ SET elevation_gain = (
     created INTEGER NOT NULL
 )"#],
     ),
+    // One-time corrections of stored values, by name, so each runs once.
+    (
+        59,
+        &[r#"CREATE TABLE IF NOT EXISTS data_fixes (
+    name TEXT PRIMARY KEY,
+    applied INTEGER NOT NULL
+)"#],
+    ),
 ];

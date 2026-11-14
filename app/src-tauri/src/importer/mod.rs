@@ -18,7 +18,7 @@ use ts_rs::TS;
 use self::{metrics::ActivityMetrics, segments::Segment, track::Track};
 use crate::{
     activity_type::ViewMode,
-    db::performances,
+    db::{Db, ai_summaries, performances, users},
     error::{AppError, AppResult},
 };
 
@@ -65,8 +65,16 @@ pub struct Processed {
     pub segments: Vec<Segment>,
 }
 
-/// Parses and computes everything for one TCX document.
-pub fn process(file_id: &str, xml: &str) -> AppResult<Processed> {
+/// Body weight (kg) from the profile, for the calorie and power estimates.
+pub fn body_weight(conn: &Connection) -> AppResult<f64> {
+    Ok(users::get(conn)?
+        .and_then(|u| u.weight)
+        .filter(|w| *w > 0.0)
+        .unwrap_or(track::DEFAULT_BODY_WEIGHT))
+}
+
+/// Parses and computes everything for one TCX document; `weight` is the body weight in kg.
+pub fn process(file_id: &str, xml: &str, weight: f64) -> AppResult<Processed> {
     let activity = tcx::parse(xml)?;
     if activity.points.len() < 2 {
         return Err(AppError::Invalid(format!(
@@ -80,7 +88,7 @@ pub fn process(file_id: &str, xml: &str) -> AppResult<Processed> {
             activity.sport
         )));
     }
-    let track = Track::new(activity.points, view);
+    let track = Track::new(activity.points, view, weight);
     Ok(Processed {
         file_id: file_id.to_string(),
         sport: activity.sport,
@@ -126,7 +134,7 @@ pub fn import_file(
         return Ok((ImportOutcome::Duplicate { activity_id }, None));
     }
     let xml = std::fs::read_to_string(path)?;
-    let processed = process(&file_id, &xml)?;
+    let processed = process(&file_id, &xml, body_weight(conn)?)?;
     let day = processed
         .metrics
         .start
@@ -195,7 +203,7 @@ pub fn reimport(
         AppError::NotFound(format!("archived TCX file for activity {activity_id}"))
     })?;
     let xml = archive::read(&archive::archive_path(imports_dir, &file_id))?;
-    let processed = process(&file_id, &xml)?;
+    let processed = process(&file_id, &xml, body_weight(conn)?)?;
     store(conn, &processed, Some(activity_id), language)?;
     Ok(weather_point(activity_id, &processed.segments))
 }
@@ -234,6 +242,151 @@ fn weather_point(activity_id: i64, segments: &[Segment]) -> Option<WeatherPoint>
         longitude: middle.longitude,
         date: middle.time_start.format("%Y-%m-%d").to_string(),
     })
+}
+
+/// Recomputes calories and power (activity, per-type row and segments) of every activity with
+/// an archived TCX, leaving everything else as it is, so edits survive. Activities whose file
+/// is missing or no longer parses are skipped. Returns how many were updated.
+///
+/// The database is only locked per activity, so the app stays usable while this runs.
+pub fn recompute_energy(db: &Db, imports_dir: &Path) -> AppResult<usize> {
+    let (weight, activities) = {
+        let conn = db.conn()?;
+        let mut stmt =
+            conn.prepare("SELECT id, file_id FROM activities WHERE file_id IS NOT NULL")?;
+        let activities: Vec<(i64, String)> = stmt
+            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+            .collect::<Result<_, _>>()?;
+        (body_weight(&conn)?, activities)
+    };
+    let mut updated = 0;
+    for (activity_id, file_id) in activities {
+        let path = archive::archive_path(imports_dir, &file_id);
+        let Ok(processed) = archive::read(&path).and_then(|xml| process(&file_id, &xml, weight))
+        else {
+            continue;
+        };
+        let table = processed
+            .view
+            .table()
+            .expect("process() rejects activities without a view");
+        let mut conn = db.conn()?;
+        let tx = conn.transaction()?;
+        tx.execute(
+            "UPDATE activities SET calories = ?1 WHERE id = ?2",
+            params![processed.metrics.calories, activity_id],
+        )?;
+        tx.execute(
+            &format!("UPDATE {table} SET avg_power = ?1 WHERE activity_id = ?2"),
+            params![processed.metrics.avg_power, activity_id],
+        )?;
+        // `activity_details.activity_id` is a TEXT column in the Python schema.
+        for (index, segment) in processed.segments.iter().enumerate() {
+            tx.execute(
+                "UPDATE activity_details SET seg_avg_power = ?1
+                 WHERE activity_id = ?2 AND segment_id = ?3",
+                params![segment.avg_power, activity_id.to_string(), index as i64],
+            )?;
+        }
+        tx.commit()?;
+        updated += 1;
+    }
+    Ok(updated)
+}
+
+/// Re-imports every activity whose archived TCX has a clock jump (see `tcx::parse`), which put
+/// it on the wrong day. Activities edited since are left alone, their date may be corrected by
+/// hand. A title still generated from the wrong start is generated again. Returns where to
+/// look the weather up again.
+pub fn fix_clock_jumps(
+    db: &Db,
+    imports_dir: &Path,
+    language: &str,
+) -> AppResult<Vec<WeatherPoint>> {
+    let activities: Vec<(i64, String, i64, String, String)> = {
+        let conn = db.conn()?;
+        let mut stmt = conn.prepare(
+            "SELECT id, file_id, date, title, activity_type FROM activities
+             WHERE file_id IS NOT NULL AND edited = 0",
+        )?;
+        stmt.query_map([], |row| {
+            Ok((
+                row.get(0)?,
+                row.get(1)?,
+                row.get(2)?,
+                row.get(3)?,
+                row.get(4)?,
+            ))
+        })?
+        .collect::<Result<_, _>>()?
+    };
+    let mut weather = Vec::new();
+    for (activity_id, file_id, date, title, activity_type) in activities {
+        let path = archive::archive_path(imports_dir, &file_id);
+        let Ok(activity) = archive::read(&path).and_then(|xml| tcx::parse(&xml)) else {
+            continue;
+        };
+        if activity.clock_jumps == 0 {
+            continue;
+        }
+        let view = ViewMode::from_activity_type(&activity_type);
+        let old_title = chrono::DateTime::from_timestamp(date, 0)
+            .map(|start| metrics::activity_title(view, start, language));
+        let mut conn = db.conn()?;
+        weather.extend(reimport(&mut conn, activity_id, imports_dir, language)?);
+        if old_title.as_deref() == Some(title.as_str()) {
+            let start: i64 = conn.query_row(
+                "SELECT date FROM activities WHERE id = ?1",
+                [activity_id],
+                |row| row.get(0),
+            )?;
+            if let Some(start) = chrono::DateTime::from_timestamp(start, 0) {
+                conn.execute(
+                    "UPDATE activities SET title = ?1 WHERE id = ?2",
+                    params![metrics::activity_title(view, start, language), activity_id],
+                )?;
+            }
+        }
+        // The old summary was written for the wrong day.
+        ai_summaries::delete(&conn, activity_id)?;
+    }
+    Ok(weather)
+}
+
+fn data_fix_applied(db: &Db, name: &str) -> AppResult<bool> {
+    Ok(db.conn()?.query_row(
+        "SELECT EXISTS (SELECT 1 FROM data_fixes WHERE name = ?1)",
+        [name],
+        |row| row.get(0),
+    )?)
+}
+
+fn mark_data_fix(db: &Db, name: &str) -> AppResult<()> {
+    db.conn()?.execute(
+        "INSERT OR IGNORE INTO data_fixes (name, applied) VALUES (?1, ?2)",
+        params![name, chrono::Utc::now().timestamp()],
+    )?;
+    Ok(())
+}
+
+/// Corrects what earlier versions stored, each fix once per database: activities dated by a
+/// clock jump ([`fix_clock_jumps`]), then calories and power from the ACSM estimates
+/// ([`recompute_energy`]). Returns where to look the weather up again.
+pub fn apply_data_fixes(
+    db: &Db,
+    imports_dir: &Path,
+    language: &str,
+) -> AppResult<Vec<WeatherPoint>> {
+    let mut weather = Vec::new();
+    if !data_fix_applied(db, "clock-jumps")? {
+        weather = fix_clock_jumps(db, imports_dir, language)?;
+        mark_data_fix(db, "clock-jumps")?;
+    }
+    if !data_fix_applied(db, "energy-acsm")? {
+        recompute_energy(db, imports_dir)?;
+        mark_data_fix(db, "energy-acsm")?;
+    }
+    Ok(weather)
 }
 
 /// Writes the activity, its per-type row, segments and best segments in one transaction.

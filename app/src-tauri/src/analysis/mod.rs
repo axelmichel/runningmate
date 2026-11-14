@@ -17,7 +17,7 @@ use rusqlite::{Connection, OptionalExtension};
 use crate::{
     activity_type::ViewMode,
     error::{AppError, AppResult},
-    importer::{archive, tcx, track::Track},
+    importer::{self, archive, tcx, track::Track},
 };
 
 use chrono::{DateTime, NaiveDateTime};
@@ -69,7 +69,8 @@ pub fn load_track(conn: &Connection, id: i64, imports_dir: &Path) -> AppResult<O
         return Ok(None);
     }
     let activity = tcx::parse(&archive::read(&path)?)?;
-    Ok((activity.points.len() >= 2).then(|| Track::new(activity.points, view)))
+    let weight = importer::body_weight(conn)?;
+    Ok((activity.points.len() >= 2).then(|| Track::new(activity.points, view, weight)))
 }
 
 const DAY_SECONDS: i64 = 24 * 3600;

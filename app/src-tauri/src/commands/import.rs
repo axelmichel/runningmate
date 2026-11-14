@@ -156,7 +156,7 @@ pub struct ImportSummary {
 }
 
 /// Looks up and stores the weather for an imported activity without blocking the import.
-fn fetch_weather_later(app: &AppHandle, point: WeatherPoint) {
+pub(crate) fn fetch_weather_later(app: &AppHandle, point: WeatherPoint) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
         let Some(found) = open_meteo::fetch(point.latitude, point.longitude, &point.date).await
@@ -168,6 +168,21 @@ fn fetch_weather_later(app: &AppHandle, point: WeatherPoint) {
         }
         let _ = app.emit("activity://updated", point.activity_id);
     });
+}
+
+/// Applies the one-time data fixes and looks the weather up again where a date changed.
+pub(crate) fn apply_data_fixes(app: &AppHandle) {
+    let language = settings::load().map(|s| s.language).unwrap_or_default();
+    let result = paths::imports_dir()
+        .and_then(|dir| importer::apply_data_fixes(&app.state::<Db>(), &dir, &language));
+    match result {
+        Ok(weather) => {
+            for point in weather {
+                fetch_weather_later(app, point);
+            }
+        }
+        Err(e) => eprintln!("correcting stored activities failed: {e}"),
+    }
 }
 
 /// Imports one file and starts its weather lookup; failures become a `Failed` outcome.

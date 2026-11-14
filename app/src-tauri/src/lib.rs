@@ -36,6 +36,10 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             app.manage(open_database()?);
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn_blocking(move || {
+                commands::import::apply_data_fixes(&handle);
+            });
             app.manage(commands::garmin::PendingGarminSignIn::default());
             app.manage(commands::import::ImportCancel::default());
             app.manage(ai::AiQueue::default());
