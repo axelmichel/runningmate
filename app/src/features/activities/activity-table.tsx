@@ -7,6 +7,7 @@ import {
   Eye,
   RotateCcw,
   Trash2,
+  Upload,
 } from "lucide-react";
 import { useState, type CSSProperties } from "react";
 
@@ -99,6 +100,7 @@ type ActivityTableProps = {
   /** Recompute from the archived TCX file. */
   onReimport: (row: ActivityRow) => void;
   onOpenDetails: (row: ActivityRow) => void;
+  onUploadGarmin: (row: ActivityRow) => void;
 };
 
 export function ActivityTable({
@@ -116,6 +118,7 @@ export function ActivityTable({
   onDelete,
   onReimport,
   onOpenDetails,
+  onUploadGarmin,
 }: ActivityTableProps) {
   const [pendingDelete, setPendingDelete] = useState<ActivityRow | null>(null);
   const columns = columnsFor(view);
@@ -269,6 +272,10 @@ export function ActivityTable({
                       <DropdownMenuItem onSelect={() => onReimport(row)}>
                         <RotateCcw />
                         {t("Re-import from TCX")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => onUploadGarmin(row)}>
+                        <Upload />
+                        {t("Upload to Garmin Connect")}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem

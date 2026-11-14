@@ -24,8 +24,7 @@ struct Labels {
     show_all: &'static str,
     quit: &'static str,
     file: &'static str,
-    import: &'static str,
-    folder_sync: &'static str,
+    sync: &'static str,
     close_window: &'static str,
     edit: &'static str,
     undo: &'static str,
@@ -54,8 +53,7 @@ const EN: Labels = Labels {
     show_all: "Show All",
     quit: "Quit RunningMate",
     file: "File",
-    import: "Import TCX…",
-    folder_sync: "Sync Folder…",
+    sync: "Sync…",
     close_window: "Close Window",
     edit: "Edit",
     undo: "Undo",
@@ -84,8 +82,7 @@ const DE: Labels = Labels {
     show_all: "Alle einblenden",
     quit: "RunningMate beenden",
     file: "Ablage",
-    import: "TCX importieren…",
-    folder_sync: "Ordner synchronisieren…",
+    sync: "Synchronisieren…",
     close_window: "Fenster schließen",
     edit: "Bearbeiten",
     undo: "Widerrufen",
@@ -117,15 +114,17 @@ fn build<R: Runtime, M: Manager<R>>(manager: &M, language: &str) -> tauri::Resul
             None => builder.build(manager),
         }
     };
+    let about = item("about", l.about, None)?;
     let settings = item("settings", l.settings, Some("CmdOrCtrl+,"))?;
     let user = item("user", l.user, None)?;
-    let import = item("import", l.import, Some("CmdOrCtrl+O"))?;
-    let folder_sync = item("folder-sync", l.folder_sync, None)?;
+    // One entry for every way of getting activities in or out (see the Connectors dialog).
+    let sync = item("sync", l.sync, Some("CmdOrCtrl+O"))?;
     let search = item("search", l.search, Some("CmdOrCtrl+F"))?;
     let help = item("help", l.help_item, Some("F1"))?;
 
     let app_menu = SubmenuBuilder::new(manager, "RunningMate")
-        .about_with_text(l.about, None)
+        // Opens the app's own About dialog with the RunningMate logo.
+        .item(&about)
         .separator()
         .item(&settings)
         .item(&user)
@@ -139,8 +138,7 @@ fn build<R: Runtime, M: Manager<R>>(manager: &M, language: &str) -> tauri::Resul
         .quit_with_text(l.quit)
         .build()?;
     let file = SubmenuBuilder::new(manager, l.file)
-        .item(&import)
-        .item(&folder_sync)
+        .item(&sync)
         .separator()
         .close_window_with_text(l.close_window)
         .build()?;
@@ -188,7 +186,7 @@ fn handle<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
         "help" => {
             let _ = app.opener().open_url(HELP_URL, None::<&str>);
         }
-        id @ ("import" | "folder-sync" | "search" | "settings" | "user") => {
+        id @ ("about" | "sync" | "search" | "settings" | "user") => {
             let _ = app.emit(MENU_EVENT, id);
         }
         _ => {}

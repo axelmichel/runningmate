@@ -675,6 +675,7 @@ pub fn delete(conn: &mut Connection, id: i64) -> AppResult<()> {
         "weather",
         "best_performances",
         "activity_charts",
+        "connector_links",
     ] {
         tx.execute(&format!("DELETE FROM {table} WHERE activity_id = ?1"), [id])?;
     }

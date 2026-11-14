@@ -52,33 +52,44 @@ fn fetch_weather_later(app: &AppHandle, point: WeatherPoint) {
     });
 }
 
-/// Imports files one by one; a failing file is reported and the rest continue.
-fn import_paths(app: &AppHandle, files: &[PathBuf]) -> AppResult<ImportSummary> {
+/// Imports one file and starts its weather lookup; failures become a `Failed` outcome.
+pub(crate) fn import_one(app: &AppHandle, file: &Path) -> AppResult<ImportOutcome> {
     let imports_dir = paths::imports_dir()?;
     let language = settings::load().map(|s| s.language).unwrap_or_default();
+    let result = {
+        let db = app.state::<Db>();
+        let mut conn = db.conn()?;
+        importer::import_file(&mut conn, file, &imports_dir, &language)
+    };
+    Ok(match result {
+        Ok((outcome, weather_point)) => {
+            if let Some(point) = weather_point {
+                fetch_weather_later(app, point);
+            }
+            outcome
+        }
+        Err(e) => ImportOutcome::Failed {
+            error: e.to_string(),
+        },
+    })
+}
+
+impl ImportSummary {
+    pub(crate) fn count(&mut self, outcome: &ImportOutcome) {
+        match outcome {
+            ImportOutcome::Imported { .. } => self.imported += 1,
+            ImportOutcome::Duplicate { .. } => self.duplicates += 1,
+            ImportOutcome::Failed { .. } => self.failed += 1,
+        }
+    }
+}
+
+/// Imports files one by one; a failing file is reported and the rest continue.
+fn import_paths(app: &AppHandle, files: &[PathBuf]) -> AppResult<ImportSummary> {
     let mut summary = ImportSummary::default();
     for (index, file) in files.iter().enumerate() {
-        let result = {
-            let db = app.state::<Db>();
-            let mut conn = db.conn()?;
-            importer::import_file(&mut conn, file, &imports_dir, &language)
-        };
-        let outcome = match result {
-            Ok((outcome, weather_point)) => {
-                if let Some(point) = weather_point {
-                    fetch_weather_later(app, point);
-                }
-                outcome
-            }
-            Err(e) => ImportOutcome::Failed {
-                error: e.to_string(),
-            },
-        };
-        match outcome {
-            ImportOutcome::Imported { .. } => summary.imported += 1,
-            ImportOutcome::Duplicate { .. } => summary.duplicates += 1,
-            ImportOutcome::Failed { .. } => summary.failed += 1,
-        }
+        let outcome = import_one(app, file)?;
+        summary.count(&outcome);
         let _ = app.emit(
             PROGRESS_EVENT,
             ImportProgress {
@@ -120,6 +131,23 @@ pub fn reimport_activity(app: AppHandle, db: State<'_, Db>, id: i64) -> AppResul
 #[tauri::command(async)]
 pub fn activity_route(db: State<'_, Db>, id: i64) -> AppResult<Option<RouteOutline>> {
     importer::route_outline(&*db.conn()?, id, &paths::imports_dir()?)
+}
+
+/// Saves the route as a PNG or SVG (chosen by the file extension) for sharing or photo overlays.
+#[tauri::command(async)]
+pub fn export_route_image(db: State<'_, Db>, id: i64, path: String) -> AppResult<()> {
+    let outline = importer::route_outline(&*db.conn()?, id, &paths::imports_dir()?)?
+        .ok_or_else(|| AppError::NotFound(format!("archived TCX file for activity {id}")))?;
+    let path = PathBuf::from(path);
+    let is_svg = path
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("svg"));
+    if is_svg {
+        std::fs::write(&path, importer::route_image::svg(&outline))?;
+    } else {
+        std::fs::write(&path, importer::route_image::png(&outline)?)?;
+    }
+    Ok(())
 }
 
 #[tauri::command(async)]

@@ -1,17 +1,16 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { listen } from "@tauri-apps/api/event";
-import { open as pickFiles } from "@tauri-apps/plugin-dialog";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { TitleBar } from "@/components/title-bar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { AboutDialog } from "@/features/about-dialog";
 import { ActivitiesPage } from "@/features/activities/activities-page";
 import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
-import { FolderSyncDialog } from "@/features/import/folder-sync-dialog";
-import { ImportDialog } from "@/features/import/import-dialog";
-import { useImportRun } from "@/features/import/use-import-run";
+import { lastConnector, type Connector } from "@/features/connectors/connector";
+import { ConnectorsDialog } from "@/features/connectors/connectors-dialog";
 import { SystemSettingsDialog } from "@/features/settings/system-settings-dialog";
 import { UserSettingsDialog } from "@/features/settings/user-settings-dialog";
 import { useTheme, type Theme } from "@/hooks/use-theme";
@@ -27,14 +26,13 @@ function App() {
   const [detailsOpen, setDetailsOpen] = useState(
     () => localStorage.getItem(DETAILS_STORAGE_KEY) !== "closed",
   );
-  const [importOpen, setImportOpen] = useState(false);
-  const [folderSyncOpen, setFolderSyncOpen] = useState(false);
+  const [connector, setConnector] = useState<Connector | null>(null);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [userSettingsOpen, setUserSettingsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { setTheme } = useTheme();
   // Re-renders the whole app when the language changes (see src/i18n).
   useTranslation();
-  const importRun = useImportRun();
   const { data: info } = useQuery({ queryKey: ["appInfo"], queryFn: api.appInfo });
 
   const toggleDetails = () =>
@@ -54,22 +52,11 @@ function App() {
       .catch(() => {});
   }, [setTheme]);
 
-  const { start: startImport } = importRun;
-  const importTcx = useCallback(async () => {
-    const selected = await pickFiles({
-      multiple: true,
-      filters: [{ name: "TCX files", extensions: ["tcx"] }],
-    });
-    if (!selected || selected.length === 0) return;
-    setImportOpen(true);
-    await startImport(() => api.importFiles(selected));
-  }, [startImport]);
-
   // Native menu items (src-tauri/src/menu.rs) arrive as `menu` events.
   useEffect(() => {
     const unlisten = listen<string>("menu", ({ payload }) => {
-      if (payload === "import") importTcx();
-      if (payload === "folder-sync") setFolderSyncOpen(true);
+      if (payload === "sync") setConnector(lastConnector());
+      if (payload === "about") setAboutOpen(true);
       if (payload === "search") setSearchOpen((open) => !open);
       if (payload === "settings") setSettingsOpen(true);
       if (payload === "user") setUserSettingsOpen(true);
@@ -77,7 +64,7 @@ function App() {
     return () => {
       unlisten.then((stop) => stop());
     };
-  }, [importTcx]);
+  }, []);
 
   // Weather is fetched in the background after an import.
   useEffect(() => {
@@ -99,8 +86,7 @@ function App() {
         onViewModeChange={setViewMode}
         searchOpen={searchOpen}
         onSearchToggle={() => setSearchOpen((open) => !open)}
-        onImport={importTcx}
-        onFolderSync={() => setFolderSyncOpen(true)}
+        onSync={() => setConnector(lastConnector())}
         onUserSettings={() => setUserSettingsOpen(true)}
         onSettings={() => setSettingsOpen(true)}
       />
@@ -113,15 +99,8 @@ function App() {
           dataDir={info?.dataDir}
         />
       </SidebarInset>
-      <ImportDialog
-        open={importOpen}
-        onOpenChange={(open) => {
-          setImportOpen(open);
-          if (!open) importRun.reset();
-        }}
-        run={importRun.run}
-      />
-      <FolderSyncDialog open={folderSyncOpen} onOpenChange={setFolderSyncOpen} />
+      <ConnectorsDialog connector={connector} onConnectorChange={setConnector} />
+      <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
       <UserSettingsDialog open={userSettingsOpen} onOpenChange={setUserSettingsOpen} />
       <SystemSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </SidebarProvider>

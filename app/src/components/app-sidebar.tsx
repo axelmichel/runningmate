@@ -1,4 +1,4 @@
-import { FolderSync, Import, Search, Settings, User } from "lucide-react";
+import { RefreshCw, Search, Settings, User } from "lucide-react";
 
 import {
   Sidebar,
@@ -19,8 +19,7 @@ type AppSidebarProps = {
   onViewModeChange: (mode: ViewMode) => void;
   searchOpen: boolean;
   onSearchToggle: () => void;
-  onImport: () => void;
-  onFolderSync: () => void;
+  onSync: () => void;
   onUserSettings: () => void;
   onSettings: () => void;
 };
@@ -30,8 +29,7 @@ export function AppSidebar({
   onViewModeChange,
   searchOpen,
   onSearchToggle,
-  onImport,
-  onFolderSync,
+  onSync,
   onUserSettings,
   onSettings,
 }: AppSidebarProps) {
@@ -68,15 +66,9 @@ export function AppSidebar({
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip={`${t("Import TCX")} (⌘O)`} onClick={onImport}>
-              <Import />
-              <span>{t("Import")}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip={t("Sync folder")} onClick={onFolderSync}>
-              <FolderSync />
-              <span>{t("Sync folder")}</span>
+            <SidebarMenuButton tooltip={`${t("Sync")} (⌘O)`} onClick={onSync}>
+              <RefreshCw />
+              <span>{t("Sync")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>

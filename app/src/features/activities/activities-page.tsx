@@ -123,6 +123,22 @@ export function ActivitiesPage({
     onError: (error) => toast.error(t("Could not re-import: {{error}}", { error: String(error) })),
   });
 
+  const uploadGarmin = useMutation({
+    mutationFn: (id: number) => api.garminUpload([id]),
+    onSuccess: (summary, id) => {
+      if (summary.imported > 0) toast.success(t("Uploaded to Garmin Connect"));
+      else if (summary.duplicates > 0) toast.info(t("Garmin Connect already has this activity"));
+      else toast.error(t("The upload to Garmin Connect failed"));
+      queryClient.invalidateQueries({ queryKey: ["links", id] });
+    },
+    onError: (error) =>
+      toast.error(
+        String(error).includes("garmin-sign-in-required")
+          ? t("Sign in to Garmin Connect under Connectors first.")
+          : t("The upload to Garmin Connect failed"),
+      ),
+  });
+
   // Previous/next in the detail window follow the table order across pages: within the page
   // the neighbour is at hand, at a page edge it's fetched and the table turns the page too.
   const rows = page.data?.rows ?? [];
@@ -201,6 +217,7 @@ export function ActivitiesPage({
           onDelete={(row) => remove.mutate(row.id)}
           onReimport={(row) => reimport.mutate(row.id)}
           onOpenDetails={(row) => showActivity(row.id)}
+          onUploadGarmin={(row) => uploadGarmin.mutate(row.id)}
         />
       </div>
       {/* Slides in and out like the left sidebar; the inner width stays fixed while animating. */}

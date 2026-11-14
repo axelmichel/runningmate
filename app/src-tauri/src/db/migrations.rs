@@ -502,4 +502,17 @@ SET elevation_gain = (
     result TEXT NOT NULL
 )"#],
     ),
+    // Rust-only migrations from here on. They only add to the schema, so the Python app
+    // (which stops at 55) can still open the database.
+    (
+        56,
+        &[r#"CREATE TABLE IF NOT EXISTS connector_links (
+    activity_id INTEGER NOT NULL,
+    connector TEXT NOT NULL,
+    remote_id TEXT,
+    direction TEXT NOT NULL,
+    linked_at INTEGER NOT NULL,
+    PRIMARY KEY (activity_id, connector)
+)"#],
+    ),
 ];

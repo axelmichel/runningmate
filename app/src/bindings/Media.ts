@@ -3,6 +3,14 @@ import type { MediaType } from "./MediaType";
 
 export type Media = { id: number, mediaType: MediaType, 
 /**
- * Absolute path of the file in `~/RunningData/media`.
+ * Absolute path: in `~/RunningData/media` for copies, anywhere for linked files.
  */
-filePath: string, };
+filePath: string, 
+/**
+ * Refers to the original file instead of a copy in the media folder.
+ */
+linked: boolean, 
+/**
+ * The file no longer exists (e.g. a linked original that was moved).
+ */
+missing: boolean, };

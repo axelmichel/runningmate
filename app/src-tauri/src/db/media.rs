@@ -1,5 +1,7 @@
 //! Photos and videos attached to an activity (`media` table).
 
+use std::path::Path;
+
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -39,11 +41,27 @@ pub struct Media {
     #[ts(type = "number")]
     pub id: i64,
     pub media_type: MediaType,
-    /// Absolute path of the file in `~/RunningData/media`.
+    /// Absolute path: in `~/RunningData/media` for copies, anywhere for linked files.
     pub file_path: String,
+    /// Refers to the original file instead of a copy in the media folder.
+    pub linked: bool,
+    /// The file no longer exists (e.g. a linked original that was moved).
+    pub missing: bool,
 }
 
-pub fn list(conn: &Connection, activity_id: i64) -> AppResult<Vec<Media>> {
+impl Media {
+    /// Fills `linked` and `missing` from the file system.
+    pub fn with_file_state(mut self, media_dir: &Path) -> Self {
+        let path = Path::new(&self.file_path);
+        self.missing = !path.exists();
+        let dir = std::fs::canonicalize(media_dir).unwrap_or_else(|_| media_dir.to_path_buf());
+        let file = std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+        self.linked = !file.starts_with(dir);
+        self
+    }
+}
+
+pub fn list(conn: &Connection, activity_id: i64, media_dir: &Path) -> AppResult<Vec<Media>> {
     let mut stmt = conn.prepare(
         "SELECT id, media_type, file_path FROM media WHERE activity_id = ?1 ORDER BY id",
     )?;
@@ -57,7 +75,10 @@ pub fn list(conn: &Connection, activity_id: i64) -> AppResult<Vec<Media>> {
                 MediaType::Image
             },
             file_path: row.get("file_path")?,
-        })
+            linked: false,
+            missing: false,
+        }
+        .with_file_state(media_dir))
     })?;
     Ok(rows.collect::<Result<_, _>>()?)
 }
@@ -98,14 +119,21 @@ mod tests {
     fn inserts_lists_and_deletes() {
         let db = Db::open_in_memory().unwrap();
         let conn = db.conn().unwrap();
-        let id = insert(&conn, 5, MediaType::Video, "/m/clip.mp4").unwrap();
-        insert(&conn, 5, MediaType::Image, "/m/a.jpg").unwrap();
-        let media = list(&conn, 5).unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let media_dir = dir.path().join("media");
+        std::fs::create_dir_all(&media_dir).unwrap();
+        let copy = media_dir.join("clip.mp4");
+        std::fs::write(&copy, b"").unwrap();
+        let id = insert(&conn, 5, MediaType::Video, copy.to_str().unwrap()).unwrap();
+        insert(&conn, 5, MediaType::Image, "/elsewhere/a.jpg").unwrap();
+        let media = list(&conn, 5, &media_dir).unwrap();
         assert_eq!(media.len(), 2);
         assert_eq!(media[0].media_type, MediaType::Video);
+        assert!(!media[0].linked && !media[0].missing);
+        assert!(media[1].linked && media[1].missing);
 
-        assert_eq!(delete(&conn, id).unwrap(), "/m/clip.mp4");
-        assert_eq!(list(&conn, 5).unwrap().len(), 1);
+        assert_eq!(delete(&conn, id).unwrap(), copy.to_str().unwrap());
+        assert_eq!(list(&conn, 5, &media_dir).unwrap().len(), 1);
         assert!(matches!(delete(&conn, id), Err(AppError::NotFound(_))));
     }
 

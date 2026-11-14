@@ -1,6 +1,10 @@
 {
+  "Add {{count}} file_one": "Add {{count}} file",
+  "Add {{count}} file_other": "Add {{count}} files",
   "Sync {{count}} file_one": "Sync {{count}} file",
   "Sync {{count}} file_other": "Sync {{count}} files",
+  "Upload {{count}} activity_one": "Upload {{count}} activity",
+  "Upload {{count}} activity_other": "Upload {{count}} activities",
   "{{count}} day_one": "{{count}} day",
   "{{count}} day_other": "{{count}} days",
   "{{count}} file added_one": "{{count}} file added",

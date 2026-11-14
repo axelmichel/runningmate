@@ -4,6 +4,7 @@
 pub mod archive;
 pub mod metrics;
 pub mod outline;
+pub mod route_image;
 pub mod segments;
 pub mod tcx;
 pub mod track;

@@ -22,6 +22,9 @@ pub enum AppError {
     NotFound(String),
     #[error("{0}")]
     Invalid(String),
+    /// Shown by the frontend as a prompt to sign in to Garmin Connect again.
+    #[error("garmin-sign-in-required")]
+    GarminSignInRequired,
 }
 
 // Commands send errors to the frontend as plain strings.

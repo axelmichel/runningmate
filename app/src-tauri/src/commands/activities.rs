@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use tauri::State;
+use tauri::{Manager, State};
 
 use crate::{
     activity_type::ViewMode,
@@ -10,12 +10,12 @@ use crate::{
             self, ActivityDetail, ActivityFilter, ActivityPage, ActivityQuery, ActivitySummary,
             ActivityUpdate, DayTotal,
         },
-        media::{self, Media, MediaType},
+        media::{self, Media},
         performances::{self, BestPerformance},
         weather::{self, Weather},
     },
     error::{AppError, AppResult},
-    paths,
+    media_files, paths, photos_picker,
 };
 
 #[tauri::command(async)]
@@ -85,58 +85,78 @@ pub fn activity_type_details(view_mode: ViewMode) -> Vec<&'static str> {
     view_mode.type_details().to_vec()
 }
 
-#[tauri::command(async)]
-pub fn list_media(db: State<'_, Db>, activity_id: i64) -> AppResult<Vec<Media>> {
-    media::list(&*db.conn()?, activity_id)
-}
-
-/// Copies a photo or video into the media folder and attaches it to the activity. The Python
-/// app moved the original file instead.
-#[tauri::command(async)]
-pub fn add_media(db: State<'_, Db>, activity_id: i64, source_path: String) -> AppResult<Media> {
-    let source = Path::new(&source_path);
-    let extension = source
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or_default();
-    let media_type = MediaType::from_extension(extension)
-        .ok_or_else(|| AppError::Invalid(format!("unsupported media file: {source_path}")))?;
-    let file_name = source
-        .file_name()
-        .and_then(|n| n.to_str())
-        .ok_or_else(|| AppError::Invalid(format!("invalid file name: {source_path}")))?;
-
-    let media_dir = paths::media_dir()?;
-    fs::create_dir_all(&media_dir)?;
-    let target = unique_path(&media_dir, file_name);
-    fs::copy(source, &target)?;
-
-    let conn = db.conn()?;
-    let file_path = target.to_string_lossy().into_owned();
-    let id = media::insert(&conn, activity_id, media_type, &file_path)?;
-    Ok(Media {
-        id,
-        media_type,
-        file_path,
-    })
-}
-
-/// `dir/name`, or `dir/stem-N.ext` if that file already exists.
-fn unique_path(dir: &Path, name: &str) -> std::path::PathBuf {
-    let candidate = dir.join(name);
-    if !candidate.exists() {
-        return candidate;
+/// Lets the webview load linked files, which live outside the data folder the asset protocol
+/// is scoped to. Only the individual files are allowed, not their folders.
+fn allow_linked(app: &tauri::AppHandle, media: &[Media]) {
+    for item in media.iter().filter(|m| m.linked && !m.missing) {
+        let _ = app.asset_protocol_scope().allow_file(&item.file_path);
     }
-    let path = Path::new(name);
-    let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("media");
-    let extension = path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or_default();
-    (1..)
-        .map(|n| dir.join(format!("{stem}-{n}.{extension}")))
-        .find(|p| !p.exists())
-        .expect("an unused file name exists")
+}
+
+#[tauri::command(async)]
+pub fn list_media(
+    app: tauri::AppHandle,
+    db: State<'_, Db>,
+    activity_id: i64,
+) -> AppResult<Vec<Media>> {
+    let media = media::list(&*db.conn()?, activity_id, &paths::media_dir()?)?;
+    allow_linked(&app, &media);
+    Ok(media)
+}
+
+/// Adds a photo or video to an activity: copied into the media folder, or with `link` the
+/// original file is referenced (temporary and Photos-library files are always copied).
+#[tauri::command(async)]
+pub fn add_media(
+    app: tauri::AppHandle,
+    db: State<'_, Db>,
+    activity_id: i64,
+    source_path: String,
+    link: bool,
+) -> AppResult<Media> {
+    let media = media_files::add(
+        &*db.conn()?,
+        &paths::media_dir()?,
+        activity_id,
+        Path::new(&source_path),
+        link,
+    )?;
+    allow_linked(&app, std::slice::from_ref(&media));
+    Ok(media)
+}
+
+/// Shows Apple's photo picker and copies the picked photos and videos into the media folder.
+/// Returns what was added (nothing when the picker was cancelled).
+#[tauri::command]
+pub async fn add_media_from_photos(
+    window: tauri::WebviewWindow,
+    activity_id: i64,
+) -> AppResult<Vec<Media>> {
+    let staging = std::env::temp_dir()
+        .join("runningmate-photos")
+        .join(chrono::Utc::now().timestamp_millis().to_string());
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    photos_picker::present(
+        &window,
+        staging.clone(),
+        Box::new(move |files| {
+            let _ = sender.send(files);
+        }),
+    )?;
+    let files = receiver
+        .await
+        .map_err(|_| AppError::Invalid("the photo picker closed unexpectedly".into()))?;
+    let media_dir = paths::media_dir()?;
+    let added = {
+        let db = window.state::<Db>();
+        let conn = db.conn()?;
+        files
+            .iter()
+            .map(|file| media_files::add(&conn, &media_dir, activity_id, file, false))
+            .collect::<AppResult<Vec<_>>>()
+    };
+    let _ = fs::remove_dir_all(&staging);
+    added
 }
 
 /// Removes the media row and its file. Files outside the media folder are left alone.
@@ -171,18 +191,4 @@ pub fn top_best_performances(
     view_mode: ViewMode,
 ) -> AppResult<Vec<BestPerformance>> {
     performances::top(&*db.conn()?, view_mode)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::unique_path;
-
-    #[test]
-    fn unique_path_avoids_existing_files() {
-        let dir = tempfile::tempdir().unwrap();
-        assert_eq!(unique_path(dir.path(), "a.jpg"), dir.path().join("a.jpg"));
-        std::fs::write(dir.path().join("a.jpg"), b"").unwrap();
-        std::fs::write(dir.path().join("a-1.jpg"), b"").unwrap();
-        assert_eq!(unique_path(dir.path(), "a.jpg"), dir.path().join("a-2.jpg"));
-    }
 }

@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { HardDrive, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
+
+import { mediaMode, setMediaMode, type MediaMode } from "@/features/detail/media-mode";
 import { toast } from "sonner";
 
 import type { SystemSettings } from "@/bindings/SystemSettings";
@@ -47,6 +49,43 @@ const THEMES: [Theme, string][] = [
   ["light", tk("Light")],
   ["dark", tk("Dark")],
 ];
+
+const MEDIA_MODES: [MediaMode, string][] = [
+  ["ask", tk("Ask each time")],
+  ["copy", tk("Always copy into RunningMate")],
+  ["link", tk("Always link to the originals")],
+];
+
+/** How photos and videos from disk are added (stored locally, not in settings.json). */
+function MediaModeSetting() {
+  const [mode, setMode] = useState<MediaMode>(mediaMode);
+  return (
+    <div className="grid gap-2">
+      <Label>{t("Adding photos and videos from files")}</Label>
+      <Select
+        value={mode}
+        onValueChange={(value) => {
+          setMediaMode(value as MediaMode);
+          setMode(value as MediaMode);
+        }}
+      >
+        <SelectTrigger className="w-72">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {MEDIA_MODES.map(([value, label]) => (
+            <SelectItem key={value} value={value}>
+              {t(label)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <p className="text-xs text-muted-foreground">
+        {t("Photos from the Photos library are always copied.")}
+      </p>
+    </div>
+  );
+}
 
 function GeneralPage() {
   const queryClient = useQueryClient();
@@ -106,6 +145,7 @@ function GeneralPage() {
           ))}
         </RadioGroup>
       </div>
+      <MediaModeSetting />
     </div>
   );
 }

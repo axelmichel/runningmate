@@ -1,7 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { Droplets, Maximize2, Wind } from "lucide-react";
+import { save } from "@tauri-apps/plugin-dialog";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { Download, Droplets, ExternalLink, Maximize2, Wind } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import type { ActivityDetail } from "@/bindings/ActivityDetail";
 import { Button } from "@/components/ui/button";
@@ -58,25 +61,54 @@ function Route({ activity, dataDir }: { activity: ActivityDetail; dataDir?: stri
       <TrackImage dataDir={dataDir} fileId={activity.fileId} />
     ) : null;
   }
+  const exportImage = async () => {
+    const path = await save({
+      defaultPath: `${activity.fileId ?? `activity-${activity.id}`}_track.png`,
+      filters: [
+        { name: "PNG", extensions: ["png"] },
+        { name: "SVG", extensions: ["svg"] },
+      ],
+    });
+    if (!path) return;
+    try {
+      await api.exportRouteImage(activity.id, path);
+      toast.success(t("Route image saved"));
+    } catch (error) {
+      toast.error(t("Could not save the route image: {{error}}", { error: String(error) }));
+    }
+  };
   const pad = 0.04;
   const points = route.points.map(([x, y]) => `${x.toFixed(4)},${y.toFixed(4)}`).join(" ");
   return (
-    <svg
-      role="img"
-      aria-label={t("Route")}
-      viewBox={`${-pad} ${-pad} ${route.width + 2 * pad} ${route.height + 2 * pad}`}
-      className="mx-auto h-40 w-full text-primary"
-      preserveAspectRatio="xMidYMid meet"
-    >
-      <polyline
-        points={points}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={0.012}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <div className="group relative">
+      <svg
+        role="img"
+        aria-label={t("Route")}
+        viewBox={`${-pad} ${-pad} ${route.width + 2 * pad} ${route.height + 2 * pad}`}
+        className="mx-auto h-40 w-full text-primary"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <polyline
+          points={points}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={0.012}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      {/* White on transparent, for sharing or laying over photos (Python's _track.png). */}
+      <Button
+        variant="secondary"
+        size="icon-sm"
+        aria-label={t("Save route image…")}
+        title={t("Save route image…")}
+        className="absolute top-0 right-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+        onClick={() => void exportImage()}
+      >
+        <Download />
+      </Button>
+    </div>
   );
 }
 
@@ -124,8 +156,37 @@ function Overview({
             align="right"
           />
         </div>
+        <Links activityId={activity.id} />
       </CardContent>
     </Card>
+  );
+}
+
+/** Services this activity is linked to, e.g. "Garmin Connect · uploaded" with a link. */
+function Links({ activityId }: { activityId: number }) {
+  const { data: links = [] } = useQuery({
+    queryKey: ["links", activityId],
+    queryFn: () => api.activityLinks(activityId),
+  });
+  const garmin = links.find((link) => link.connector === "garmin");
+  if (!garmin) return null;
+  return (
+    <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+      <span>Garmin Connect · {garmin.direction === "import" ? t("imported") : t("uploaded")}</span>
+      {garmin.remoteId && (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("Open in Garmin Connect")}
+          title={t("Open in Garmin Connect")}
+          onClick={() =>
+            void openUrl(`https://connect.garmin.com/modern/activity/${garmin.remoteId}`)
+          }
+        >
+          <ExternalLink />
+        </Button>
+      )}
+    </div>
   );
 }
 

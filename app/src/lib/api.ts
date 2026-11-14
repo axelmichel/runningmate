@@ -7,11 +7,15 @@ import type { ActivityQuery } from "@/bindings/ActivityQuery";
 import type { ActivitySummary } from "@/bindings/ActivitySummary";
 import type { ActivityUpdate } from "@/bindings/ActivityUpdate";
 import type { BestPerformance } from "@/bindings/BestPerformance";
+import type { ConnectorLink } from "@/bindings/ConnectorLink";
 import type { DayTotal } from "@/bindings/DayTotal";
 import type { Equipment } from "@/bindings/Equipment";
 import type { EquipmentKind } from "@/bindings/EquipmentKind";
+import type { ExportCandidate } from "@/bindings/ExportCandidate";
 import type { FitnessDay } from "@/bindings/FitnessDay";
 import type { FolderSyncStatus } from "@/bindings/FolderSyncStatus";
+import type { GarminSignInResult } from "@/bindings/GarminSignInResult";
+import type { GarminStatus } from "@/bindings/GarminStatus";
 import type { HeartRateTrend } from "@/bindings/HeartRateTrend";
 import type { ImportSummary } from "@/bindings/ImportSummary";
 import type { Media } from "@/bindings/Media";
@@ -65,14 +69,33 @@ export const api = {
   importFiles: (paths: string[]) => invoke<ImportSummary>("import_files", { paths }),
   reimportActivity: (id: number) => invoke<void>("reimport_activity", { id }),
   activityRoute: (id: number) => invoke<RouteOutline | null>("activity_route", { id }),
+  /** Writes the route as PNG or SVG, depending on the file extension. */
+  exportRouteImage: (id: number, path: string) => invoke<void>("export_route_image", { id, path }),
   folderSyncStatus: () => invoke<FolderSyncStatus>("folder_sync_status"),
   setSyncFolder: (folder: string) => invoke<FolderSyncStatus>("set_sync_folder", { folder }),
   syncFolder: () => invoke<ImportSummary>("sync_folder"),
 
+  // Garmin Connect
+  garminStatus: () => invoke<GarminStatus>("garmin_status"),
+  garminSignIn: (username: string, password: string) =>
+    invoke<GarminSignInResult>("garmin_sign_in", { username, password }),
+  garminSubmitCode: (code: string) => invoke<void>("garmin_submit_code", { code }),
+  garminSignOut: () => invoke<void>("garmin_sign_out"),
+  garminSync: () => invoke<ImportSummary>("garmin_sync"),
+  garminExportCandidates: (since: number) =>
+    invoke<ExportCandidate[]>("garmin_export_candidates", { since }),
+  /** Uploads activities; progress arrives as `import://progress` events. */
+  garminUpload: (ids: number[]) => invoke<ImportSummary>("garmin_upload", { ids }),
+  activityLinks: (id: number) => invoke<ConnectorLink[]>("activity_links", { id }),
+
   // Media, weather, best performances
   listMedia: (activityId: number) => invoke<Media[]>("list_media", { activityId }),
-  addMedia: (activityId: number, sourcePath: string) =>
-    invoke<Media>("add_media", { activityId, sourcePath }),
+  /** Copies the file into the media folder, or links to it when `link` is set. */
+  addMedia: (activityId: number, sourcePath: string, link: boolean) =>
+    invoke<Media>("add_media", { activityId, sourcePath, link }),
+  /** Shows Apple's photo picker (macOS) and copies the picked items. */
+  addMediaFromPhotos: (activityId: number) =>
+    invoke<Media[]>("add_media_from_photos", { activityId }),
   deleteMedia: (id: number) => invoke<void>("delete_media", { id }),
   getWeather: (activityId: number) => invoke<Weather | null>("get_weather", { activityId }),
   activityBestPerformances: (activityId: number) =>

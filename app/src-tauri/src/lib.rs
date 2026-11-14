@@ -3,10 +3,13 @@ mod analysis;
 mod commands;
 mod db;
 mod error;
+mod garmin;
 mod importer;
+mod media_files;
 mod menu;
 mod open_meteo;
 mod paths;
+mod photos_picker;
 mod settings;
 mod storage;
 mod sync;
@@ -31,6 +34,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             app.manage(open_database()?);
+            app.manage(commands::garmin::PendingGarminSignIn::default());
             menu::install(app)?;
             // Lets the webview load track images and media from the data folder.
             app.asset_protocol_scope()
@@ -49,6 +53,7 @@ pub fn run() {
             commands::activities::activity_type_details,
             commands::activities::list_media,
             commands::activities::add_media,
+            commands::activities::add_media_from_photos,
             commands::activities::delete_media,
             commands::activities::get_weather,
             commands::activities::activity_best_performances,
@@ -67,9 +72,18 @@ pub fn run() {
             commands::analysis::activity_training_effect,
             commands::analysis::fitness_trend,
             commands::analysis::heart_rate_trend,
+            commands::garmin::garmin_status,
+            commands::garmin::garmin_sign_in,
+            commands::garmin::garmin_submit_code,
+            commands::garmin::garmin_sign_out,
+            commands::garmin::garmin_sync,
+            commands::garmin::garmin_export_candidates,
+            commands::garmin::garmin_upload,
+            commands::garmin::activity_links,
             commands::import::import_files,
             commands::import::reimport_activity,
             commands::import::activity_route,
+            commands::import::export_route_image,
             commands::import::folder_sync_status,
             commands::import::set_sync_folder,
             commands::import::sync_folder,

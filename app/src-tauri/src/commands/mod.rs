@@ -4,6 +4,7 @@
 pub mod activities;
 pub mod analysis;
 pub mod app;
+pub mod garmin;
 pub mod import;
 pub mod settings;
 pub mod users;

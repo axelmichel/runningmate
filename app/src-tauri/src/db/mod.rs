@@ -2,6 +2,7 @@
 //! of every column follow `database/database_handler.py`.
 
 pub mod activities;
+pub mod connectors;
 pub mod media;
 pub mod migrations;
 pub mod performances;
@@ -111,7 +112,7 @@ mod tests {
         let db = Db::open_in_memory().unwrap();
         let conn = db.conn().unwrap();
 
-        assert_eq!(current_version(&conn).unwrap(), 55);
+        assert_eq!(current_version(&conn).unwrap(), 56);
         assert_eq!(
             columns(&conn, "activities"),
             [
@@ -228,7 +229,7 @@ mod real_database {
             .unwrap();
         for id in &ids {
             activities::get(&conn, *id).unwrap_or_else(|e| panic!("activity {id}: {e}"));
-            media::list(&conn, *id).unwrap();
+            media::list(&conn, *id, Path::new("/nonexistent-media")).unwrap();
             weather::get(&conn, *id).unwrap();
             performances::for_activity(&conn, *id).unwrap();
         }

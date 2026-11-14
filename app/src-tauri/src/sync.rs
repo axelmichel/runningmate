@@ -115,6 +115,18 @@ pub fn set_folder(folder: &str) -> AppResult<FolderSyncStatus> {
     status_from(&path)
 }
 
+/// A string value from `sync.json` (e.g. `last_garmin_sync`).
+pub fn value(key: &str) -> AppResult<Option<String>> {
+    Ok(read(&sync_file()?)?
+        .get(key)
+        .and_then(Value::as_str)
+        .map(String::from))
+}
+
+pub fn set_value(key: &str, value: &str) -> AppResult<()> {
+    write_value(&sync_file()?, key, Value::String(value.into()))
+}
+
 /// Records `time` as the last sync.
 pub fn mark_synced(time: DateTime<Local>) -> AppResult<()> {
     write_value(
