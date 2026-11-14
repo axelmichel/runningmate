@@ -209,13 +209,16 @@ function Excerpt({ icon: Icon, label, text }: { icon: LucideIcon; label: string;
   );
 }
 
-/** Photos, comment and AI summary at a glance; opens the detail window, where they are in full. */
+/**
+ * Photos, comment and AI summary at a glance, for the sidebar; opens the detail window, where
+ * they are in full (so the detail window's own panel leaves this out).
+ */
 function NotesCard({
   activity,
   onOpenDetails,
 }: {
   activity: ActivityDetail;
-  onOpenDetails?: (id: number) => void;
+  onOpenDetails: (id: number) => void;
 }) {
   const { data: media = [] } = useQuery({
     queryKey: ["media", activity.id],
@@ -229,32 +232,25 @@ function NotesCard({
   const comment = activity.comment?.trim();
   if (!photos && !comment && !summary) return null;
 
-  const content = (
-    <CardContent className="grid gap-2.5">
-      {photos > 0 && (
-        <div className="flex items-center gap-2 text-sm">
-          <Images className="size-4 shrink-0 text-primary" />
-          {t("{{count}} photo", { count: photos })}
-        </div>
-      )}
-      {comment && <Excerpt icon={MessageSquareText} label={t("Comment")} text={comment} />}
-      {summary && <Excerpt icon={Sparkles} label={t("Summary")} text={summary.text} />}
-    </CardContent>
-  );
   return (
-    <Card size="sm" className={onOpenDetails ? "p-0" : undefined}>
-      {onOpenDetails ? (
-        <button
-          type="button"
-          title={t("Open details")}
-          className="rounded-[inherit] py-3 text-left transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-          onClick={() => onOpenDetails(activity.id)}
-        >
-          {content}
-        </button>
-      ) : (
-        content
-      )}
+    <Card size="sm" className="p-0">
+      <button
+        type="button"
+        title={t("Open details")}
+        className="rounded-[inherit] py-3 text-left transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        onClick={() => onOpenDetails(activity.id)}
+      >
+        <CardContent className="grid gap-2.5">
+          {photos > 0 && (
+            <div className="flex items-center gap-2 text-sm">
+              <Images className="size-4 shrink-0 text-primary" />
+              {t("{{count}} photo", { count: photos })}
+            </div>
+          )}
+          {comment && <Excerpt icon={MessageSquareText} label={t("Comment")} text={comment} />}
+          {summary && <Excerpt icon={Sparkles} label={t("Summary")} text={summary.text} />}
+        </CardContent>
+      </button>
     </Card>
   );
 }
@@ -345,7 +341,7 @@ export function ActivityPanel({
   return (
     <div className="grid gap-3">
       <Overview activity={activity} dataDir={dataDir} onOpenDetails={onOpenDetails} />
-      <NotesCard activity={activity} onOpenDetails={onOpenDetails} />
+      {onOpenDetails && <NotesCard activity={activity} onOpenDetails={onOpenDetails} />}
       <WeatherCard activityId={activity.id} />
       <BestPerformances activityId={activity.id} />
     </div>
