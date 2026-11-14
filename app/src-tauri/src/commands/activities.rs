@@ -15,7 +15,9 @@ use crate::{
         weather::{self, Weather},
     },
     error::{AppError, AppResult},
-    media_files, paths, photos_picker,
+    media_files, paths,
+    photos_library::{self, LibraryAsset, PhotosAccess},
+    photos_picker,
 };
 
 #[tauri::command(async)]
@@ -191,4 +193,87 @@ pub fn top_best_performances(
     view_mode: ViewMode,
 ) -> AppResult<Vec<BestPerformance>> {
     performances::top(&*db.conn()?, view_mode)
+}
+
+/// Minutes before the start and after the end of an activity that count as "during" it, for
+/// photos taken just before setting off or right after finishing.
+const PHOTO_MARGIN_SECS: i64 = 10 * 60;
+
+#[tauri::command(async)]
+pub fn photos_access() -> PhotosAccess {
+    photos_library::access()
+}
+
+/// Asks for Photos library access (the system dialog appears only the first time).
+#[tauri::command]
+pub async fn request_photos_access() -> AppResult<PhotosAccess> {
+    tauri::async_runtime::spawn_blocking(photos_library::request_access)
+        .await
+        .map_err(|e| AppError::Invalid(e.to_string()))
+}
+
+/// Photos and videos in the Photos library taken during the activity (± a few minutes).
+#[tauri::command(async)]
+pub fn activity_photos(db: State<'_, Db>, activity_id: i64) -> AppResult<Vec<LibraryAsset>> {
+    let (detail, media) = {
+        let conn = db.conn()?;
+        let detail = activities::get(&conn, activity_id)?;
+        let media = media::list(&conn, activity_id, &paths::media_dir()?)?;
+        (detail, media)
+    };
+    let Some(start) = detail.date else {
+        return Ok(Vec::new());
+    };
+    let end = start + detail.duration.unwrap_or(0);
+    let mut assets =
+        photos_library::assets_between(start - PHOTO_MARGIN_SECS, end + PHOTO_MARGIN_SECS)?;
+    for asset in &mut assets {
+        asset.added =
+            photos_library::is_added(&asset.id, media.iter().map(|m| m.file_path.as_str()));
+    }
+    Ok(assets)
+}
+
+/// Path of a small preview of a Photos library item (inside the data folder, so the webview
+/// may load it).
+#[tauri::command]
+pub async fn library_photo_thumbnail(id: String) -> AppResult<String> {
+    let cache = paths::data_dir()?.join("cache").join("photos");
+    tauri::async_runtime::spawn_blocking(move || photos_library::thumbnail(&id, &cache))
+        .await
+        .map_err(|e| AppError::Invalid(e.to_string()))?
+        .map(|path| path.to_string_lossy().into_owned())
+}
+
+/// Copies the chosen Photos library items into the media folder.
+#[tauri::command]
+pub async fn add_library_photos(
+    app: tauri::AppHandle,
+    activity_id: i64,
+    ids: Vec<String>,
+) -> AppResult<Vec<Media>> {
+    let staging = std::env::temp_dir()
+        .join("runningmate-photos")
+        .join(chrono::Utc::now().timestamp_millis().to_string());
+    let exported = {
+        let staging = staging.clone();
+        tauri::async_runtime::spawn_blocking(move || {
+            ids.iter()
+                .map(|id| photos_library::export(id, &staging))
+                .collect::<AppResult<Vec<_>>>()
+        })
+        .await
+        .map_err(|e| AppError::Invalid(e.to_string()))?
+    };
+    let added = exported.and_then(|files| {
+        let media_dir = paths::media_dir()?;
+        let db = app.state::<Db>();
+        let conn = db.conn()?;
+        files
+            .iter()
+            .map(|file| media_files::add(&conn, &media_dir, activity_id, file, false))
+            .collect::<AppResult<Vec<_>>>()
+    });
+    let _ = fs::remove_dir_all(&staging);
+    added
 }

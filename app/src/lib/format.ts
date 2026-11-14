@@ -4,6 +4,7 @@ let locale: string | undefined;
 const numberFormats = new Map<number, Intl.NumberFormat>();
 let dateTimeFormat: Intl.DateTimeFormat;
 let dateFormat: Intl.DateTimeFormat;
+let timeFormat: Intl.DateTimeFormat;
 
 /** Switches number and date formatting to the app language ("en", "de", "fr"). */
 export function setFormatLocale(language: string | undefined) {
@@ -11,6 +12,7 @@ export function setFormatLocale(language: string | undefined) {
   numberFormats.clear();
   dateTimeFormat = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
   dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
+  timeFormat = new Intl.DateTimeFormat(locale, { timeStyle: "medium" });
 }
 setFormatLocale(undefined);
 
@@ -79,4 +81,9 @@ export function formatDateTime(timestamp: number | null | undefined): string {
 
 export function formatDate(timestamp: number | null | undefined): string {
   return timestamp == null ? "–" : dateFormat.format(new Date(timestamp * 1000));
+}
+
+/** Time of day with seconds, e.g. "14:27:05". */
+export function formatTime(timestamp: number | null | undefined): string {
+  return timestamp == null ? "–" : timeFormat.format(new Date(timestamp * 1000));
 }

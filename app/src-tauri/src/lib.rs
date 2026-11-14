@@ -9,6 +9,7 @@ mod media_files;
 mod menu;
 mod open_meteo;
 mod paths;
+mod photos_library;
 mod photos_picker;
 mod settings;
 mod storage;
@@ -55,6 +56,11 @@ pub fn run() {
             commands::activities::list_media,
             commands::activities::add_media,
             commands::activities::add_media_from_photos,
+            commands::activities::photos_access,
+            commands::activities::request_photos_access,
+            commands::activities::activity_photos,
+            commands::activities::library_photo_thumbnail,
+            commands::activities::add_library_photos,
             commands::activities::delete_media,
             commands::activities::get_weather,
             commands::activities::activity_best_performances,
