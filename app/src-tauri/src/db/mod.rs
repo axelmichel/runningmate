@@ -276,9 +276,11 @@ mod real_database {
         for days in [90, 365] {
             let report = crate::analysis::health::report(&conn, now - days * 86_400, now).unwrap();
             println!(
-                "health {days} days: {} activities, {} with heart rate, {:?}",
+                "health {days} days: {} activities, {} with heart rate, peak {:?}, last {:?}, {:?}",
                 report.activities,
                 report.heart_rate.len(),
+                report.fitness_peak,
+                report.fitness.last(),
                 report.cardio
             );
         }

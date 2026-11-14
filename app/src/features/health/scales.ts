@@ -87,6 +87,16 @@ export const FORM_SCALE: Scale = {
   ],
 };
 
+/** `value` in percent of `reference`; `null` without a reference. */
+export function shareOf(value: number, reference: number): number | null {
+  return reference > 0 ? (value / reference) * 100 : null;
+}
+
+/** Change from `before` to `after` in percent; `null` without a value before. */
+export function changeOf(before: number, after: number): number | null {
+  return before > 0 ? ((after - before) / before) * 100 : null;
+}
+
 /** Form in percent of fitness; `null` without fitness. */
 export function formPercent(form: number, fitness: number): number | null {
   return fitness > 0 ? (form / fitness) * 100 : null;

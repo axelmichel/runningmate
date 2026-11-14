@@ -10,7 +10,7 @@ use chrono::DateTime;
 use super::{
     cardio::{self, CardioRating},
     fitness::FitnessDay,
-    fitness_between, segment_time, zones,
+    fitness_until, in_period, segment_time, zones,
     zones::ZoneTime,
 };
 use crate::{
@@ -42,6 +42,9 @@ pub struct HealthHeartPoint {
 #[ts(export)]
 pub struct HealthReport {
     pub fitness: Vec<FitnessDay>,
+    /// The highest fitness ever reached up to the end of the period, so the period's values
+    /// can be read as a share of the personal best (the load numbers mean nothing on their own).
+    pub fitness_peak: Option<FitnessDay>,
     pub heart_rate: Vec<HealthHeartPoint>,
     /// Zone 1, 3 and 5 bounds drawn as reference lines (min, ideal, max).
     #[ts(type = "[number, number, number] | null")]
@@ -212,6 +215,7 @@ fn cardio_fitness(
 
 pub fn report(conn: &Connection, from: i64, to: i64) -> AppResult<HealthReport> {
     let user = users::get(conn)?;
+    let curve = fitness_until(conn, to)?;
     let bounds = user.as_ref().and_then(|u| u.zones);
     let zones = match bounds {
         Some(bounds) => Some(zones::from_segments(
@@ -226,7 +230,11 @@ pub fn report(conn: &Connection, from: i64, to: i64) -> AppResult<HealthReport> 
         |row| row.get(0),
     )?;
     Ok(HealthReport {
-        fitness: fitness_between(conn, from, to)?,
+        fitness_peak: curve
+            .iter()
+            .max_by(|a, b| a.fitness.total_cmp(&b.fitness))
+            .cloned(),
+        fitness: in_period(curve, from),
         heart_rate: heart_rate_points(conn, from, to)?,
         references: bounds.map(|z| [z[0], z[2], z[4]]),
         zones,
@@ -269,6 +277,8 @@ mod tests {
             ]
         );
         assert_eq!(report.zones, None);
+        // No segments, so no training load.
+        assert_eq!(report.fitness_peak, None);
         // One run (5 km in 25 minutes) is too few for an estimate, and there is no profile.
         assert_eq!(report.cardio.runs, 1);
         assert_eq!(report.cardio.vo2max, None);

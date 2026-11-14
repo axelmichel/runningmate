@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { FORM_SCALE, cardioScale, formPercent, position, segmentOf } from "./scales";
+import {
+  FORM_SCALE,
+  cardioScale,
+  changeOf,
+  formPercent,
+  position,
+  segmentOf,
+  shareOf,
+} from "./scales";
 
 describe("health scales", () => {
   it("places VO2max in the age group's levels", () => {
@@ -19,6 +27,13 @@ describe("health scales", () => {
     expect(segmentOf(FORM_SCALE, -30).label).toBe("Optimal");
     expect(segmentOf(FORM_SCALE, 0).label).toBe("Grey zone");
     expect(segmentOf(FORM_SCALE, 80).label).toBe("Transition");
+  });
+
+  it("relates fitness to the personal best and the start of the period", () => {
+    expect(shareOf(282.4, 307.6)).toBeCloseTo(91.8, 1);
+    expect(shareOf(10, 0)).toBeNull();
+    expect(changeOf(200, 250)).toBe(25);
+    expect(changeOf(0, 50)).toBeNull();
   });
 
   it("clamps the marker to the scale", () => {

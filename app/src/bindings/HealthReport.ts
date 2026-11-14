@@ -4,7 +4,12 @@ import type { FitnessDay } from "./FitnessDay";
 import type { HealthHeartPoint } from "./HealthHeartPoint";
 import type { ZoneTime } from "./ZoneTime";
 
-export type HealthReport = { fitness: Array<FitnessDay>, heartRate: Array<HealthHeartPoint>, 
+export type HealthReport = { fitness: Array<FitnessDay>, 
+/**
+ * The highest fitness ever reached up to the end of the period, so the period's values
+ * can be read as a share of the personal best (the load numbers mean nothing on their own).
+ */
+fitnessPeak: FitnessDay | null, heartRate: Array<HealthHeartPoint>, 
 /**
  * Zone 1, 3 and 5 bounds drawn as reference lines (min, ideal, max).
  */

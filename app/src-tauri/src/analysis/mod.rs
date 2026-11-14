@@ -222,19 +222,20 @@ pub fn fitness_trend(conn: &Connection, id: i64) -> AppResult<Vec<FitnessDay>> {
     fitness_between(conn, date - HISTORY_DAYS * DAY_SECONDS, date)
 }
 
-/// Fitness, fatigue and form for the training days between two Unix times. The curve starts
-/// 42 days earlier so it has settled (Python extended its window in a similar way).
-pub fn fitness_between(conn: &Connection, from: i64, to: i64) -> AppResult<Vec<FitnessDay>> {
+/// Fitness, fatigue and form for every training day up to `to`. The curve always starts at the
+/// first activity: it only moves on training days, so a curve started shortly before a window
+/// would not have settled, and the same day would show different values for different windows.
+pub fn fitness_until(conn: &Connection, to: i64) -> AppResult<Vec<FitnessDay>> {
     let mut stmt = conn.prepare(
         "SELECT date(activities.date, 'unixepoch') AS day, activities.activity_type AS type,
             AVG(seg_avg_heart_rate * seg_avg_pace / (seg_avg_speed + 1)) AS load
          FROM activity_details JOIN activities ON activity_details.activity_id = activities.id
-         WHERE activities.date BETWEEN ?1 AND ?2
+         WHERE activities.date <= ?1
          GROUP BY activities.date, activities.activity_type
          ORDER BY activities.date",
     )?;
     let rows: Vec<(String, ViewMode, Option<f64>)> = stmt
-        .query_map([from - 42 * DAY_SECONDS, to], |row| {
+        .query_map([to], |row| {
             let activity_type: Option<String> = row.get("type")?;
             Ok((
                 row.get("day")?,
@@ -243,13 +244,20 @@ pub fn fitness_between(conn: &Connection, from: i64, to: i64) -> AppResult<Vec<F
             ))
         })?
         .collect::<Result<_, _>>()?;
+    Ok(fitness::fitness_curve(&fitness::daily_loads(&rows)))
+}
+
+/// The training days of [`fitness_until`] from `from` on.
+pub fn fitness_between(conn: &Connection, from: i64, to: i64) -> AppResult<Vec<FitnessDay>> {
+    Ok(in_period(fitness_until(conn, to)?, from))
+}
+
+/// The days of a fitness curve from `from` (Unix time) on.
+pub fn in_period(curve: Vec<FitnessDay>, from: i64) -> Vec<FitnessDay> {
     let first_day = DateTime::from_timestamp(from, 0)
         .map(|t| t.format("%Y-%m-%d").to_string())
         .unwrap_or_default();
-    Ok(fitness::fitness_curve(&fitness::daily_loads(&rows))
-        .into_iter()
-        .filter(|d| d.day >= first_day)
-        .collect())
+    curve.into_iter().filter(|d| d.day >= first_day).collect()
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]

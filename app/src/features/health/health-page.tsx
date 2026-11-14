@@ -35,7 +35,15 @@ import { cn } from "@/lib/utils";
 
 import { DEFAULT_MONTHS, PRESET_MONTHS, lastMonths, periodBounds } from "./period";
 import { ScaleBar } from "./scale-bar";
-import { CARDIO_LEVELS, FORM_SCALE, cardioScale, formPercent, segmentOf } from "./scales";
+import {
+  CARDIO_LEVELS,
+  FORM_SCALE,
+  cardioScale,
+  changeOf,
+  formPercent,
+  segmentOf,
+  shareOf,
+} from "./scales";
 
 const fitnessConfig = () =>
   ({
@@ -216,6 +224,11 @@ function FitnessCard({ fitness }: { fitness: { day: string }[] }) {
     <Card size="sm">
       <CardHeader>
         <CardTitle className="text-sm">{t("Fitness, fatigue and form")}</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          {t(
+            "Fitness is your training load averaged over about six weeks of training, fatigue over about one week; form is the difference. The values are RunningMate's own load points: compare them over time, not with other apps.",
+          )}
+        </p>
       </CardHeader>
       <CardContent>
         {fitness.length === 0 ? (
@@ -364,7 +377,15 @@ export function HealthPage() {
     enabled: bounds !== null,
     placeholderData: (previous) => previous,
   });
+  // The load numbers have no unit anyone knows, so fitness is shown against the personal best
+  // and form against fitness.
   const latest = report?.fitness.at(-1);
+  const first = report?.fitness.at(0);
+  const peak = report?.fitnessPeak ?? null;
+  const fitnessShare = latest && peak ? shareOf(latest.fitness, peak.fitness) : null;
+  const fitnessChange =
+    latest && first && first !== latest ? changeOf(first.fitness, latest.fitness) : null;
+  const formShare = latest ? formPercent(latest.form, latest.fitness) : null;
   const heart = report?.heartRate ?? [];
   const averageHeartRate = heart.length
     ? heart.reduce((sum, p) => sum + p.avgHeartRate, 0) / heart.length
@@ -387,13 +408,29 @@ export function HealthPage() {
           />
           <Stat
             label={t("Fitness")}
-            value={formatNumber(latest?.fitness, 1)}
-            hint={latest && t("Fatigue {{value}}", { value: formatNumber(latest.fatigue, 1) })}
+            value={fitnessShare === null ? "–" : `${formatNumber(fitnessShare)} %`}
+            hint={
+              peak && fitnessShare !== null
+                ? [
+                    t("of your best ({{date}})", { date: formatDate(dayTimestamp(peak.day)) }),
+                    fitnessChange !== null &&
+                      t("{{change}} % in this period", {
+                        change: `${fitnessChange >= 0 ? "+" : ""}${formatNumber(fitnessChange)}`,
+                      }),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")
+                : undefined
+            }
           />
           <Stat
             label={t("Form")}
-            value={formatNumber(latest?.form, 1)}
-            hint={latest && t("on {{date}}", { date: formatDate(dayTimestamp(latest.day)) })}
+            value={formShare === null ? "–" : `${formatNumber(formShare)} %`}
+            hint={
+              latest && formShare !== null
+                ? `${t(segmentOf(FORM_SCALE, formShare).label)} · ${formatDate(dayTimestamp(latest.day))}`
+                : undefined
+            }
           />
         </div>
         {report && (
