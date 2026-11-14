@@ -93,13 +93,22 @@ function MediaModeSetting() {
   );
 }
 
-/** The settings plus a mutation that saves them; changes save immediately. */
+/**
+ * The settings plus a mutation that saves them; changes save immediately. Each change is applied
+ * to the latest saved settings and saves run one after another, so two quick changes (ticking a
+ * box, then picking a model) can't overwrite each other with an outdated copy.
+ */
 function useSettings() {
   const queryClient = useQueryClient();
   const { setTheme } = useTheme();
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: api.getSettings });
   const save = useMutation({
-    mutationFn: (next: SystemSettings) => api.saveSettings(next),
+    scope: { id: "settings" },
+    mutationFn: (change: Partial<SystemSettings>) => {
+      const current = queryClient.getQueryData<SystemSettings>(["settings"]);
+      if (!current) throw new Error("settings not loaded");
+      return api.saveSettings({ ...current, ...change });
+    },
     onSuccess: (saved) => {
       queryClient.setQueryData(["settings"], saved);
       setTheme(saved.layout as Theme);
@@ -119,10 +128,7 @@ function GeneralPage() {
     <div className="grid max-w-md gap-6">
       <div className="grid gap-2">
         <Label>{t("Language")}</Label>
-        <Select
-          value={settings.language}
-          onValueChange={(language) => save.mutate({ ...settings, language })}
-        >
+        <Select value={settings.language} onValueChange={(language) => save.mutate({ language })}>
           <SelectTrigger className="w-56">
             <SelectValue />
           </SelectTrigger>
@@ -142,10 +148,7 @@ function GeneralPage() {
       </div>
       <div className="grid gap-2">
         <Label>{t("Appearance")}</Label>
-        <RadioGroup
-          value={settings.layout}
-          onValueChange={(layout) => save.mutate({ ...settings, layout })}
-        >
+        <RadioGroup value={settings.layout} onValueChange={(layout) => save.mutate({ layout })}>
           {THEMES.map(([value, label]) => (
             <div key={value} className="flex items-center gap-2">
               <RadioGroupItem value={value} id={`theme-${value}`} />
@@ -174,7 +177,7 @@ function AiPage() {
   const serverUrl = url ?? settings.ai_url;
   const saveUrl = () => {
     const trimmed = serverUrl.trim().replace(/\/+$/, "");
-    if (trimmed !== settings.ai_url) save.mutate({ ...settings, ai_url: trimmed });
+    if (trimmed !== settings.ai_url) save.mutate({ ai_url: trimmed });
     setUrl(null);
   };
   // The chosen model stays selectable even before the list was loaded.
@@ -187,9 +190,7 @@ function AiPage() {
           <Checkbox
             id="ai-enabled"
             checked={settings.ai_enabled}
-            onCheckedChange={(checked) =>
-              save.mutate({ ...settings, ai_enabled: checked === true })
-            }
+            onCheckedChange={(checked) => save.mutate({ ai_enabled: checked === true })}
           />
           <Label htmlFor="ai-enabled">{t("Write activity summaries with a local AI model")}</Label>
         </div>
@@ -227,7 +228,7 @@ function AiPage() {
         <Label>{t("Model")}</Label>
         <Select
           value={settings.ai_model}
-          onValueChange={(ai_model) => save.mutate({ ...settings, ai_model })}
+          onValueChange={(ai_model) => save.mutate({ ai_model })}
           disabled={choices.length === 0}
         >
           <SelectTrigger className="w-72">
@@ -249,7 +250,7 @@ function AiPage() {
         <Label>{t("Compare with the last")}</Label>
         <Select
           value={String(settings.ai_period_weeks)}
-          onValueChange={(weeks) => save.mutate({ ...settings, ai_period_weeks: Number(weeks) })}
+          onValueChange={(weeks) => save.mutate({ ai_period_weeks: Number(weeks) })}
         >
           <SelectTrigger className="w-56">
             <SelectValue />
