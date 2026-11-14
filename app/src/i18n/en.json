@@ -19,6 +19,8 @@
   "{{count}} month_other": "{{count}} months",
   "{{count}} new file_one": "{{count}} new file",
   "{{count}} new file_other": "{{count}} new files",
+  "{{count}} photo_one": "{{count}} photo",
+  "{{count}} photo_other": "{{count}} photos",
   "{{count}} selected · {{distance}} km_one": "{{count}} selected · {{distance}} km",
   "{{count}} selected · {{distance}} km_other": "{{count}} selected · {{distance}} km",
   "{{count}} week_one": "{{count}} week",

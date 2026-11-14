@@ -407,6 +407,8 @@
   "{{count}} month_other": "{{count}} Monate",
   "{{count}} new file_one": "{{count}} neue Datei",
   "{{count}} new file_other": "{{count}} neue Dateien",
+  "{{count}} photo_one": "{{count}} Foto",
+  "{{count}} photo_other": "{{count}} Fotos",
   "{{count}} selected · {{distance}} km_one": "{{count}} ausgewählt · {{distance}} km",
   "{{count}} selected · {{distance}} km_other": "{{count}} ausgewählt · {{distance}} km",
   "{{count}} week_one": "{{count}} Woche",

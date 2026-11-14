@@ -2,7 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { Download, Droplets, ExternalLink, Maximize2, Wind } from "lucide-react";
+import {
+  Download,
+  Droplets,
+  ExternalLink,
+  Images,
+  Maximize2,
+  MessageSquareText,
+  Sparkles,
+  Wind,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -190,6 +200,65 @@ function Links({ activityId }: { activityId: number }) {
   );
 }
 
+function Excerpt({ icon: Icon, label, text }: { icon: LucideIcon; label: string; text: string }) {
+  return (
+    <div className="flex gap-2">
+      <Icon className="mt-0.5 size-4 shrink-0 text-primary" aria-label={label} />
+      <p className="line-clamp-3 text-sm whitespace-pre-line">{text}</p>
+    </div>
+  );
+}
+
+/** Photos, comment and AI summary at a glance; opens the detail window, where they are in full. */
+function NotesCard({
+  activity,
+  onOpenDetails,
+}: {
+  activity: ActivityDetail;
+  onOpenDetails?: (id: number) => void;
+}) {
+  const { data: media = [] } = useQuery({
+    queryKey: ["media", activity.id],
+    queryFn: () => api.listMedia(activity.id),
+  });
+  const { data: summary } = useQuery({
+    queryKey: ["aiSummary", activity.id],
+    queryFn: () => api.getAiSummary(activity.id),
+  });
+  const photos = media.filter((m) => m.mediaType === "image" && !m.missing).length;
+  const comment = activity.comment?.trim();
+  if (!photos && !comment && !summary) return null;
+
+  const content = (
+    <CardContent className="grid gap-2.5">
+      {photos > 0 && (
+        <div className="flex items-center gap-2 text-sm">
+          <Images className="size-4 shrink-0 text-primary" />
+          {t("{{count}} photo", { count: photos })}
+        </div>
+      )}
+      {comment && <Excerpt icon={MessageSquareText} label={t("Comment")} text={comment} />}
+      {summary && <Excerpt icon={Sparkles} label={t("Summary")} text={summary.text} />}
+    </CardContent>
+  );
+  return (
+    <Card size="sm" className={onOpenDetails ? "p-0" : undefined}>
+      {onOpenDetails ? (
+        <button
+          type="button"
+          title={t("Open details")}
+          className="rounded-[inherit] py-3 text-left transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          onClick={() => onOpenDetails(activity.id)}
+        >
+          {content}
+        </button>
+      ) : (
+        content
+      )}
+    </Card>
+  );
+}
+
 function WeatherCard({ activityId }: { activityId: number }) {
   const { data: weather } = useQuery({
     queryKey: ["weather", activityId],
@@ -276,6 +345,7 @@ export function ActivityPanel({
   return (
     <div className="grid gap-3">
       <Overview activity={activity} dataDir={dataDir} onOpenDetails={onOpenDetails} />
+      <NotesCard activity={activity} onOpenDetails={onOpenDetails} />
       <WeatherCard activityId={activity.id} />
       <BestPerformances activityId={activity.id} />
     </div>
