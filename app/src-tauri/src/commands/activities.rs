@@ -61,8 +61,8 @@ pub fn get_activity(db: State<'_, Db>, id: i64) -> AppResult<ActivityDetail> {
 
 #[tauri::command(async)]
 pub fn update_activity(db: State<'_, Db>, update: ActivityUpdate) -> AppResult<ActivityDetail> {
-    let conn = db.conn()?;
-    activities::update(&conn, &update)?;
+    let mut conn = db.conn()?;
+    activities::update(&mut conn, &update)?;
     activities::get(&conn, update.id)
 }
 

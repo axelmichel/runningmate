@@ -27,7 +27,14 @@ pub fn save_heart_rate_zones(db: State<'_, Db>, input: ZonesInput) -> AppResult<
 #[tauri::command(async)]
 pub fn suggested_heart_rate_zones(db: State<'_, Db>) -> AppResult<[i64; 5]> {
     let user = users::get(&*db.conn()?)?.ok_or_else(|| AppError::NotFound("user".into()))?;
-    Ok(users::suggested_zones(user.hr_max, user.age.unwrap_or(0)))
+    let today = chrono::Local::now().date_naive();
+    let age = user
+        .birthday
+        .as_deref()
+        .and_then(|birthday| users::age_on(birthday, today))
+        .or(user.age)
+        .unwrap_or(0);
+    Ok(users::suggested_zones(user.hr_max, age))
 }
 
 #[tauri::command(async)]

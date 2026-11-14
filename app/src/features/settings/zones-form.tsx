@@ -17,7 +17,7 @@ const ZONE_COLORS = ["#35193e", "#701f57", "#ad1759", "#f37651", "#f6b48f"];
 export function ZonesFormView({ user }: { user: User }) {
   const queryClient = useQueryClient();
   const suggested = useQuery({
-    queryKey: ["suggestedZones", user.hrMax, user.age],
+    queryKey: ["suggestedZones", user.hrMax, user.age, user.birthday],
     queryFn: api.suggestedHeartRateZones,
     enabled: user.zones == null,
   });

@@ -27,6 +27,8 @@ const RESTING_OXYGEN: f64 = 3.5;
 /// Energy per ml of oxygen: 5 kcal per litre, as in the ACSM equations.
 const KCAL_PER_ML_OXYGEN: f64 = 0.005;
 const JOULES_PER_KCAL: f64 = 4184.0;
+/// Gaps longer than this (seconds) count as a pause.
+pub const PAUSE_THRESHOLD: f64 = 10.0;
 
 /// Oxygen cost of the ACSM running and walking equations, ml/kg per metre: horizontal, and per
 /// metre climbed. `VO2 = 3.5 + horizontal × speed + vertical × speed × grade` (ml/kg/min, speed in
@@ -57,8 +59,6 @@ pub struct Track {
     pub raw_time_diff: Vec<f64>,
     /// Geodesic metres to the previous point (0 for the first).
     pub geodesic: Vec<f64>,
-    /// `geodesic` with zeros interpolated, as pandas' `replace(0, NaN).interpolate()` does.
-    pub dist_diff: Vec<f64>,
     /// m/s.
     pub speed: Vec<f64>,
     /// Measured watts, or estimated from speed and climb when missing.
@@ -105,6 +105,7 @@ impl Track {
                 }
             })
             .collect();
+        // Zeros interpolated, as pandas' `replace(0, NaN).interpolate()` does, for speed and pace.
         let dist_diff = interpolate(
             &geodesic
                 .iter()
@@ -162,13 +163,16 @@ impl Track {
                 let kcal = match oxygen_cost(view) {
                     // ACSM equation summed per point: the speed term becomes distance and the
                     // grade term metres climbed. Measured watts don't change what a run costs.
+                    // The raw distance, so standing still doesn't borrow the neighbours' steps.
                     Some((horizontal, vertical)) => {
-                        let oxygen = horizontal * dist_diff[i]
+                        let oxygen = horizontal * geodesic[i]
                             + vertical * rise[i]
                             + RESTING_OXYGEN * raw_time_diff[i] / 60.0;
                         weight * oxygen * KCAL_PER_ML_OXYGEN
                     }
-                    None => power[i] * time_diff[i] / (CYCLING_EFFICIENCY * JOULES_PER_KCAL),
+                    // A pause isn't pedalled through at the power of the point after it.
+                    None if raw_time_diff[i] > PAUSE_THRESHOLD => 0.0,
+                    None => power[i] * raw_time_diff[i] / (CYCLING_EFFICIENCY * JOULES_PER_KCAL),
                 };
                 if kcal.is_nan() { 0.0 } else { kcal.max(0.0) }
             })
@@ -179,7 +183,6 @@ impl Track {
             points,
             raw_time_diff,
             geodesic,
-            dist_diff,
             speed,
             power,
             pace,
@@ -356,6 +359,66 @@ mod tests {
         // 68 kg × (0.2 × 1000 m + 3.5 × 6 min) ml/kg × 5 kcal/l.
         let expected = 68.0 * (0.2 * 1000.0 + 3.5 * 6.0) * 0.005;
         assert!((kcal - expected).abs() < 1.0, "{kcal} vs {expected}");
+    }
+
+    /// Points 6 s and about 16.7 m apart heading north; `stops` lists the indices that repeat
+    /// the previous position, `gap` the index that comes 600 s after the one before.
+    fn line(stops: &[i64], gap: Option<i64>, power: Option<f64>) -> Vec<RawPoint> {
+        let mut north = 0.0;
+        (0..=60)
+            .map(|i| {
+                if i > 0 && !stops.contains(&i) {
+                    north += 1000.0 / 60.0;
+                }
+                let late = gap.is_some_and(|g| i >= g);
+                RawPoint {
+                    time: chrono::DateTime::UNIX_EPOCH
+                        + chrono::TimeDelta::seconds(i * 6 + if late { 594 } else { 0 }),
+                    latitude: 48.0 + north / 111_195.0,
+                    longitude: -3.8,
+                    elevation: 50.0,
+                    heart_rate: None,
+                    cadence: Some(80.0),
+                    power,
+                }
+            })
+            .collect()
+    }
+
+    #[test]
+    fn standing_still_burns_no_distance() {
+        let kcal = |points| {
+            Track::new(points, ViewMode::Running, 68.0)
+                .calories
+                .iter()
+                .sum::<f64>()
+        };
+        let moving = kcal(line(&[], None, None));
+        // Ten stops of 6 s each: 10 × 16.7 m less and the same time.
+        let stopping = kcal(line(&[10, 11, 12, 13, 14, 30, 31, 32, 33, 34], None, None));
+        let expected = 68.0 * 0.2 * 10.0 * 1000.0 / 60.0 * 0.005;
+        assert!(
+            (moving - stopping - expected).abs() < 0.1,
+            "{moving} vs {stopping}"
+        );
+    }
+
+    #[test]
+    fn a_pause_is_not_pedalled_through() {
+        let kcal = |points| {
+            Track::new(points, ViewMode::Cycling, 68.0)
+                .calories
+                .iter()
+                .sum::<f64>()
+        };
+        let steady = kcal(line(&[], None, Some(150.0)));
+        let paused = kcal(line(&[], Some(30), Some(150.0)));
+        // Only the 6 s step into the point after the pause is lost.
+        let step = 150.0 * 6.0 / (CYCLING_EFFICIENCY * JOULES_PER_KCAL);
+        assert!(
+            (steady - paused - step).abs() < 1e-6,
+            "{steady} vs {paused}"
+        );
     }
 
     #[test]

@@ -449,6 +449,38 @@ fn equipment_table(view: ViewMode) -> Option<(&'static str, &'static str)> {
     }
 }
 
+/// Adds `km` (negative to take it off) to the shoe or bike assigned to an activity, never going
+/// below 0. Keeps the item's total in step when the activity's distance changes or it goes.
+pub(crate) fn add_to_equipment(conn: &Connection, activity_id: i64, km: f64) -> AppResult<()> {
+    let view = ViewMode::from_activity_type(&activity_type_of(conn, activity_id)?);
+    let (Some(table), Some((column, equipment))) = (view.table(), equipment_table(view)) else {
+        return Ok(());
+    };
+    if km != 0.0 {
+        conn.execute(
+            &format!(
+                "UPDATE {equipment} SET distance = MAX(COALESCE(distance, 0) + ?1, 0)
+                 WHERE id = (SELECT {column} FROM {table} WHERE activity_id = ?2)"
+            ),
+            params![km, activity_id],
+        )?;
+    }
+    Ok(())
+}
+
+/// The activity's stored distance in km, 0 without one.
+pub(crate) fn distance_of(conn: &Connection, id: i64) -> AppResult<f64> {
+    Ok(conn
+        .query_row(
+            "SELECT distance FROM activities WHERE id = ?1",
+            [id],
+            |row| opt_f64(row, "distance"),
+        )
+        .optional()?
+        .flatten()
+        .unwrap_or(0.0))
+}
+
 fn activity_type_of(conn: &Connection, id: i64) -> AppResult<String> {
     conn.query_row(
         "SELECT activity_type FROM activities WHERE id = ?1",
@@ -571,14 +603,17 @@ pub struct ActivityUpdate {
     pub elevation_gain: f64,
 }
 
-/// Saves the edit page and marks the activity as reviewed (`new = 0`, `edited = 1`).
-pub fn update(conn: &Connection, update: &ActivityUpdate) -> AppResult<()> {
+/// Saves the edit page and marks the activity as reviewed (`new = 0`, `edited = 1`). A changed
+/// distance is passed on to the assigned shoe or bike.
+pub fn update(conn: &mut Connection, update: &ActivityUpdate) -> AppResult<()> {
     if update.duration < 0 || update.distance < 0.0 || update.elevation_gain < 0.0 {
         return Err(AppError::Invalid(
             "duration, distance and elevation must not be negative".into(),
         ));
     }
-    let changed = conn.execute(
+    let tx = conn.transaction()?;
+    let previous = distance_of(&tx, update.id)?;
+    let changed = tx.execute(
         "UPDATE activities
          SET title = ?1, comment = ?2, type_detail = ?3, date = ?4, duration = ?5, distance = ?6,
              elevation_gain = ?7, edited = 1, new = 0
@@ -597,6 +632,8 @@ pub fn update(conn: &Connection, update: &ActivityUpdate) -> AppResult<()> {
     if changed == 0 {
         return Err(AppError::NotFound(format!("activity {}", update.id)));
     }
+    add_to_equipment(&tx, update.id, update.distance - previous)?;
+    tx.commit()?;
     Ok(())
 }
 
@@ -662,10 +699,11 @@ pub fn set_equipment(
 }
 
 /// Deletes an activity with its per-type row, segments, weather and derived data. Media rows
-/// and files are kept, as in the Python app.
+/// and files are kept, as in the Python app. The assigned shoe or bike gives the distance back.
 pub fn delete(conn: &mut Connection, id: i64) -> AppResult<()> {
     let view = ViewMode::from_activity_type(&activity_type_of(conn, id)?);
     let tx = conn.transaction()?;
+    add_to_equipment(&tx, id, -distance_of(&tx, id)?)?;
     if let Some(table) = view.table() {
         tx.execute(&format!("DELETE FROM {table} WHERE activity_id = ?1"), [id])?;
     }
@@ -874,9 +912,9 @@ pub(crate) mod tests {
     #[test]
     fn update_saves_all_fields_and_marks_reviewed() {
         let db = seeded();
-        let conn = db.conn().unwrap();
+        let mut conn = db.conn().unwrap();
         update(
-            &conn,
+            &mut conn,
             &ActivityUpdate {
                 id: 1,
                 title: "Renamed".into(),
@@ -896,6 +934,42 @@ pub(crate) mod tests {
         assert!(!detail.is_new);
         assert!(detail.edited);
         assert!(detail.reviewed);
+    }
+
+    #[test]
+    fn shoe_distance_follows_edits_and_deletion() {
+        let db = seeded();
+        let mut conn = db.conn().unwrap();
+        conn.execute(
+            "INSERT INTO shoes (id, name, distance, status) VALUES (7, 'Racer', 100, 1)",
+            [],
+        )
+        .unwrap();
+        set_equipment(&mut conn, 1, Some(7)).unwrap();
+        let shoe = |conn: &Connection| -> f64 {
+            conn.query_row("SELECT distance FROM shoes WHERE id = 7", [], |r| r.get(0))
+                .unwrap()
+        };
+        assert_eq!(shoe(&conn), 110.0);
+
+        let mut edit = ActivityUpdate {
+            id: 1,
+            title: "Run".into(),
+            comment: String::new(),
+            type_detail: None,
+            date: 1_700_000_000,
+            duration: 3600,
+            distance: 12.5,
+            elevation_gain: 0.0,
+        };
+        update(&mut conn, &edit).unwrap();
+        assert!((shoe(&conn) - 112.5).abs() < 1e-9);
+        edit.distance = 9.0;
+        update(&mut conn, &edit).unwrap();
+        assert!((shoe(&conn) - 109.0).abs() < 1e-9);
+
+        delete(&mut conn, 1).unwrap();
+        assert!((shoe(&conn) - 100.0).abs() < 1e-9);
     }
 
     #[test]

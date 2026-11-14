@@ -199,12 +199,20 @@ pub fn training_effect(conn: &Connection, id: i64) -> AppResult<TrainingEffect> 
 
     let types = view.allowed_types();
     let placeholders = vec!["?"; types.len()].join(", ");
+    // Like the activity itself, earlier segments only count with the values the load uses: a
+    // segment recorded without heart rate has load 0 and would pull the baseline down.
+    let power = if view == ViewMode::Cycling {
+        " AND seg_avg_power > 0"
+    } else {
+        ""
+    };
     let sql = format!(
         "SELECT seg_avg_heart_rate AS hr, seg_avg_power AS power, seg_avg_speed AS speed,
             seg_avg_pace AS pace
          FROM activity_details JOIN activities ON activity_details.activity_id = activities.id
          WHERE activities.id != ? AND activities.activity_type IN ({placeholders})
-           AND activities.date BETWEEN ? AND ?"
+           AND activities.date BETWEEN ? AND ?
+           AND seg_avg_heart_rate > 0 AND seg_avg_pace > 0 AND seg_avg_speed > 0{power}"
     );
     let mut values: Vec<rusqlite::types::Value> = vec![id.into()];
     values.extend(types.iter().map(|t| (*t).to_string().into()));
@@ -227,12 +235,14 @@ pub fn fitness_trend(conn: &Connection, id: i64) -> AppResult<Vec<FitnessDay>> {
 /// Fitness, fatigue and form for every training day up to `to`. The curve always starts at the
 /// first activity: it only moves on training days, so a curve started shortly before a window
 /// would not have settled, and the same day would show different values for different windows.
+/// Segments without heart rate or pace have no load and are left out; an activity recorded
+/// without heart rate used to count as a training day with load 0 and pull the curve down.
 pub fn fitness_until(conn: &Connection, to: i64) -> AppResult<Vec<FitnessDay>> {
     let mut stmt = conn.prepare(
         "SELECT date(activities.date, 'unixepoch') AS day, activities.activity_type AS type,
             AVG(seg_avg_heart_rate * seg_avg_pace / (seg_avg_speed + 1)) AS load
          FROM activity_details JOIN activities ON activity_details.activity_id = activities.id
-         WHERE activities.date <= ?1
+         WHERE activities.date <= ?1 AND seg_avg_heart_rate > 0 AND seg_avg_pace > 0
          GROUP BY activities.date, activities.activity_type
          ORDER BY activities.date",
     )?;
@@ -354,5 +364,48 @@ mod tests {
         assert!((1..=12).contains(&effect.score));
         assert_eq!(heart_rate_trend(&conn, 1).unwrap().points.len(), 1);
         assert_eq!(fitness_trend(&conn, 1).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn history_without_heart_rate_has_no_load() {
+        let db = Db::open_in_memory().unwrap();
+        let conn = db.conn().unwrap();
+        let day = 1_746_530_314;
+        let segment = |id: i64, hr: i64| {
+            conn.execute(
+                "INSERT INTO activity_details (activity_id, segment_id, seg_distance,
+                    seg_avg_pace, seg_avg_heart_rate, seg_avg_power, seg_avg_speed)
+                 VALUES (?1, 0, 1.0, 6.0, ?2, 160, 2.8)",
+                rusqlite::params![id.to_string(), hr],
+            )
+            .unwrap();
+        };
+        insert_activity(
+            &conn,
+            1,
+            "Running",
+            day - 2 * DAY_SECONDS,
+            1.0,
+            "With heart rate",
+        );
+        segment(1, 125);
+        insert_activity(&conn, 3, "Running", day, 1.0, "Today");
+        segment(3, 125);
+        let with_history = training_effect(&conn, 3).unwrap();
+        assert_eq!(with_history.score, 7);
+        let fitness = fitness_trend(&conn, 3).unwrap();
+
+        // An earlier run recorded without heart rate changes neither.
+        insert_activity(
+            &conn,
+            2,
+            "Running",
+            day - DAY_SECONDS,
+            1.0,
+            "Without heart rate",
+        );
+        segment(2, 0);
+        assert_eq!(training_effect(&conn, 3).unwrap(), with_history);
+        assert_eq!(fitness_trend(&conn, 3).unwrap(), fitness);
     }
 }
