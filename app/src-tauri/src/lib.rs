@@ -1,4 +1,5 @@
 mod activity_type;
+mod ai;
 mod analysis;
 mod commands;
 mod db;
@@ -37,6 +38,7 @@ pub fn run() {
             app.manage(open_database()?);
             app.manage(commands::garmin::PendingGarminSignIn::default());
             app.manage(commands::import::ImportCancel::default());
+            app.manage(ai::AiQueue::default());
             menu::install(app)?;
             // Lets the webview load track images and media from the data folder.
             app.asset_protocol_scope()
@@ -96,6 +98,9 @@ pub fn run() {
             commands::import::folder_sync_status,
             commands::import::set_sync_folder,
             commands::import::sync_folder,
+            commands::ai::ai_models,
+            commands::ai::get_ai_summary,
+            commands::ai::generate_ai_summary,
             commands::settings::get_settings,
             commands::settings::save_settings,
             commands::settings::storage_info,

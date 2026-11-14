@@ -12,4 +12,20 @@ measures: string,
 /**
  * "system", "light" or "dark".
  */
-layout: string, };
+layout: string, 
+/**
+ * Writes activity summaries with a local Ollama model.
+ */
+ai_enabled: boolean, 
+/**
+ * Base URL of the Ollama server.
+ */
+ai_url: string, 
+/**
+ * Ollama model name, e.g. "qwen2.5:7b"; empty until one is chosen.
+ */
+ai_model: string, 
+/**
+ * Weeks before an activity it is compared with; one of [`AI_PERIOD_WEEKS`].
+ */
+ai_period_weeks: number, };

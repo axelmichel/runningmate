@@ -3,6 +3,7 @@
 //! `widget_heart_rate_tendency.py`) or rendered from re-parsed TCX data (charts and maps).
 
 pub mod cardio;
+pub mod comparison;
 pub mod fitness;
 pub mod health;
 pub mod series;

@@ -21,6 +21,8 @@
   "{{count}} new file_other": "{{count}} new files",
   "{{count}} selected · {{distance}} km_one": "{{count}} selected · {{distance}} km",
   "{{count}} selected · {{distance}} km_other": "{{count}} selected · {{distance}} km",
+  "{{count}} week_one": "{{count}} week",
+  "{{count}} week_other": "{{count}} weeks",
   "{{count}} with heart rate_one": "{{count}} with heart rate",
   "{{count}} with heart rate_other": "{{count}} with heart rate"
 }

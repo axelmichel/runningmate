@@ -2,6 +2,7 @@
 //! Commands use `async` so database work runs off the main thread.
 
 pub mod activities;
+pub mod ai;
 pub mod analysis;
 pub mod app;
 pub mod garmin;

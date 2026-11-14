@@ -1,5 +1,6 @@
 //! TCX import, re-import and folder sync. Imports run on a blocking thread and report each
-//! file through `import://progress` events; weather is fetched in the background afterwards.
+//! file through `import://progress` events; weather (and the AI summary, if enabled) is fetched
+//! in the background afterwards.
 
 use std::{
     path::{Path, PathBuf},
@@ -10,8 +11,9 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 use ts_rs::TS;
 
+use super::ai;
 use crate::{
-    db::{Db, weather},
+    db::{Db, ai_summaries, weather},
     error::{AppError, AppResult},
     importer::{self, ImportOutcome, WeatherPoint, outline::RouteOutline},
     open_meteo, paths, settings,
@@ -182,6 +184,9 @@ pub(crate) fn import_one(app: &AppHandle, file: &Path) -> AppResult<ImportOutcom
             if let Some(point) = weather_point {
                 fetch_weather_later(app, point);
             }
+            if let ImportOutcome::Imported { activity_id } = outcome {
+                ai::summarize_later(app, activity_id);
+            }
             outcome
         }
         Err(e) => ImportOutcome::Failed {
@@ -268,10 +273,17 @@ pub async fn import_files(
 #[tauri::command(async)]
 pub fn reimport_activity(app: AppHandle, db: State<'_, Db>, id: i64) -> AppResult<()> {
     let language = settings::load().map(|s| s.language).unwrap_or_default();
-    let point = importer::reimport(&mut *db.conn()?, id, &paths::imports_dir()?, &language)?;
+    let point = {
+        let mut conn = db.conn()?;
+        let point = importer::reimport(&mut conn, id, &paths::imports_dir()?, &language)?;
+        // The old summary was written from the old values.
+        ai_summaries::delete(&conn, id)?;
+        point
+    };
     if let Some(point) = point {
         fetch_weather_later(&app, point);
     }
+    ai::summarize_later(&app, id);
     Ok(())
 }
 

@@ -3,6 +3,7 @@ import { ActivityPanel } from "@/features/activities/activity-panel";
 import { t } from "@/i18n";
 import { formatMinSec, formatNumber } from "@/lib/format";
 
+import { AiSummaryCard } from "./ai-summary-card";
 import { MediaGallery } from "./media-gallery";
 
 function Fact({ label, value }: { label: string; value: string | null }) {
@@ -22,6 +23,7 @@ export function GeneralTab({ activity, dataDir }: { activity: ActivityDetail; da
     <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">
       <ActivityPanel activityId={activity.id} dataDir={dataDir} />
       <div className="grid content-start gap-6">
+        <AiSummaryCard activityId={activity.id} />
         <MediaGallery activityId={activity.id} />
         {activity.comment && <p className="text-sm whitespace-pre-wrap">{activity.comment}</p>}
         <div>

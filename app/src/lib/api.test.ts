@@ -34,5 +34,11 @@ describe("api", () => {
       weight: 10.5,
       inUse: true,
     });
+
+    await api.aiModels("http://localhost:11434");
+    expect(invoke).toHaveBeenLastCalledWith("ai_models", { url: "http://localhost:11434" });
+
+    await api.generateAiSummary(7);
+    expect(invoke).toHaveBeenLastCalledWith("generate_ai_summary", { id: 7 });
   });
 });

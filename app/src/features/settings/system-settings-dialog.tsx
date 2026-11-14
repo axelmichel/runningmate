@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { HardDrive, SlidersHorizontal } from "lucide-react";
+import { HardDrive, Loader2, SlidersHorizontal, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import { mediaMode, setMediaMode, type MediaMode } from "@/features/detail/media-mode";
@@ -7,6 +7,8 @@ import { toast } from "sonner";
 
 import type { SystemSettings } from "@/bindings/SystemSettings";
 import { NavTabs, type NavItem } from "@/components/nav-tabs";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -31,10 +34,11 @@ import { formatNumber } from "@/lib/format";
 
 import { formatBytes } from "./validation";
 
-type Page = "general" | "storage";
+type Page = "general" | "ai" | "storage";
 
 const ITEMS: (NavItem & { value: Page })[] = [
   { value: "general", label: tk("General"), icon: SlidersHorizontal },
+  { value: "ai", label: tk("AI summary"), icon: Sparkles },
   { value: "storage", label: tk("Storage"), icon: HardDrive },
 ];
 
@@ -49,6 +53,8 @@ const THEMES: [Theme, string][] = [
   ["light", tk("Light")],
   ["dark", tk("Dark")],
 ];
+
+const PERIOD_WEEKS = [2, 4, 8, 12];
 
 const MEDIA_MODES: [MediaMode, string][] = [
   ["ask", tk("Ask each time")],
@@ -87,11 +93,11 @@ function MediaModeSetting() {
   );
 }
 
-function GeneralPage() {
+/** The settings plus a mutation that saves them; changes save immediately. */
+function useSettings() {
   const queryClient = useQueryClient();
   const { setTheme } = useTheme();
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: api.getSettings });
-  // Changes save immediately, like the theme toggle in most apps.
   const save = useMutation({
     mutationFn: (next: SystemSettings) => api.saveSettings(next),
     onSuccess: (saved) => {
@@ -102,6 +108,11 @@ function GeneralPage() {
     onError: (error) =>
       toast.error(t("Could not save settings: {{error}}", { error: String(error) })),
   });
+  return { settings, save };
+}
+
+function GeneralPage() {
+  const { settings, save } = useSettings();
   if (!settings) return null;
 
   return (
@@ -150,6 +161,112 @@ function GeneralPage() {
   );
 }
 
+/** Activity summaries from a local Ollama server. */
+function AiPage() {
+  const { settings, save } = useSettings();
+  const [url, setUrl] = useState<string | null>(null);
+  const models = useMutation({
+    mutationFn: (server: string) => api.aiModels(server),
+    onError: (error) =>
+      toast.error(t("Could not reach Ollama: {{error}}", { error: String(error) })),
+  });
+  if (!settings) return null;
+  const serverUrl = url ?? settings.ai_url;
+  const saveUrl = () => {
+    const trimmed = serverUrl.trim().replace(/\/+$/, "");
+    if (trimmed !== settings.ai_url) save.mutate({ ...settings, ai_url: trimmed });
+    setUrl(null);
+  };
+  // The chosen model stays selectable even before the list was loaded.
+  const choices = [...new Set([...(models.data ?? []), settings.ai_model].filter(Boolean))];
+
+  return (
+    <div className="grid max-w-md gap-6">
+      <div className="grid gap-2">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="ai-enabled"
+            checked={settings.ai_enabled}
+            onCheckedChange={(checked) =>
+              save.mutate({ ...settings, ai_enabled: checked === true })
+            }
+          />
+          <Label htmlFor="ai-enabled">{t("Write activity summaries with a local AI model")}</Label>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {t(
+            "Compares an activity with earlier ones over a similar distance and with the recent weeks. New activities are summarised after import. Needs Ollama running on this computer; your data doesn't leave it.",
+          )}
+        </p>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="ai-url">{t("Ollama server")}</Label>
+        <div className="flex gap-2">
+          <Input
+            id="ai-url"
+            value={serverUrl}
+            onChange={(e) => setUrl(e.target.value)}
+            onBlur={saveUrl}
+          />
+          <Button
+            variant="outline"
+            disabled={models.isPending}
+            onClick={() => models.mutate(serverUrl.trim())}
+          >
+            {models.isPending && <Loader2 className="animate-spin" />}
+            {t("Load models")}
+          </Button>
+        </div>
+        {models.data?.length === 0 && (
+          <p className="text-xs text-muted-foreground">
+            {t("No models installed. Install one with “ollama pull qwen2.5:7b”.")}
+          </p>
+        )}
+      </div>
+      <div className="grid gap-2">
+        <Label>{t("Model")}</Label>
+        <Select
+          value={settings.ai_model}
+          onValueChange={(ai_model) => save.mutate({ ...settings, ai_model })}
+          disabled={choices.length === 0}
+        >
+          <SelectTrigger className="w-72">
+            <SelectValue placeholder={t("Load the models first")} />
+          </SelectTrigger>
+          <SelectContent>
+            {choices.map((name) => (
+              <SelectItem key={name} value={name}>
+                {name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          {t("Models with 7 to 14 billion parameters (e.g. qwen2.5:14b) work well.")}
+        </p>
+      </div>
+      <div className="grid gap-2">
+        <Label>{t("Compare with the last")}</Label>
+        <Select
+          value={String(settings.ai_period_weeks)}
+          onValueChange={(weeks) => save.mutate({ ...settings, ai_period_weeks: Number(weeks) })}
+        >
+          <SelectTrigger className="w-56">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PERIOD_WEEKS.map((weeks) => (
+              <SelectItem key={weeks} value={String(weeks)}>
+                {t("{{count}} week", { count: weeks })}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
+
 function StoragePage() {
   const { data: info } = useQuery({ queryKey: ["storage"], queryFn: api.storageInfo });
   if (!info) return null;
@@ -182,7 +299,7 @@ function StoragePage() {
   );
 }
 
-/** Language, appearance and storage (`ui/window_system_settings.py`). */
+/** Language, appearance, AI summary and storage (`ui/window_system_settings.py`). */
 export function SystemSettingsDialog({
   open,
   onOpenChange,
@@ -197,7 +314,7 @@ export function SystemSettingsDialog({
         <DialogHeader>
           <DialogTitle>{t("Settings")}</DialogTitle>
           <DialogDescription className="sr-only">
-            {t("Language, appearance and storage")}
+            {t("Language, appearance, AI summary and storage")}
           </DialogDescription>
         </DialogHeader>
         <Tabs
@@ -210,6 +327,9 @@ export function SystemSettingsDialog({
           <div className="min-h-0 min-w-0 flex-1 overflow-auto">
             <TabsContent value="general">
               <GeneralPage />
+            </TabsContent>
+            <TabsContent value="ai">
+              <AiPage />
             </TabsContent>
             <TabsContent value="storage">
               <StoragePage />

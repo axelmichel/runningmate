@@ -6,6 +6,7 @@ import type { ActivityPage } from "@/bindings/ActivityPage";
 import type { ActivityQuery } from "@/bindings/ActivityQuery";
 import type { ActivitySummary } from "@/bindings/ActivitySummary";
 import type { ActivityUpdate } from "@/bindings/ActivityUpdate";
+import type { AiSummary } from "@/bindings/AiSummary";
 import type { BestPerformance } from "@/bindings/BestPerformance";
 import type { ConnectorLink } from "@/bindings/ConnectorLink";
 import type { DateRange } from "@/bindings/DateRange";
@@ -132,6 +133,12 @@ export const api = {
     invoke<Equipment[]>("set_equipment_in_use", { kind, id, inUse }),
   deleteEquipment: (kind: EquipmentKind, id: number) =>
     invoke<Equipment[]>("delete_equipment", { kind, id }),
+
+  // AI summaries (a local Ollama server; a finished summary also emits `activity://updated`)
+  /** Models installed on the Ollama server; fails when it can't be reached. */
+  aiModels: (url: string) => invoke<string[]>("ai_models", { url }),
+  getAiSummary: (id: number) => invoke<AiSummary | null>("get_ai_summary", { id }),
+  generateAiSummary: (id: number) => invoke<AiSummary>("generate_ai_summary", { id }),
 
   // System settings
   getSettings: () => invoke<SystemSettings>("get_settings"),
