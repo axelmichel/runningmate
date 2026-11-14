@@ -78,6 +78,10 @@
   --chart-3: #e13342;
   --chart-4: #f37651;
   --chart-5: #f6b48f;
+  /* Sport colours, checked as a set for colour-blind and plain separation (light surface). */
+  --sport-running: #e13342;
+  --sport-cycling: #7c4ddb;
+  --sport-walking: #e8802f;
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -113,6 +117,10 @@
   --chart-3: #e13342;
   --chart-4: #f37651;
   --chart-5: #f6b48f;
+  /* The same sports in steps checked against the dark card. */
+  --sport-running: #e13342;
+  --sport-cycling: #9b6cf0;
+  --sport-walking: #d4762a;
   --sidebar: #35193e;
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: #f37651;

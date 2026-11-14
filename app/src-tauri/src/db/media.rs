@@ -61,26 +61,69 @@ impl Media {
     }
 }
 
+fn from_row(row: &rusqlite::Row, media_dir: &Path) -> rusqlite::Result<Media> {
+    let media_type: String = row.get("media_type")?;
+    Ok(Media {
+        id: row.get("id")?,
+        media_type: if media_type == "video" {
+            MediaType::Video
+        } else {
+            MediaType::Image
+        },
+        file_path: row.get("file_path")?,
+        linked: false,
+        missing: false,
+    }
+    .with_file_state(media_dir))
+}
+
 pub fn list(conn: &Connection, activity_id: i64, media_dir: &Path) -> AppResult<Vec<Media>> {
     let mut stmt = conn.prepare(
         "SELECT id, media_type, file_path FROM media WHERE activity_id = ?1 ORDER BY id",
     )?;
-    let rows = stmt.query_map([activity_id], |row| {
-        let media_type: String = row.get("media_type")?;
-        Ok(Media {
-            id: row.get("id")?,
-            media_type: if media_type == "video" {
-                MediaType::Video
-            } else {
-                MediaType::Image
-            },
-            file_path: row.get("file_path")?,
-            linked: false,
-            missing: false,
-        }
-        .with_file_state(media_dir))
-    })?;
+    let rows = stmt.query_map([activity_id], |row| from_row(row, media_dir))?;
     Ok(rows.collect::<Result<_, _>>()?)
+}
+
+/// A photo with the activity it belongs to.
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ActivityPhoto {
+    #[ts(type = "number")]
+    pub activity_id: i64,
+    pub media: Media,
+}
+
+/// The `limit` latest photos of all activities, newest activity first; files that no longer
+/// exist are skipped.
+pub fn recent_photos(
+    conn: &Connection,
+    limit: usize,
+    media_dir: &Path,
+) -> AppResult<Vec<ActivityPhoto>> {
+    let mut stmt = conn.prepare(
+        "SELECT media.id, media.media_type, media.file_path, media.activity_id
+         FROM media JOIN activities ON activities.id = media.activity_id
+         WHERE media.media_type = 'image'
+         ORDER BY activities.date DESC, media.id",
+    )?;
+    let mut photos = Vec::new();
+    for row in stmt.query_map([], |row| {
+        Ok(ActivityPhoto {
+            activity_id: row.get("activity_id")?,
+            media: from_row(row, media_dir)?,
+        })
+    })? {
+        let photo = row?;
+        if !photo.media.missing {
+            photos.push(photo);
+            if photos.len() == limit {
+                break;
+            }
+        }
+    }
+    Ok(photos)
 }
 
 pub fn insert(
@@ -135,6 +178,32 @@ mod tests {
         assert_eq!(delete(&conn, id).unwrap(), copy.to_str().unwrap());
         assert_eq!(list(&conn, 5, &media_dir).unwrap().len(), 1);
         assert!(matches!(delete(&conn, id), Err(AppError::NotFound(_))));
+    }
+
+    #[test]
+    fn recent_photos_come_newest_activity_first() {
+        use crate::db::activities::tests::insert_activity;
+
+        let db = Db::open_in_memory().unwrap();
+        let conn = db.conn().unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let file = |name: &str| {
+            let path = dir.path().join(name);
+            std::fs::write(&path, b"").unwrap();
+            path.to_str().unwrap().to_string()
+        };
+        insert_activity(&conn, 1, "Running", 1_000, 5.0, "Older");
+        insert_activity(&conn, 2, "Running", 2_000, 5.0, "Newer");
+        insert(&conn, 1, MediaType::Image, &file("old.jpg")).unwrap();
+        insert(&conn, 2, MediaType::Image, &file("new.jpg")).unwrap();
+        insert(&conn, 2, MediaType::Video, &file("clip.mp4")).unwrap();
+        insert(&conn, 2, MediaType::Image, "/gone/missing.jpg").unwrap();
+
+        let photos = recent_photos(&conn, 10, dir.path()).unwrap();
+        let ids: Vec<_> = photos.iter().map(|p| p.activity_id).collect();
+        assert_eq!(ids, [2, 1]);
+        assert!(photos[0].media.file_path.ends_with("new.jpg"));
+        assert_eq!(recent_photos(&conn, 1, dir.path()).unwrap().len(), 1);
     }
 
     #[test]

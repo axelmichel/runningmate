@@ -60,6 +60,7 @@ pub fn run() {
             commands::activities::delete_activity,
             commands::activities::activity_type_details,
             commands::activities::list_media,
+            commands::activities::recent_photos,
             commands::activities::add_media,
             commands::activities::add_media_from_photos,
             commands::activities::photos_access,

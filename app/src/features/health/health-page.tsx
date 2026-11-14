@@ -54,10 +54,11 @@ const fitnessConfig = () =>
 
 const heartConfig = () =>
   ({
-    Running: { label: t("Runs"), color: "var(--chart-1)" },
-    Cycling: { label: t("Rides"), color: "var(--chart-3)" },
-    Walking: { label: t("Walks"), color: "var(--chart-5)" },
-    trend: { label: t("Trend"), color: "var(--chart-4)" },
+    Running: { label: t("Runs"), color: "var(--sport-running)" },
+    Cycling: { label: t("Rides"), color: "var(--sport-cycling)" },
+    Walking: { label: t("Walks"), color: "var(--sport-walking)" },
+    // Neutral, so it doesn't read as a fourth sport.
+    trend: { label: t("Trend"), color: "var(--muted-foreground)" },
   }) satisfies ChartConfig;
 
 const TYPES = ["Running", "Cycling", "Walking"] as const;

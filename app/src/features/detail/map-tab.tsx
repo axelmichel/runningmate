@@ -13,7 +13,7 @@ import { t } from "@/i18n";
 import { formatNumber, formatPace } from "@/lib/format";
 
 import { HEART_RATE_RAMP, PACE_RAMP, rampColor, robustRange } from "./color-scale";
-import { Basemap } from "./basemap";
+import { Basemap, MapCredit } from "./basemap";
 import { useSeries } from "./use-series";
 
 type Mode = "track" | "pace" | "heartRate";
@@ -169,11 +169,12 @@ export function MapTab({ activityId, view }: { activityId: number; view: ViewMod
         </Button>
         {mode !== "track" && <Legend mode={mode} points={points} />}
       </div>
-      <div className="min-h-0 flex-1 overflow-hidden rounded-lg border">
+      <div className="relative isolate min-h-0 flex-1 overflow-hidden rounded-lg border">
         <MapContainer
           bounds={derived.bounds}
           boundsOptions={{ padding: [24, 24] }}
           className="h-full w-full"
+          attributionControl={false}
         >
           <Basemap dark={dark} />
           <FitToContainer />
@@ -219,6 +220,7 @@ export function MapTab({ activityId, view }: { activityId: number; view: ViewMod
             <Tooltip>{t("Finish")}</Tooltip>
           </CircleMarker>
         </MapContainer>
+        <MapCredit />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { HeartPulse, RefreshCw, Search, Settings, User } from "lucide-react";
+import { Gauge, HeartPulse, RefreshCw, Search, Settings, User } from "lucide-react";
 
 import {
   Sidebar,
@@ -15,10 +15,11 @@ import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
 import { t } from "@/i18n";
 
 type AppSidebarProps = {
-  /** The activity view, or `null` while the Health data page is shown. */
-  viewMode: ViewMode | null;
+  page: "dashboard" | "activities" | "health";
+  /** The activity view, marked while the activities page is shown. */
+  viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
-  onHealth: () => void;
+  onPageChange: (page: "dashboard" | "health") => void;
   searchOpen: boolean;
   onSearchToggle: () => void;
   onSync: () => void;
@@ -27,9 +28,10 @@ type AppSidebarProps = {
 };
 
 export function AppSidebar({
+  page,
   viewMode,
   onViewModeChange,
-  onHealth,
+  onPageChange,
   searchOpen,
   onSearchToggle,
   onSync,
@@ -50,10 +52,26 @@ export function AppSidebar({
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={page === "dashboard"}
+                  tooltip={`${t("Dashboard")} (⇧⌘D)`}
+                  onClick={() => onPageChange("dashboard")}
+                >
+                  <Gauge />
+                  <span>{t("Dashboard")}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
               {VIEW_MODES.map(({ mode, label, icon: Icon }) => (
                 <SidebarMenuItem key={mode}>
                   <SidebarMenuButton
-                    isActive={viewMode === mode}
+                    isActive={page === "activities" && viewMode === mode}
                     tooltip={t(label)}
                     onClick={() => onViewModeChange(mode)}
                   >
@@ -70,9 +88,9 @@ export function AppSidebar({
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  isActive={viewMode === null}
+                  isActive={page === "health"}
                   tooltip={`${t("Health data")} (⇧⌘H)`}
-                  onClick={onHealth}
+                  onClick={() => onPageChange("health")}
                 >
                   <HeartPulse />
                   <span>{t("Health data")}</span>

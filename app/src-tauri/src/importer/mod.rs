@@ -408,8 +408,8 @@ fn mark_data_fix(db: &Db, name: &str) -> AppResult<()> {
 
 /// Corrects what earlier versions stored, each fix once per database: activities dated by a
 /// clock jump ([`fix_clock_jumps`]), calories and power from the ACSM estimates
-/// ([`recompute_energy`]), then pauses and segment cuts ([`recompute_pauses_and_segments`]).
-/// Returns where to look the weather up again.
+/// ([`recompute_energy`]), pauses and segment cuts ([`recompute_pauses_and_segments`]), then
+/// best segments across a clock running backwards. Returns where to look the weather up again.
 pub fn apply_data_fixes(
     db: &Db,
     imports_dir: &Path,
@@ -427,6 +427,13 @@ pub fn apply_data_fixes(
     if !data_fix_applied(db, "pauses-and-segments")? {
         recompute_pauses_and_segments(db, imports_dir)?;
         mark_data_fix(db, "pauses-and-segments")?;
+    }
+    // Best segments no longer span a segment whose clock ran backwards.
+    if !data_fix_applied(db, "best-segments-clock")? {
+        update_archived(db, imports_dir, |tx, activity_id, processed| {
+            store_best_segments(tx, processed, activity_id)
+        })?;
+        mark_data_fix(db, "best-segments-clock")?;
     }
     Ok(weather)
 }

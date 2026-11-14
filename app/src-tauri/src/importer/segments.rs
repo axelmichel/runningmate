@@ -156,8 +156,14 @@ pub fn best_segments(segments: &[Segment], targets: &[f64]) -> Vec<BestSegment> 
                 let mut distance = 0.0;
                 let mut seconds = 0.0;
                 for segment in &segments[start..] {
+                    let time = (segment.time_end - segment.time_start).as_seconds_f64();
+                    // A clock that jumped back leaves a segment without time; no stretch over
+                    // it can be timed.
+                    if time <= 0.0 {
+                        break;
+                    }
                     distance += segment.distance;
-                    seconds += (segment.time_end - segment.time_start).as_seconds_f64();
+                    seconds += time;
                     if distance < target {
                         continue;
                     }
@@ -223,14 +229,18 @@ mod tests {
         let segments = [segment(1.0, 6.0, 0), segment(0.2, 4.0, 6)];
         let best = best_segments(&segments, &[1.2]);
         assert!((best[0].pace - 6.8 / 1.2).abs() < 1e-9, "{}", best[0].pace);
-        // A remainder without time doesn't halve the pace (Python: (6.0 + 0.0) / 2).
+        // A remainder without time can't complete a stretch (Python: (6.0 + 0.0) / 2).
         let segments = [segment(0.998, 6.0, 0), segment(0.01, 0.0, 6)];
-        let best = best_segments(&segments, &[1.0]);
-        assert!(
-            (best[0].pace - 0.998 * 6.0 / 1.008).abs() < 1e-6,
-            "{}",
-            best[0].pace
-        );
+        assert!(best_segments(&segments, &[1.0]).is_empty());
+        // Nor can a segment whose clock ran backwards, but the stretches beside it count.
+        let segments = [
+            segment(1.0, 6.0, 0),
+            segment(1.0, -2.0, 6),
+            segment(1.0, 5.0, 10),
+            segment(1.0, 5.5, 15),
+        ];
+        let best = best_segments(&segments, &[1.0, 2.0]);
+        assert_eq!((best[0].pace, best[1].pace), (5.0, 5.25));
     }
 
     #[test]

@@ -6,7 +6,7 @@ use serde::Serialize;
 use ts_rs::TS;
 
 use super::value::{opt_f64, opt_i64, opt_string};
-use crate::{activity_type::ViewMode, error::AppResult};
+use crate::{activity_type::ViewMode, error::AppResult, importer::track::pace_limits};
 
 /// Segment distances (km) checked per view, from `BestSegmentFinder.SEGMENT_DISTANCES`.
 pub fn segment_distances(view: ViewMode) -> &'static [f64] {
@@ -32,6 +32,16 @@ pub struct BestPerformance {
     pub start_time: Option<String>,
 }
 
+/// SQL condition keeping paces a person can manage: not faster than the per-point pace limit of
+/// the activity type (`importer::track::pace_limits`). A file whose clock jumps back produces
+/// segments with negative or tiny times, and a ride recorded as a run produces world records.
+fn plausible() -> String {
+    let limits = [ViewMode::Running, ViewMode::Cycling, ViewMode::Walking]
+        .map(|view| format!("WHEN '{view:?}' THEN {:?}", pace_limits(view).0))
+        .join(" ");
+    format!("best_time >= CASE activity_type {limits} ELSE 0 END AND best_time > 0")
+}
+
 fn read(
     conn: &Connection,
     sql: &str,
@@ -53,9 +63,12 @@ fn read(
 pub fn for_activity(conn: &Connection, activity_id: i64) -> AppResult<Vec<BestPerformance>> {
     read(
         conn,
-        "SELECT activity_id, distance, MIN(best_time) AS best_time, date_time
-         FROM best_performances WHERE activity_id = ?1
-         GROUP BY distance ORDER BY distance",
+        &format!(
+            "SELECT activity_id, distance, MIN(best_time) AS best_time, date_time
+             FROM best_performances WHERE activity_id = ?1 AND {}
+             GROUP BY distance ORDER BY distance",
+            plausible()
+        ),
         [activity_id],
     )
 }
@@ -70,9 +83,12 @@ pub fn top(conn: &Connection, view: ViewMode) -> AppResult<Vec<BestPerformance>>
     for distance in segment_distances(view) {
         result.extend(read(
             conn,
-            "SELECT activity_id, distance, best_time, date_time FROM best_performances
-             WHERE activity_type = ?1 AND distance = ?2
-             ORDER BY best_time ASC LIMIT 3",
+            &format!(
+                "SELECT activity_id, distance, best_time, date_time FROM best_performances
+                 WHERE activity_type = ?1 AND distance = ?2 AND {}
+                 ORDER BY best_time ASC LIMIT 3",
+                plausible()
+            ),
             rusqlite::params![view_name, distance],
         )?);
     }
@@ -116,5 +132,27 @@ mod tests {
             .collect();
         assert_eq!(one_k, [2, 3, 1]);
         assert_eq!(top.iter().filter(|p| p.distance == 5.0).count(), 1);
+    }
+
+    #[test]
+    fn leaves_out_impossible_records() {
+        let db = Db::open_in_memory().unwrap();
+        let conn = db.conn().unwrap();
+        conn.execute_batch(
+            "INSERT INTO best_performances (activity_id, distance, best_time, activity_type,
+                date_time)
+             VALUES (1, 5.0, 5.5, 'Running', ''), (2, 5.0, 0.15, 'Running', ''),
+                    (3, 5.0, -0.2, 'Running', ''), (4, 5.0, 2.0, 'Cycling', ''),
+                    (2, 1.0, 0.1, 'Running', '');",
+        )
+        .unwrap();
+        let running: Vec<_> = top(&conn, ViewMode::Running)
+            .unwrap()
+            .iter()
+            .map(|p| p.activity_id)
+            .collect();
+        assert_eq!(running, [1]);
+        assert_eq!(top(&conn, ViewMode::Cycling).unwrap().len(), 1);
+        assert!(for_activity(&conn, 2).unwrap().is_empty());
     }
 }
