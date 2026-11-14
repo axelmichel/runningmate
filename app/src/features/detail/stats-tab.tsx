@@ -1,0 +1,154 @@
+import { Area, AreaChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+
+import type { TrackPoint } from "@/bindings/TrackPoint";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatNumber, formatPace } from "@/lib/format";
+
+import { useSeries } from "./use-series";
+
+const config = {
+  elevation: { label: "Elevation (m)", color: "var(--chart-2)" },
+  heartRate: { label: "Heart rate (bpm)", color: "var(--chart-3)" },
+  pace: { label: "Pace (/km)", color: "var(--chart-4)" },
+} satisfies ChartConfig;
+
+const distanceAxis = (
+  <XAxis
+    dataKey="distance"
+    type="number"
+    domain={["dataMin", "dataMax"]}
+    tickFormatter={(v: number) => `${formatNumber(v, 0)} km`}
+    tickLine={false}
+    axisLine={false}
+  />
+);
+
+function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle className="text-sm">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  );
+}
+
+/** Elevation, heart rate and pace over distance (the Python statistics page). */
+export function StatsTab({ activityId }: { activityId: number }) {
+  const { data: points, isPending } = useSeries(activityId);
+  if (isPending) return <Skeleton className="h-96 w-full" />;
+  if (!points) {
+    return <p className="text-sm text-muted-foreground">No archived TCX file for this activity.</p>;
+  }
+  const hasHeartRate = points.some((p) => p.heartRate != null);
+  const hasPace = points.some((p) => p.pace != null);
+  const tooltip = (
+    <ChartTooltip
+      content={
+        <ChartTooltipContent
+          labelFormatter={(_, payload) =>
+            `${formatNumber((payload?.[0]?.payload as TrackPoint | undefined)?.distance, 2)} km`
+          }
+        />
+      }
+    />
+  );
+  return (
+    <div className="grid gap-4">
+      <ChartCard title="Elevation">
+        <ChartContainer config={config} className="aspect-auto h-48 w-full">
+          <AreaChart data={points}>
+            <CartesianGrid vertical={false} />
+            {distanceAxis}
+            <YAxis
+              width={40}
+              tickLine={false}
+              axisLine={false}
+              domain={["dataMin - 10", "dataMax + 10"]}
+              tickFormatter={(v: number) => formatNumber(v)}
+            />
+            {tooltip}
+            <Area
+              dataKey="elevation"
+              type="monotone"
+              stroke="var(--color-elevation)"
+              fill="var(--color-elevation)"
+              fillOpacity={0.25}
+              isAnimationActive={false}
+            />
+          </AreaChart>
+        </ChartContainer>
+      </ChartCard>
+      {hasHeartRate && (
+        <ChartCard title="Heart rate">
+          <ChartContainer config={config} className="aspect-auto h-48 w-full">
+            <LineChart data={points}>
+              <CartesianGrid vertical={false} />
+              {distanceAxis}
+              <YAxis
+                width={40}
+                tickLine={false}
+                axisLine={false}
+                domain={["dataMin - 5", "dataMax + 5"]}
+              />
+              {tooltip}
+              <Line
+                dataKey="heartRate"
+                type="monotone"
+                stroke="var(--color-heartRate)"
+                dot={false}
+                connectNulls
+                isAnimationActive={false}
+              />
+            </LineChart>
+          </ChartContainer>
+        </ChartCard>
+      )}
+      {hasPace && (
+        <ChartCard title="Pace">
+          <ChartContainer config={config} className="aspect-auto h-48 w-full">
+            <LineChart data={points}>
+              <CartesianGrid vertical={false} />
+              {distanceAxis}
+              {/* Faster (lower) paces at the top. */}
+              <YAxis
+                width={40}
+                reversed
+                tickLine={false}
+                axisLine={false}
+                domain={["dataMin", "dataMax"]}
+                tickFormatter={(v: number) => formatPace(v)}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value) => `${formatPace(Number(value))} /km`}
+                    labelFormatter={(_, payload) =>
+                      `${formatNumber((payload?.[0]?.payload as TrackPoint | undefined)?.distance, 2)} km`
+                    }
+                  />
+                }
+              />
+              <Line
+                dataKey="pace"
+                type="monotone"
+                stroke="var(--color-pace)"
+                dot={false}
+                connectNulls
+                isAnimationActive={false}
+              />
+            </LineChart>
+          </ChartContainer>
+        </ChartCard>
+      )}
+    </div>
+  );
+}

@@ -6,7 +6,7 @@ pub mod media;
 pub mod migrations;
 pub mod performances;
 pub mod users;
-mod value;
+pub mod value;
 pub mod weather;
 
 use std::{
@@ -234,6 +234,23 @@ mod real_database {
         }
         println!("decoded {} activities", ids.len());
 
+        let started = std::time::Instant::now();
+        let mut scores = [0usize; 13];
+        for id in &ids {
+            crate::analysis::segments(&conn, *id).unwrap();
+            let effect = crate::analysis::training_effect(&conn, *id)
+                .unwrap_or_else(|e| panic!("training effect {id}: {e}"));
+            scores[effect.score as usize] += 1;
+            crate::analysis::fitness_trend(&conn, *id).unwrap();
+            crate::analysis::heart_rate_trend(&conn, *id).unwrap();
+        }
+        println!(
+            "analysed {} activities in {:?}; training effect scores 1-12: {:?}",
+            ids.len(),
+            started.elapsed(),
+            &scores[1..]
+        );
+
         // Optionally also outline the newest routes from the archives (read-only).
         if let Ok(imports) = std::env::var("RUNNINGMATE_TEST_IMPORTS") {
             let started = std::time::Instant::now();
@@ -242,6 +259,9 @@ mod real_database {
                 let route =
                     crate::importer::route_outline(&conn, *id, Path::new(&imports)).unwrap();
                 outlined += usize::from(route.is_some());
+                let zones =
+                    crate::analysis::heart_rate_zones(&conn, *id, Path::new(&imports)).unwrap();
+                assert!(zones.is_some_and(|z| z.len() == 5));
             }
             println!(
                 "outlined {outlined}/50 routes in {:?} ({:?} each)",

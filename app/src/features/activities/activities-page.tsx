@@ -6,6 +6,7 @@ import type { ActivityFilter } from "@/bindings/ActivityFilter";
 import type { ViewMode } from "@/bindings/ViewMode";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ActivityDetailDialog } from "@/features/detail/activity-detail-dialog";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,7 @@ export function ActivitiesPage({
   const [pageIndex, setPageIndex] = useState(0);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [selection, setSelection] = useState<Set<number>>(new Set());
+  const [detailId, setDetailId] = useState<number | null>(null);
 
   // Switching view keeps the filter but starts over on page one, as the Python app did.
   const [shownView, setShownView] = useState(view);
@@ -155,6 +157,7 @@ export function ActivitiesPage({
           onSelectionChange={setSelection}
           onDelete={(row) => remove.mutate(row.id)}
           onReimport={(row) => reimport.mutate(row.id)}
+          onOpenDetails={(row) => setDetailId(row.id)}
         />
       </div>
       {/* Slides in and out like the left sidebar; the inner width stays fixed while animating. */}
@@ -167,9 +170,14 @@ export function ActivitiesPage({
         )}
       >
         <ScrollArea className="h-full w-84 pl-4">
-          <ActivityPanel activityId={panelId} dataDir={dataDir} />
+          <ActivityPanel activityId={panelId} dataDir={dataDir} onOpenDetails={setDetailId} />
         </ScrollArea>
       </aside>
+      <ActivityDetailDialog
+        activityId={detailId}
+        onClose={() => setDetailId(null)}
+        dataDir={dataDir}
+      />
     </div>
   );
 }

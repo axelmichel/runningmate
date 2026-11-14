@@ -160,3 +160,17 @@
     background: transparent;
   }
 }
+
+/* Kilometre numbers drawn inside the map markers (features/detail/map-tab.tsx). */
+.leaflet-tooltip.km-label {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+}
+.leaflet-tooltip.km-label::before {
+  display: none;
+}

@@ -1,12 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDuration, formatHours, formatMinSec, formatPace } from "./format";
+import { formatDuration, formatHours, formatMinSec, formatPace, parseDuration } from "./format";
 
 describe("format", () => {
   it("formats durations", () => {
     expect(formatDuration(2932)).toBe("0:48:52");
     expect(formatDuration(36000)).toBe("10:00:00");
     expect(formatDuration(null)).toBe("–");
+  });
+
+  it("parses durations", () => {
+    expect(parseDuration("0:48:52")).toBe(2932);
+    expect(parseDuration("48:52")).toBe(2932);
+    expect(parseDuration("1:75:00")).toBeNull();
+    expect(parseDuration("abc")).toBeNull();
   });
 
   it("formats total hours", () => {

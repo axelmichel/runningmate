@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   EllipsisVertical,
+  Eye,
   RotateCcw,
   Trash2,
 } from "lucide-react";
@@ -96,6 +97,7 @@ type ActivityTableProps = {
   onDelete: (row: ActivityRow) => void;
   /** Recompute from the archived TCX file. */
   onReimport: (row: ActivityRow) => void;
+  onOpenDetails: (row: ActivityRow) => void;
 };
 
 export function ActivityTable({
@@ -112,6 +114,7 @@ export function ActivityTable({
   onSelectionChange,
   onDelete,
   onReimport,
+  onOpenDetails,
 }: ActivityTableProps) {
   const [pendingDelete, setPendingDelete] = useState<ActivityRow | null>(null);
   const columns = columnsFor(view);
@@ -222,6 +225,7 @@ export function ActivityTable({
                 data-state={row.id === activeId ? "selected" : undefined}
                 className="group/row cursor-pointer"
                 onClick={() => onActivate(row.id)}
+                onDoubleClick={() => onOpenDetails(row)}
               >
                 <TableCell
                   className={pinClass(pins[0], PINNED_CELL)}
@@ -259,6 +263,10 @@ export function ActivityTable({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={() => onOpenDetails(row)}>
+                        <Eye />
+                        View details
+                      </DropdownMenuItem>
                       <DropdownMenuItem onSelect={() => onReimport(row)}>
                         <RotateCcw />
                         Re-import from TCX

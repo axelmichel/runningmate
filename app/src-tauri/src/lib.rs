@@ -1,4 +1,5 @@
 mod activity_type;
+mod analysis;
 mod commands;
 mod db;
 mod error;
@@ -59,6 +60,12 @@ pub fn run() {
             commands::users::add_equipment,
             commands::users::set_equipment_in_use,
             commands::users::delete_equipment,
+            commands::analysis::activity_series,
+            commands::analysis::activity_segments,
+            commands::analysis::activity_heart_rate_zones,
+            commands::analysis::activity_training_effect,
+            commands::analysis::fitness_trend,
+            commands::analysis::heart_rate_trend,
             commands::import::import_files,
             commands::import::reimport_activity,
             commands::import::activity_route,

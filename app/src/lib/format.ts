@@ -28,6 +28,15 @@ export function formatDuration(seconds: number | null | undefined): string {
   return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+/** "H:MM:SS" (or "MM:SS") → seconds, `null` if invalid. */
+export function parseDuration(text: string): number | null {
+  const parts = text.trim().split(":").map(Number);
+  if (parts.length < 2 || parts.length > 3 || parts.some((p) => !Number.isInteger(p) || p < 0))
+    return null;
+  const [h, m, s] = parts.length === 3 ? parts : [0, ...parts];
+  return m < 60 && s < 60 ? h * 3600 + m * 60 + s : null;
+}
+
 /** Seconds → "123 h 05 min", for totals. */
 export function formatHours(seconds: number): string {
   const minutes = Math.round(seconds / 60);

@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { Droplets, Wind } from "lucide-react";
+import { Droplets, Maximize2, Wind } from "lucide-react";
 import { useState } from "react";
 
 import type { ActivityDetail } from "@/bindings/ActivityDetail";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import {
@@ -78,11 +79,32 @@ function Route({ activity, dataDir }: { activity: ActivityDetail; dataDir?: stri
   );
 }
 
-function Overview({ activity, dataDir }: { activity: ActivityDetail; dataDir?: string }) {
+function Overview({
+  activity,
+  dataDir,
+  onOpenDetails,
+}: {
+  activity: ActivityDetail;
+  dataDir?: string;
+  onOpenDetails?: (id: number) => void;
+}) {
   return (
     <Card size="sm">
       <CardHeader>
         <CardTitle className="leading-snug">{activity.title}</CardTitle>
+        {onOpenDetails && (
+          <CardAction>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Open details"
+              title="Open details"
+              onClick={() => onOpenDetails(activity.id)}
+            >
+              <Maximize2 />
+            </Button>
+          </CardAction>
+        )}
         <div className="text-xs text-muted-foreground">
           {formatDateTime(activity.date)} · {activity.typeDetail || activity.activityType}
         </div>
@@ -167,7 +189,16 @@ function BestPerformances({ activityId }: { activityId: number }) {
 }
 
 /** Right-hand panel for the active (or latest) activity, like the Python main window. */
-export function ActivityPanel({ activityId, dataDir }: { activityId?: number; dataDir?: string }) {
+export function ActivityPanel({
+  activityId,
+  dataDir,
+  onOpenDetails,
+}: {
+  activityId?: number;
+  dataDir?: string;
+  /** Shows a button that opens the detail window. */
+  onOpenDetails?: (id: number) => void;
+}) {
   const { data: activity, isPending } = useQuery({
     queryKey: ["activity", activityId],
     queryFn: () => api.getActivity(activityId!),
@@ -182,7 +213,7 @@ export function ActivityPanel({ activityId, dataDir }: { activityId?: number; da
   }
   return (
     <div className="grid gap-3">
-      <Overview activity={activity} dataDir={dataDir} />
+      <Overview activity={activity} dataDir={dataDir} onOpenDetails={onOpenDetails} />
       <WeatherCard activityId={activity.id} />
       <BestPerformances activityId={activity.id} />
     </div>

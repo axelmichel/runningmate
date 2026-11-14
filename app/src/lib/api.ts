@@ -10,16 +10,22 @@ import type { BestPerformance } from "@/bindings/BestPerformance";
 import type { DayTotal } from "@/bindings/DayTotal";
 import type { Equipment } from "@/bindings/Equipment";
 import type { EquipmentKind } from "@/bindings/EquipmentKind";
+import type { FitnessDay } from "@/bindings/FitnessDay";
 import type { FolderSyncStatus } from "@/bindings/FolderSyncStatus";
+import type { HeartRateTrend } from "@/bindings/HeartRateTrend";
 import type { ImportSummary } from "@/bindings/ImportSummary";
 import type { Media } from "@/bindings/Media";
 import type { RouteOutline } from "@/bindings/RouteOutline";
+import type { SegmentRow } from "@/bindings/SegmentRow";
 import type { SystemSettings } from "@/bindings/SystemSettings";
+import type { TrackPoint } from "@/bindings/TrackPoint";
+import type { TrainingEffect } from "@/bindings/TrainingEffect";
 import type { User } from "@/bindings/User";
 import type { UserInput } from "@/bindings/UserInput";
 import type { ViewMode } from "@/bindings/ViewMode";
 import type { Weather } from "@/bindings/Weather";
 import type { ZonesInput } from "@/bindings/ZonesInput";
+import type { ZoneTime } from "@/bindings/ZoneTime";
 
 export type AppInfo = {
   version: string;
@@ -43,6 +49,16 @@ export const api = {
   deleteActivity: (id: number) => invoke<void>("delete_activity", { id }),
   activityTypeDetails: (viewMode: ViewMode) =>
     invoke<string[]>("activity_type_details", { viewMode }),
+
+  // Detail window analyses
+  activitySeries: (id: number) => invoke<TrackPoint[] | null>("activity_series", { id }),
+  activitySegments: (id: number) => invoke<SegmentRow[]>("activity_segments", { id }),
+  activityHeartRateZones: (id: number) =>
+    invoke<ZoneTime[] | null>("activity_heart_rate_zones", { id }),
+  activityTrainingEffect: (id: number) =>
+    invoke<TrainingEffect>("activity_training_effect", { id }),
+  fitnessTrend: (id: number) => invoke<FitnessDay[]>("fitness_trend", { id }),
+  heartRateTrend: (id: number) => invoke<HeartRateTrend>("heart_rate_trend", { id }),
 
   // Import and folder sync (progress arrives as `import://progress` events)
   importFiles: (paths: string[]) => invoke<ImportSummary>("import_files", { paths }),
