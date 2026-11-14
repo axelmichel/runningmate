@@ -1,7 +1,10 @@
 //! TCX import, re-import and folder sync. Imports run on a blocking thread and report each
 //! file through `import://progress` events; weather is fetched in the background afterwards.
 
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
@@ -16,6 +19,41 @@ use crate::{
 };
 
 pub const PROGRESS_EVENT: &str = "import://progress";
+/// Reported while files are read before importing; iCloud Drive may download them first.
+pub const READING_EVENT: &str = "import://reading";
+
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ReadingProgress {
+    pub done: usize,
+    pub total: usize,
+    pub file: String,
+}
+
+/// Set by `cancel_import`; long-running imports check it between files and stop early.
+#[derive(Default)]
+pub struct ImportCancel(AtomicBool);
+
+impl ImportCancel {
+    pub fn reset(&self) {
+        self.0.store(false, Ordering::SeqCst);
+    }
+
+    pub fn requested(&self) -> bool {
+        self.0.load(Ordering::SeqCst)
+    }
+}
+
+/// Asks the running import, folder sync or Garmin sync/upload to stop after the current file.
+#[tauri::command]
+pub fn cancel_import(cancel: State<'_, ImportCancel>) {
+    cancel.0.store(true, Ordering::SeqCst);
+}
+
+fn cancelled(app: &AppHandle) -> bool {
+    app.state::<ImportCancel>().requested()
+}
 
 #[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -62,6 +100,36 @@ impl DateRange {
     }
 }
 
+/// Copies the files into a local staging folder, reporting each through `import://reading`.
+/// Files in iCloud Drive may be downloaded on first access, which is the slow part of a folder
+/// sync; afterwards everything is read from the local copies. Names are kept, as they are the
+/// files' ids for duplicate detection.
+fn stage(app: &AppHandle, files: &[PathBuf], staging: &Path) -> AppResult<Vec<PathBuf>> {
+    std::fs::create_dir_all(staging)?;
+    let mut staged = Vec::new();
+    for (index, file) in files.iter().enumerate() {
+        if cancelled(app) {
+            break;
+        }
+        let name = file.file_name().map(|n| n.to_owned()).unwrap_or_default();
+        let target = staging.join(&name);
+        let _ = app.emit(
+            READING_EVENT,
+            ReadingProgress {
+                done: index + 1,
+                total: files.len(),
+                file: name.to_string_lossy().into_owned(),
+            },
+        );
+        // A file that can't be read is passed on as is, so the importer reports why.
+        match std::fs::copy(file, &target) {
+            Ok(_) => staged.push(target),
+            Err(_) => staged.push(file.clone()),
+        }
+    }
+    Ok(staged)
+}
+
 /// TCX files within the range, newest first (by their first trackpoint). Files whose start
 /// can't be read are kept, at the end, so the importer can report what's wrong with them.
 pub(crate) fn newest_first(files: Vec<PathBuf>, range: &DateRange) -> Vec<PathBuf> {
@@ -81,6 +149,8 @@ pub struct ImportSummary {
     pub imported: usize,
     pub duplicates: usize,
     pub failed: usize,
+    /// Stopped early by the user.
+    pub cancelled: bool,
 }
 
 /// Looks up and stores the weather for an imported activity without blocking the import.
@@ -134,6 +204,10 @@ impl ImportSummary {
 fn import_paths(app: &AppHandle, files: &[PathBuf]) -> AppResult<ImportSummary> {
     let mut summary = ImportSummary::default();
     for (index, file) in files.iter().enumerate() {
+        if cancelled(app) {
+            summary.cancelled = true;
+            break;
+        }
         let outcome = import_one(app, file)?;
         summary.count(&outcome);
         let _ = app.emit(
@@ -152,10 +226,28 @@ fn import_paths(app: &AppHandle, files: &[PathBuf]) -> AppResult<ImportSummary> 
     Ok(summary)
 }
 
-async fn run_import(app: AppHandle, files: Vec<PathBuf>) -> AppResult<ImportSummary> {
-    tauri::async_runtime::spawn_blocking(move || import_paths(&app, &files))
-        .await
-        .map_err(|e| AppError::Invalid(format!("import stopped: {e}")))?
+/// Reads (stages) the files, orders them newest first within the range and imports them, all
+/// on a blocking thread. The staging copies are removed afterwards.
+async fn run_import(
+    app: AppHandle,
+    files: Vec<PathBuf>,
+    range: DateRange,
+) -> AppResult<ImportSummary> {
+    app.state::<ImportCancel>().reset();
+    tauri::async_runtime::spawn_blocking(move || {
+        let staging = std::env::temp_dir()
+            .join("runningmate-import")
+            .join(chrono::Utc::now().timestamp_millis().to_string());
+        let result = stage(&app, &files, &staging).and_then(|staged| {
+            let mut summary = import_paths(&app, &newest_first(staged, &range))?;
+            summary.cancelled |= cancelled(&app);
+            Ok(summary)
+        });
+        let _ = std::fs::remove_dir_all(&staging);
+        result
+    })
+    .await
+    .map_err(|e| AppError::Invalid(format!("import stopped: {e}")))?
 }
 
 #[tauri::command]
@@ -164,11 +256,12 @@ pub async fn import_files(
     paths: Vec<String>,
     range: Option<DateRange>,
 ) -> AppResult<ImportSummary> {
-    let files = newest_first(
+    run_import(
+        app,
         paths.into_iter().map(PathBuf::from).collect(),
-        &range.unwrap_or_default(),
-    );
-    run_import(app, files).await
+        range.unwrap_or_default(),
+    )
+    .await
 }
 
 /// Recomputes an activity from its archived TCX file.
@@ -219,21 +312,19 @@ pub fn set_sync_folder(folder: String) -> AppResult<FolderSyncStatus> {
 
 /// Imports the `.tcx` files changed since the last sync straight from the sync folder (Python
 /// copied them into `imports` first), newest first and within the optional range. The sync
-/// time is only recorded for an unrestricted sync without failures, so nothing is skipped.
+/// time is only recorded for a complete, unrestricted sync without failures, so nothing is
+/// skipped.
 #[tauri::command]
 pub async fn sync_folder(app: AppHandle, range: Option<DateRange>) -> AppResult<ImportSummary> {
     let range = range.unwrap_or_default();
     let started = chrono::Local::now();
-    let files = newest_first(
-        sync::status()?
-            .new_files
-            .into_iter()
-            .map(PathBuf::from)
-            .collect(),
-        &range,
-    );
-    let summary = run_import(app, files).await?;
-    if summary.failed == 0 && range.from.is_none() && range.to.is_none() {
+    let files = sync::status()?
+        .new_files
+        .into_iter()
+        .map(PathBuf::from)
+        .collect();
+    let summary = run_import(app, files, range).await?;
+    if summary.failed == 0 && !summary.cancelled && range.from.is_none() && range.to.is_none() {
         sync::mark_synced(started)?;
     }
     Ok(summary)

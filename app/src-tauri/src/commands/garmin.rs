@@ -8,7 +8,9 @@ use ts_rs::TS;
 
 use rusqlite::OptionalExtension;
 
-use super::import::{DateRange, ImportProgress, ImportSummary, PROGRESS_EVENT, import_one};
+use super::import::{
+    DateRange, ImportCancel, ImportProgress, ImportSummary, PROGRESS_EVENT, import_one,
+};
 use crate::{
     db::{
         Db,
@@ -96,6 +98,7 @@ pub fn garmin_sign_out() -> AppResult<()> {
 #[tauri::command]
 pub async fn garmin_sync(app: AppHandle, range: Option<DateRange>) -> AppResult<ImportSummary> {
     let range = range.unwrap_or_default();
+    app.state::<ImportCancel>().reset();
     let api = garmin::connect().await?;
     let last_sync = sync::value(garmin::LAST_SYNC_KEY)?;
     let start = range
@@ -110,6 +113,10 @@ pub async fn garmin_sync(app: AppHandle, range: Option<DateRange>) -> AppResult<
     let mut newest_day: Option<String> = None;
     let mut download_failed = false;
     for (index, activity) in activities.iter().enumerate() {
+        if app.state::<ImportCancel>().requested() {
+            summary.cancelled = true;
+            break;
+        }
         let file_id = garmin::file_id(activity);
         let label = activity.activity_name.clone().map_or_else(
             || file_id.clone(),
@@ -194,6 +201,7 @@ pub async fn garmin_sync(app: AppHandle, range: Option<DateRange>) -> AppResult<
     let open_ended = range.from.is_none() && range.to.is_none();
     if open_ended
         && !download_failed
+        && !summary.cancelled
         && let Some(day) = newest_day.filter(|day| Some(day) != last_sync.as_ref())
     {
         sync::set_value(garmin::LAST_SYNC_KEY, &day)?;
@@ -211,10 +219,15 @@ pub fn garmin_export_candidates(db: State<'_, Db>, since: i64) -> AppResult<Vec<
 /// `import://progress` (imported = uploaded, duplicate = Garmin already had it).
 #[tauri::command]
 pub async fn garmin_upload(app: AppHandle, ids: Vec<i64>) -> AppResult<ImportSummary> {
+    app.state::<ImportCancel>().reset();
     let api = garmin::connect().await?;
     let imports_dir = paths::imports_dir()?;
     let mut summary = ImportSummary::default();
     for (index, id) in ids.iter().enumerate() {
+        if app.state::<ImportCancel>().requested() {
+            summary.cancelled = true;
+            break;
+        }
         let (title, file_id) = {
             let db = app.state::<Db>();
             let conn = db.conn()?;

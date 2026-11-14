@@ -76,6 +76,8 @@ export const api = {
   exportRouteImage: (id: number, path: string) => invoke<void>("export_route_image", { id, path }),
   folderSyncStatus: () => invoke<FolderSyncStatus>("folder_sync_status"),
   setSyncFolder: (folder: string) => invoke<FolderSyncStatus>("set_sync_folder", { folder }),
+  /** Stops the running import, sync or upload after the current file. */
+  cancelImport: () => invoke<void>("cancel_import"),
   syncFolder: (range?: DateRange) => invoke<ImportSummary>("sync_folder", { range }),
 
   // Garmin Connect

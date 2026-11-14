@@ -35,6 +35,7 @@ pub fn run() {
         .setup(|app| {
             app.manage(open_database()?);
             app.manage(commands::garmin::PendingGarminSignIn::default());
+            app.manage(commands::import::ImportCancel::default());
             menu::install(app)?;
             // Lets the webview load track images and media from the data folder.
             app.asset_protocol_scope()
@@ -81,6 +82,7 @@ pub fn run() {
             commands::garmin::garmin_upload,
             commands::garmin::activity_links,
             commands::import::import_files,
+            commands::import::cancel_import,
             commands::import::reimport_activity,
             commands::import::activity_route,
             commands::import::export_route_image,

@@ -4,17 +4,30 @@ import { useCallback, useState } from "react";
 
 import type { ImportProgress } from "@/bindings/ImportProgress";
 import type { ImportSummary } from "@/bindings/ImportSummary";
+import type { ReadingProgress } from "@/bindings/ReadingProgress";
+import { api } from "@/lib/api";
 
 export type ImportRun = {
   running: boolean;
+  /** Files being read before importing (iCloud Drive may download them first). */
+  reading: ReadingProgress | null;
   log: ImportProgress[];
   summary: ImportSummary | null;
   error: string | null;
+  /** Cancel was requested; the run stops after the current file. */
+  cancelling: boolean;
 };
 
-const IDLE: ImportRun = { running: false, log: [], summary: null, error: null };
+const IDLE: ImportRun = {
+  running: false,
+  reading: null,
+  log: [],
+  summary: null,
+  error: null,
+  cancelling: false,
+};
 
-/** Runs an import command and collects its `import://progress` events. */
+/** Runs an import or sync command and collects its `import://reading` and `import://progress` events. */
 export function useImportRun() {
   const queryClient = useQueryClient();
   const [run, setRun] = useState<ImportRun>(IDLE);
@@ -22,7 +35,10 @@ export function useImportRun() {
   const start = useCallback(
     async (command: () => Promise<ImportSummary>) => {
       setRun({ ...IDLE, running: true });
-      const unlisten = await listen<ImportProgress>("import://progress", (event) =>
+      const stopReading = await listen<ReadingProgress>("import://reading", (event) =>
+        setRun((current) => ({ ...current, reading: event.payload })),
+      );
+      const stopProgress = await listen<ImportProgress>("import://progress", (event) =>
         setRun((current) => ({ ...current, log: [...current.log, event.payload] })),
       );
       try {
@@ -31,14 +47,20 @@ export function useImportRun() {
       } catch (error) {
         setRun((current) => ({ ...current, running: false, error: String(error) }));
       } finally {
-        unlisten();
+        stopReading();
+        stopProgress();
         queryClient.invalidateQueries({ queryKey: ["activities"] });
       }
     },
     [queryClient],
   );
 
+  const cancel = useCallback(() => {
+    setRun((current) => ({ ...current, cancelling: true }));
+    void api.cancelImport();
+  }, []);
+
   const reset = useCallback(() => setRun(IDLE), []);
 
-  return { run, start, reset };
+  return { run, start, cancel, reset };
 }

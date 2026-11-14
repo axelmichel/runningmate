@@ -202,7 +202,9 @@ export function GarminPanel({ onRunningChange }: { onRunningChange: (running: bo
             "Optional; without dates everything since the last sync. Newest activities are imported first.",
           )}
         />
-        {started(importRun.run) && <ImportProgressView run={importRun.run} />}
+        {started(importRun.run) && (
+          <ImportProgressView run={importRun.run} onCancel={importRun.cancel} />
+        )}
         <div>
           <Button
             disabled={running}
@@ -247,7 +249,9 @@ export function GarminPanel({ onRunningChange }: { onRunningChange: (running: bo
                 : t("Nothing to upload")}
           </Button>
         </div>
-        {started(exportRun.run) && <ImportProgressView run={exportRun.run} />}
+        {started(exportRun.run) && (
+          <ImportProgressView run={exportRun.run} onCancel={exportRun.cancel} />
+        )}
       </Section>
     </div>
   );

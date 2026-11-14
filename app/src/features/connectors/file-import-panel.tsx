@@ -17,7 +17,7 @@ export function FileImportPanel({
 }: {
   onRunningChange: (running: boolean) => void;
 }) {
-  const { run, start } = useImportRun();
+  const { run, start, cancel } = useImportRun();
   const [range, setRange] = useState<RangeInput>(OPEN_RANGE);
   const started = run.running || run.summary !== null || run.error !== null;
 
@@ -46,7 +46,7 @@ export function FileImportPanel({
           {run.running ? t("Importing…") : t("Choose TCX files…")}
         </Button>
       </div>
-      {started && <ImportProgressView run={run} />}
+      {started && <ImportProgressView run={run} onCancel={cancel} />}
     </div>
   );
 }

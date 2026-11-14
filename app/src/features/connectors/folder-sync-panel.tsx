@@ -26,7 +26,7 @@ export function FolderSyncPanel({
   onRunningChange: (running: boolean) => void;
 }) {
   const queryClient = useQueryClient();
-  const { run, start } = useImportRun();
+  const { run, start, cancel } = useImportRun();
   const [range, setRange] = useState<RangeInput>(OPEN_RANGE);
   const status = useQuery({ queryKey: ["folderSync"], queryFn: api.folderSyncStatus });
   const started = run.running || run.summary !== null || run.error !== null;
@@ -91,7 +91,7 @@ export function FolderSyncPanel({
           "Optional. Newest activities are imported first; with dates, the sync time isn't advanced.",
         )}
       />
-      {started && <ImportProgressView run={run} />}
+      {started && <ImportProgressView run={run} onCancel={cancel} />}
       <div>
         <Button
           disabled={newFiles === 0 || run.running}
