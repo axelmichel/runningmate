@@ -176,7 +176,7 @@
 }
 
 /* While a dialog is open, the title bar's toggles and title are greyed out; they can't be used
-   then anyway, and a maximized dialog leaves the bar uncovered (components/title-bar.tsx). */
+   then anyway. The dialog backdrop covers the bar too and blurs it (components/title-bar.tsx). */
 [data-slot="titlebar"] > * {
   transition: opacity 100ms;
 }

@@ -11,6 +11,7 @@ import { ActivitiesPage } from "@/features/activities/activities-page";
 import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
 import { lastConnector, type Connector } from "@/features/connectors/connector";
 import { ConnectorsDialog } from "@/features/connectors/connectors-dialog";
+import { HealthPage } from "@/features/health/health-page";
 import { SystemSettingsDialog } from "@/features/settings/system-settings-dialog";
 import { UserSettingsDialog } from "@/features/settings/user-settings-dialog";
 import { useTheme, type Theme } from "@/hooks/use-theme";
@@ -22,6 +23,7 @@ const DETAILS_STORAGE_KEY = "runningmate-details-panel";
 function App() {
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<ViewMode>("All");
+  const [page, setPage] = useState<"activities" | "health">("activities");
   const [searchOpen, setSearchOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(
     () => localStorage.getItem(DETAILS_STORAGE_KEY) !== "closed",
@@ -57,7 +59,11 @@ function App() {
     const unlisten = listen<string>("menu", ({ payload }) => {
       if (payload === "sync") setConnector(lastConnector());
       if (payload === "about") setAboutOpen(true);
-      if (payload === "search") setSearchOpen((open) => !open);
+      if (payload === "search") {
+        setPage("activities");
+        setSearchOpen((open) => !open);
+      }
+      if (payload === "health") setPage("health");
       if (payload === "settings") setSettingsOpen(true);
       if (payload === "user") setUserSettingsOpen(true);
     });
@@ -76,28 +82,46 @@ function App() {
     };
   }, [queryClient]);
 
-  const title = t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
+  const health = page === "health";
+  const title = health
+    ? t("Health data")
+    : t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
 
   return (
     <SidebarProvider>
-      <TitleBar title={title} detailsOpen={detailsOpen} onDetailsToggle={toggleDetails} />
+      <TitleBar
+        title={title}
+        detailsOpen={detailsOpen}
+        onDetailsToggle={health ? undefined : toggleDetails}
+      />
       <AppSidebar
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        searchOpen={searchOpen}
-        onSearchToggle={() => setSearchOpen((open) => !open)}
+        viewMode={health ? null : viewMode}
+        onViewModeChange={(mode) => {
+          setViewMode(mode);
+          setPage("activities");
+        }}
+        onHealth={() => setPage("health")}
+        searchOpen={searchOpen && !health}
+        onSearchToggle={() => {
+          setSearchOpen((open) => health || !open);
+          setPage("activities");
+        }}
         onSync={() => setConnector(lastConnector())}
         onUserSettings={() => setUserSettingsOpen(true)}
         onSettings={() => setSettingsOpen(true)}
       />
       <SidebarInset className="h-svh min-w-0 overflow-hidden pt-(--titlebar-height)">
-        <ActivitiesPage
-          view={viewMode}
-          searchOpen={searchOpen}
-          onSearchOpenChange={setSearchOpen}
-          detailsOpen={detailsOpen}
-          dataDir={info?.dataDir}
-        />
+        {health ? (
+          <HealthPage />
+        ) : (
+          <ActivitiesPage
+            view={viewMode}
+            searchOpen={searchOpen}
+            onSearchOpenChange={setSearchOpen}
+            detailsOpen={detailsOpen}
+            dataDir={info?.dataDir}
+          />
+        )}
       </SidebarInset>
       <ConnectorsDialog connector={connector} onConnectorChange={setConnector} />
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />

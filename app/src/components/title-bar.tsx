@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 type TitleBarProps = {
   title: string;
   detailsOpen: boolean;
-  onDetailsToggle: () => void;
+  /** Without it (pages without a details panel) the toggle is hidden. */
+  onDetailsToggle?: () => void;
 };
 
 /**
@@ -31,10 +32,12 @@ export function TitleBar({ title, detailsOpen, onDetailsToggle }: TitleBarProps)
       <span data-tauri-drag-region className="flex-1 font-medium">
         {title}
       </span>
-      <Button variant="ghost" size="icon-sm" aria-pressed={detailsOpen} onClick={onDetailsToggle}>
-        <PanelRight />
-        <span className="sr-only">{t("Toggle details panel")}</span>
-      </Button>
+      {onDetailsToggle && (
+        <Button variant="ghost" size="icon-sm" aria-pressed={detailsOpen} onClick={onDetailsToggle}>
+          <PanelRight />
+          <span className="sr-only">{t("Toggle details panel")}</span>
+        </Button>
+      )}
     </header>
   );
 }

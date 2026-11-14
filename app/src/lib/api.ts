@@ -17,6 +17,7 @@ import type { FitnessDay } from "@/bindings/FitnessDay";
 import type { FolderSyncStatus } from "@/bindings/FolderSyncStatus";
 import type { GarminSignInResult } from "@/bindings/GarminSignInResult";
 import type { GarminStatus } from "@/bindings/GarminStatus";
+import type { HealthReport } from "@/bindings/HealthReport";
 import type { HeartRateTrend } from "@/bindings/HeartRateTrend";
 import type { ImportSummary } from "@/bindings/ImportSummary";
 import type { LibraryAsset } from "@/bindings/LibraryAsset";
@@ -67,6 +68,8 @@ export const api = {
     invoke<TrainingEffect>("activity_training_effect", { id }),
   fitnessTrend: (id: number) => invoke<FitnessDay[]>("fitness_trend", { id }),
   heartRateTrend: (id: number) => invoke<HeartRateTrend>("heart_rate_trend", { id }),
+  /** Fitness and heart rate between two Unix times (the Health data page). */
+  healthReport: (from: number, to: number) => invoke<HealthReport>("health_report", { from, to }),
 
   // Import and folder sync (progress arrives as `import://progress` events)
   /** Imports newest first; `range` limits by activity start. */

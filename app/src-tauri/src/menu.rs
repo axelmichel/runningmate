@@ -35,6 +35,7 @@ struct Labels {
     select_all: &'static str,
     view: &'static str,
     search: &'static str,
+    health: &'static str,
     fullscreen: &'static str,
     window: &'static str,
     minimize: &'static str,
@@ -64,6 +65,7 @@ const EN: Labels = Labels {
     select_all: "Select All",
     view: "View",
     search: "Search",
+    health: "Health Data",
     fullscreen: "Enter Full Screen",
     window: "Window",
     minimize: "Minimize",
@@ -93,6 +95,7 @@ const DE: Labels = Labels {
     select_all: "Alles auswählen",
     view: "Darstellung",
     search: "Suchen",
+    health: "Gesundheitsdaten",
     fullscreen: "Vollbildmodus",
     window: "Fenster",
     minimize: "Im Dock ablegen",
@@ -120,6 +123,7 @@ fn build<R: Runtime, M: Manager<R>>(manager: &M, language: &str) -> tauri::Resul
     // One entry for every way of getting activities in or out (see the Connectors dialog).
     let sync = item("sync", l.sync, Some("CmdOrCtrl+O"))?;
     let search = item("search", l.search, Some("CmdOrCtrl+F"))?;
+    let health = item("health", l.health, Some("CmdOrCtrl+Shift+H"))?;
     let help = item("help", l.help_item, Some("F1"))?;
 
     let app_menu = SubmenuBuilder::new(manager, "RunningMate")
@@ -154,6 +158,7 @@ fn build<R: Runtime, M: Manager<R>>(manager: &M, language: &str) -> tauri::Resul
         .build()?;
     let view = SubmenuBuilder::new(manager, l.view)
         .item(&search)
+        .item(&health)
         .separator()
         .fullscreen_with_text(l.fullscreen)
         .build()?;
@@ -186,7 +191,7 @@ fn handle<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
         "help" => {
             let _ = app.opener().open_url(HELP_URL, None::<&str>);
         }
-        id @ ("about" | "sync" | "search" | "settings" | "user") => {
+        id @ ("about" | "sync" | "search" | "health" | "settings" | "user") => {
             let _ = app.emit(MENU_EVENT, id);
         }
         _ => {}

@@ -2,6 +2,11 @@
 
 export type GarminStatus = { signedIn: boolean, 
 /**
- * "YYYY-MM-DD" of the newest synced day.
+ * "YYYY-MM-DD" where the next sync starts (the newest synced day, or the oldest one
+ * whose download failed).
  */
-lastSync: string | null, };
+lastSync: string | null, 
+/**
+ * Unix timestamp of the last sync that ran to the end.
+ */
+lastRun: number | null, };

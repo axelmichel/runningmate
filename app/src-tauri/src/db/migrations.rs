@@ -515,4 +515,6 @@ SET elevation_gain = (
     PRIMARY KEY (activity_id, connector)
 )"#],
     ),
+    // "male" or "female", for comparing VO2max with people of the same age and sex.
+    (57, &[r#"ALTER TABLE users ADD COLUMN gender TEXT"#]),
 ];

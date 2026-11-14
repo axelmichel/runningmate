@@ -79,6 +79,7 @@ pub fn run() {
             commands::analysis::activity_training_effect,
             commands::analysis::fitness_trend,
             commands::analysis::heart_rate_trend,
+            commands::analysis::health_report,
             commands::garmin::garmin_status,
             commands::garmin::garmin_sign_in,
             commands::garmin::garmin_submit_code,

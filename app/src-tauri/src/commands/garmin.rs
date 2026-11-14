@@ -34,8 +34,12 @@ pub struct PendingGarminSignIn(Mutex<Option<PendingSignIn>>);
 #[ts(export)]
 pub struct GarminStatus {
     pub signed_in: bool,
-    /// "YYYY-MM-DD" of the newest synced day.
+    /// "YYYY-MM-DD" where the next sync starts (the newest synced day, or the oldest one
+    /// whose download failed).
     pub last_sync: Option<String>,
+    /// Unix timestamp of the last sync that ran to the end.
+    #[ts(type = "number | null")]
+    pub last_run: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, TS)]
@@ -51,6 +55,9 @@ pub fn garmin_status() -> AppResult<GarminStatus> {
     Ok(GarminStatus {
         signed_in: garmin::is_signed_in()?,
         last_sync: sync::value(garmin::LAST_SYNC_KEY)?,
+        last_run: sync::value(garmin::LAST_RUN_KEY)?
+            .and_then(|t| chrono::DateTime::parse_from_rfc3339(&t).ok())
+            .map(|t| t.timestamp()),
     })
 }
 
@@ -93,8 +100,8 @@ pub fn garmin_sign_out() -> AppResult<()> {
 /// range it covers everything since the last sync; activities on the same day with about the
 /// same distance as an existing one are skipped before downloading and linked to it instead.
 ///
-/// The sync date only advances for an open-ended sync without failed downloads, so a limited
-/// range or a failure never leaves a gap behind.
+/// The start of the next sync only advances after an open-ended sync, and no further than the
+/// oldest failed download, so a limited range or a failure never leaves a gap behind.
 #[tauri::command]
 pub async fn garmin_sync(app: AppHandle, range: Option<DateRange>) -> AppResult<ImportSummary> {
     let range = range.unwrap_or_default();
@@ -111,7 +118,7 @@ pub async fn garmin_sync(app: AppHandle, range: Option<DateRange>) -> AppResult<
 
     let mut summary = ImportSummary::default();
     let mut newest_day: Option<String> = None;
-    let mut download_failed = false;
+    let mut oldest_failed: Option<String> = None;
     for (index, activity) in activities.iter().enumerate() {
         if app.state::<ImportCancel>().requested() {
             summary.cancelled = true;
@@ -159,7 +166,12 @@ pub async fn garmin_sync(app: AppHandle, range: Option<DateRange>) -> AppResult<
                     outcome
                 }
                 Err(e) => {
-                    download_failed = true;
+                    if oldest_failed
+                        .as_deref()
+                        .is_none_or(|day| activity.date() < day)
+                    {
+                        oldest_failed = Some(activity.date().to_string());
+                    }
                     ImportOutcome::Failed {
                         error: e.to_string(),
                     }
@@ -198,14 +210,21 @@ pub async fn garmin_sync(app: AppHandle, range: Option<DateRange>) -> AppResult<
             },
         );
     }
+    // Newest first, so a cancelled sync may have left older activities out.
+    if summary.cancelled {
+        return Ok(summary);
+    }
     let open_ended = range.from.is_none() && range.to.is_none();
     if open_ended
-        && !download_failed
-        && !summary.cancelled
-        && let Some(day) = newest_day.filter(|day| Some(day) != last_sync.as_ref())
+        && let Some(day) = garmin::resume_day(
+            last_sync.as_deref(),
+            newest_day.as_deref(),
+            oldest_failed.as_deref(),
+        )
     {
         sync::set_value(garmin::LAST_SYNC_KEY, &day)?;
     }
+    sync::set_value(garmin::LAST_RUN_KEY, &chrono::Local::now().to_rfc3339())?;
     Ok(summary)
 }
 

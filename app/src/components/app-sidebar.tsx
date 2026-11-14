@@ -1,4 +1,4 @@
-import { RefreshCw, Search, Settings, User } from "lucide-react";
+import { HeartPulse, RefreshCw, Search, Settings, User } from "lucide-react";
 
 import {
   Sidebar,
@@ -15,8 +15,10 @@ import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
 import { t } from "@/i18n";
 
 type AppSidebarProps = {
-  viewMode: ViewMode;
+  /** The activity view, or `null` while the Health data page is shown. */
+  viewMode: ViewMode | null;
   onViewModeChange: (mode: ViewMode) => void;
+  onHealth: () => void;
   searchOpen: boolean;
   onSearchToggle: () => void;
   onSync: () => void;
@@ -27,6 +29,7 @@ type AppSidebarProps = {
 export function AppSidebar({
   viewMode,
   onViewModeChange,
+  onHealth,
   searchOpen,
   onSearchToggle,
   onSync,
@@ -59,6 +62,22 @@ export function AppSidebar({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={viewMode === null}
+                  tooltip={`${t("Health data")} (⇧⌘H)`}
+                  onClick={onHealth}
+                >
+                  <HeartPulse />
+                  <span>{t("Health data")}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
