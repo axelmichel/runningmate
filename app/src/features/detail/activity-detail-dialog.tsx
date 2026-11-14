@@ -105,10 +105,12 @@ export function ActivityDetailDialog({
       <DialogContent
         // The close button sits in the header row, so it lines up with the other controls.
         showCloseButton={false}
+        // Maximized, the dialog and its backdrop fill the window below the app title bar.
+        overlayClassName={maximized ? "top-(--titlebar-height)" : undefined}
         className={cn(
           "flex flex-col gap-4",
           maximized
-            ? "h-[calc(100svh-2rem)] w-[calc(100vw-2rem)] max-w-none sm:max-w-none"
+            ? "top-(--titlebar-height) left-0 h-[calc(100svh-var(--titlebar-height))] w-screen max-w-none translate-x-0 translate-y-0 rounded-none ring-0 sm:max-w-none"
             : "h-[85vh] max-w-6xl sm:max-w-6xl",
         )}
       >

@@ -20,6 +20,7 @@ type TitleBarProps = {
 export function TitleBar({ title, detailsOpen, onDetailsToggle }: TitleBarProps) {
   return (
     <header
+      data-slot="titlebar"
       data-tauri-drag-region
       className={cn(
         "fixed inset-x-0 top-0 z-20 flex h-(--titlebar-height) items-center gap-2 border-b bg-background pr-2 text-sm select-none",
