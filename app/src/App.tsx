@@ -1,36 +1,48 @@
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { TitleBar } from "@/components/title-bar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import type { ViewMode } from "@/features/activities/view-mode";
-import { api, type AppInfo } from "@/lib/api";
+import { ActivitiesPage } from "@/features/activities/activities-page";
+import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
+import { api } from "@/lib/api";
 
 function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("All");
-  const [info, setInfo] = useState<AppInfo | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const { data: info } = useQuery({ queryKey: ["appInfo"], queryFn: api.appInfo });
 
+  // Cmd/Ctrl+F toggles the search bar, as View → Search did.
   useEffect(() => {
-    api.appInfo().then(setInfo).catch(console.error);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "f") {
+        event.preventDefault();
+        setSearchOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  const title = VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode;
 
   return (
     <SidebarProvider>
-      <AppSidebar viewMode={viewMode} onViewModeChange={setViewMode} />
-      <TitleBar title={viewMode} />
-      <SidebarInset className="pt-(--titlebar-height)">
-        <main className="p-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>RunningMate</CardTitle>
-              <CardDescription>Version {info?.version ?? "…"}</CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              Data folder: {info?.dataDir ?? "…"}
-            </CardContent>
-          </Card>
-        </main>
+      <TitleBar title={title} />
+      <AppSidebar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        searchOpen={searchOpen}
+        onSearchToggle={() => setSearchOpen((open) => !open)}
+      />
+      <SidebarInset className="h-svh overflow-hidden pt-(--titlebar-height)">
+        <ActivitiesPage
+          view={viewMode}
+          searchOpen={searchOpen}
+          onSearchOpenChange={setSearchOpen}
+          dataDir={info?.dataDir}
+        />
       </SidebarInset>
     </SidebarProvider>
   );

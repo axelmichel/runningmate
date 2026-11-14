@@ -7,6 +7,7 @@ import type { ActivityQuery } from "@/bindings/ActivityQuery";
 import type { ActivitySummary } from "@/bindings/ActivitySummary";
 import type { ActivityUpdate } from "@/bindings/ActivityUpdate";
 import type { BestPerformance } from "@/bindings/BestPerformance";
+import type { DayTotal } from "@/bindings/DayTotal";
 import type { Equipment } from "@/bindings/Equipment";
 import type { EquipmentKind } from "@/bindings/EquipmentKind";
 import type { Media } from "@/bindings/Media";
@@ -30,6 +31,8 @@ export const api = {
   listActivities: (query: ActivityQuery) => invoke<ActivityPage>("list_activities", { query }),
   activitySummary: (viewMode: ViewMode, filter?: ActivityFilter) =>
     invoke<ActivitySummary>("activity_summary", { viewMode, filter }),
+  activityHeatmap: (viewMode: ViewMode, filter?: ActivityFilter) =>
+    invoke<DayTotal[]>("activity_heatmap", { viewMode, filter }),
   getActivity: (id: number) => invoke<ActivityDetail>("get_activity", { id }),
   updateActivity: (update: ActivityUpdate) => invoke<ActivityDetail>("update_activity", { update }),
   setActivityEquipment: (activityId: number, equipmentId: number | null) =>

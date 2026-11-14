@@ -24,12 +24,16 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             app.manage(open_database()?);
+            // Lets the webview load track images and media from the data folder.
+            app.asset_protocol_scope()
+                .allow_directory(paths::data_dir()?, true)?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::app::app_info,
             commands::activities::list_activities,
             commands::activities::activity_summary,
+            commands::activities::activity_heatmap,
             commands::activities::get_activity,
             commands::activities::update_activity,
             commands::activities::set_activity_equipment,

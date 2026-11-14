@@ -16,9 +16,16 @@ import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
 type AppSidebarProps = {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  searchOpen: boolean;
+  onSearchToggle: () => void;
 };
 
-export function AppSidebar({ viewMode, onViewModeChange }: AppSidebarProps) {
+export function AppSidebar({
+  viewMode,
+  onViewModeChange,
+  searchOpen,
+  onSearchToggle,
+}: AppSidebarProps) {
   return (
     <Sidebar
       collapsible="icon"
@@ -51,8 +58,13 @@ export function AppSidebar({ viewMode, onViewModeChange }: AppSidebarProps) {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Search (⌘F)" isActive={searchOpen} onClick={onSearchToggle}>
+              <Search />
+              <span>Search</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           {[
-            { label: "Search", icon: Search },
             { label: "User", icon: User },
             { label: "Settings", icon: Settings },
           ].map(({ label, icon: Icon }) => (

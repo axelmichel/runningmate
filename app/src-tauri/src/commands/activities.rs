@@ -8,7 +8,7 @@ use crate::{
         Db,
         activities::{
             self, ActivityDetail, ActivityFilter, ActivityPage, ActivityQuery, ActivitySummary,
-            ActivityUpdate,
+            ActivityUpdate, DayTotal,
         },
         media::{self, Media, MediaType},
         performances::{self, BestPerformance},
@@ -30,6 +30,26 @@ pub fn activity_summary(
     filter: Option<ActivityFilter>,
 ) -> AppResult<ActivitySummary> {
     activities::summary(&*db.conn()?, view_mode, &filter.unwrap_or_default())
+}
+
+/// Seconds in the 365-day heatmap window.
+const HEATMAP_SPAN: i64 = 365 * 24 * 3600;
+
+/// Daily totals for the activity heatmap. Like the Python heatmap, the window is the year up to
+/// today, or the year after the filter's start date, or the year up to its end date.
+#[tauri::command(async)]
+pub fn activity_heatmap(
+    db: State<'_, Db>,
+    view_mode: ViewMode,
+    filter: Option<ActivityFilter>,
+) -> AppResult<Vec<DayTotal>> {
+    let filter = filter.unwrap_or_default();
+    let end = match (filter.min_date, filter.max_date) {
+        (_, Some(max)) => max,
+        (Some(min), None) => min + HEATMAP_SPAN,
+        (None, None) => chrono::Local::now().timestamp(),
+    };
+    activities::daily_durations(&*db.conn()?, view_mode, &filter, end - HEATMAP_SPAN, end)
 }
 
 #[tauri::command(async)]

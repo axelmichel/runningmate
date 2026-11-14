@@ -336,6 +336,53 @@ pub fn summary(
     })?)
 }
 
+/// Training time on one local calendar day, for the activity heatmap.
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DayTotal {
+    /// Local date, "YYYY-MM-DD".
+    pub day: String,
+    /// Seconds.
+    #[ts(type = "number")]
+    pub duration: i64,
+}
+
+/// Total duration per local day between `start` and `end` (Unix timestamps, inclusive). The
+/// filter's own date range is ignored; the caller picks the window from it.
+pub fn daily_durations(
+    conn: &Connection,
+    view: ViewMode,
+    filter: &ActivityFilter,
+    start: i64,
+    end: i64,
+) -> AppResult<Vec<DayTotal>> {
+    let filter = ActivityFilter {
+        min_date: None,
+        max_date: None,
+        ..filter.clone()
+    };
+    let mut sql = format!(
+        "SELECT date(activities.date, 'unixepoch', 'localtime') AS day,
+            SUM(activities.duration) AS duration
+         {} WHERE activities.date BETWEEN ? AND ?",
+        from_clause(view)
+    );
+    let mut params = vec![Value::Integer(start), Value::Integer(end)];
+    filter.apply(&mut sql, &mut params);
+    sql.push_str(" GROUP BY day ORDER BY day");
+    let rows = conn
+        .prepare(&sql)?
+        .query_map(params_from_iter(params), |row| {
+            Ok(DayTotal {
+                day: row.get("day")?,
+                duration: opt_i64(row, "duration")?.unwrap_or(0),
+            })
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(rows)
+}
+
 /// Everything the detail window shows about one activity: the `activities` row, the metrics
 /// from its per-type table and the assigned shoe or bike.
 #[derive(Debug, Clone, Serialize, TS)]
@@ -750,6 +797,28 @@ pub(crate) mod tests {
         assert!((s.distance - 31.1).abs() < 1e-9);
         assert_eq!(s.duration, 7200);
         assert_eq!(s.elevation_gain, 100.0);
+    }
+
+    #[test]
+    fn sums_duration_per_day_ignoring_filter_dates() {
+        let db = seeded();
+        let conn = db.conn().unwrap();
+        // A second activity on the same local day as activity 1.
+        insert_activity(&conn, 5, "Running", 1_700_000_600, 5.0, "Second run");
+        let filter = ActivityFilter {
+            min_date: Some(1_800_000_000),
+            ..Default::default()
+        };
+        let days = daily_durations(
+            &conn,
+            ViewMode::Running,
+            &filter,
+            1_699_900_000,
+            1_700_250_000,
+        )
+        .unwrap();
+        assert_eq!(days.len(), 1);
+        assert_eq!(days[0].duration, 7200);
     }
 
     #[test]
