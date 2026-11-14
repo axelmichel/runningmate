@@ -19,7 +19,9 @@ import type { GarminSignInResult } from "@/bindings/GarminSignInResult";
 import type { GarminStatus } from "@/bindings/GarminStatus";
 import type { HeartRateTrend } from "@/bindings/HeartRateTrend";
 import type { ImportSummary } from "@/bindings/ImportSummary";
+import type { LibraryAsset } from "@/bindings/LibraryAsset";
 import type { Media } from "@/bindings/Media";
+import type { PhotosAccess } from "@/bindings/PhotosAccess";
 import type { RouteOutline } from "@/bindings/RouteOutline";
 import type { SegmentRow } from "@/bindings/SegmentRow";
 import type { StorageInfo } from "@/bindings/StorageInfo";
@@ -101,6 +103,12 @@ export const api = {
   /** Shows Apple's photo picker (macOS) and copies the picked items. */
   addMediaFromPhotos: (activityId: number) =>
     invoke<Media[]>("add_media_from_photos", { activityId }),
+  photosAccess: () => invoke<PhotosAccess>("photos_access"),
+  requestPhotosAccess: () => invoke<PhotosAccess>("request_photos_access"),
+  activityPhotos: (activityId: number) => invoke<LibraryAsset[]>("activity_photos", { activityId }),
+  libraryPhotoThumbnail: (id: string) => invoke<string>("library_photo_thumbnail", { id }),
+  addLibraryPhotos: (activityId: number, ids: string[]) =>
+    invoke<Media[]>("add_library_photos", { activityId, ids }),
   deleteMedia: (id: number) => invoke<void>("delete_media", { id }),
   getWeather: (activityId: number) => invoke<Weather | null>("get_weather", { activityId }),
   activityBestPerformances: (activityId: number) =>

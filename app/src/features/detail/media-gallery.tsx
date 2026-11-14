@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open as pickFiles } from "@tauri-apps/plugin-dialog";
-import { FileWarning, FolderOpen, Images, Link2, Play, X } from "lucide-react";
+import { CalendarClock, FileWarning, FolderOpen, Images, Link2, Play, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -33,6 +33,7 @@ import { api } from "@/lib/api";
 import { isMac } from "@/lib/platform";
 import { cn } from "@/lib/utils";
 
+import { ActivityPhotosDialog } from "./activity-photos-dialog";
 import { MEDIA_EXTENSIONS, isMediaFile, mediaMode, setMediaMode } from "./media-mode";
 
 function Thumbnail({
@@ -134,8 +135,8 @@ function AddModeDialog({
 }
 
 /**
- * Photos and videos of an activity: from the Photos library (macOS picker), from disk, or
- * dropped onto the gallery; with a viewer and delete.
+ * Photos and videos of an activity: from the Photos library (those taken during the activity,
+ * or any via the macOS picker), from disk, or dropped onto the gallery; with a viewer and delete.
  */
 export function MediaGallery({ activityId }: { activityId: number }) {
   const queryClient = useQueryClient();
@@ -143,6 +144,7 @@ export function MediaGallery({ activityId }: { activityId: number }) {
   const [deleting, setDeleting] = useState<Media | null>(null);
   const [pending, setPending] = useState<string[]>([]);
   const [dropping, setDropping] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const area = useRef<HTMLDivElement>(null);
   const { data: media = [] } = useQuery({
     queryKey: ["media", activityId],
@@ -242,10 +244,26 @@ export function MediaGallery({ activityId }: { activityId: number }) {
         <span className="text-sm font-medium">{t("Photos and videos")}</span>
         <div className="flex gap-2">
           {isMac && (
-            <Button variant="outline" size="sm" disabled={busy} onClick={() => fromPhotos.mutate()}>
-              <Images />
-              {t("From Photos…")}
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={busy}
+                onClick={() => setLibraryOpen(true)}
+              >
+                <CalendarClock />
+                {t("From this activity…")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={busy}
+                onClick={() => fromPhotos.mutate()}
+              >
+                <Images />
+                {t("From Photos…")}
+              </Button>
+            </>
           )}
           <Button variant="outline" size="sm" disabled={busy} onClick={() => void pickFromDisk()}>
             <FolderOpen />
@@ -268,6 +286,18 @@ export function MediaGallery({ activityId }: { activityId: number }) {
             />
           ))}
         </div>
+      )}
+
+      {isMac && (
+        <ActivityPhotosDialog
+          activityId={activityId}
+          open={libraryOpen}
+          onOpenChange={setLibraryOpen}
+          onAdded={(count) => {
+            added(count);
+            refresh();
+          }}
+        />
       )}
 
       <AddModeDialog
