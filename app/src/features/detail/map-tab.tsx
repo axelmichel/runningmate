@@ -1,8 +1,9 @@
 import "leaflet/dist/leaflet.css";
 
 import type { LatLngBoundsExpression, LatLngTuple } from "leaflet";
-import { useMemo, useState } from "react";
-import { CircleMarker, MapContainer, Polyline, TileLayer, Tooltip } from "react-leaflet";
+import { MapPin } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CircleMarker, MapContainer, Polyline, Tooltip, useMap } from "react-leaflet";
 
 import type { TrackPoint } from "@/bindings/TrackPoint";
 import type { ViewMode } from "@/bindings/ViewMode";
@@ -11,9 +12,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber, formatPace } from "@/lib/format";
 
 import { HEART_RATE_RAMP, PACE_RAMP, rampColor, robustRange } from "./color-scale";
+import { Basemap } from "./basemap";
 import { useSeries } from "./use-series";
 
 type Mode = "track" | "pace" | "heartRate";
+
+/** Keeps Leaflet's size in sync when the surrounding layout changes width (e.g. navigation). */
+function FitToContainer() {
+  const map = useMap();
+  useEffect(() => {
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(map.getContainer());
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
+}
+
+const MARKERS_STORAGE_KEY = "runningmate-map-distance-markers";
 
 /** Number of colour steps; consecutive points in the same step share one polyline. */
 const COLOR_STEPS = 12;
@@ -81,6 +96,14 @@ function Legend({ mode, points }: { mode: Exclude<Mode, "track">; points: TrackP
 export function MapTab({ activityId, view }: { activityId: number; view: ViewMode }) {
   const { data: points, isPending } = useSeries(activityId);
   const [mode, setMode] = useState<Mode>("track");
+  const [showMarkers, setShowMarkers] = useState(
+    () => localStorage.getItem(MARKERS_STORAGE_KEY) !== "hidden",
+  );
+  const toggleMarkers = () =>
+    setShowMarkers((shown) => {
+      localStorage.setItem(MARKERS_STORAGE_KEY, shown ? "hidden" : "shown");
+      return !shown;
+    });
   const dark = document.documentElement.classList.contains("dark");
 
   const derived = useMemo(() => {
@@ -129,6 +152,16 @@ export function MapTab({ activityId, view }: { activityId: number; view: ViewMod
             {label}
           </Button>
         ))}
+        <Button
+          size="sm"
+          variant={showMarkers ? "secondary" : "ghost"}
+          aria-pressed={showMarkers}
+          title={showMarkers ? "Hide distance markers" : "Show distance markers"}
+          onClick={toggleMarkers}
+        >
+          <MapPin />
+          {view === "Cycling" ? "5 km markers" : "Km markers"}
+        </Button>
         {mode !== "track" && <Legend mode={mode} points={points} />}
       </div>
       <div className="min-h-0 flex-1 overflow-hidden rounded-lg border">
@@ -137,14 +170,12 @@ export function MapTab({ activityId, view }: { activityId: number; view: ViewMod
           boundsOptions={{ padding: [24, 24] }}
           className="h-full w-full"
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url={`https://{s}.basemaps.cartocdn.com/${dark ? "dark_all" : "light_all"}/{z}/{x}/{y}{r}.png`}
-          />
+          <Basemap dark={dark} />
+          <FitToContainer />
           {mode === "track" && (
             <Polyline
               positions={derived.line}
-              pathOptions={{ color: "#701f57", weight: 4, opacity: 0.8 }}
+              pathOptions={{ color: "#f37651", weight: 4, opacity: 0.9 }}
             />
           )}
           {mode !== "track" &&
@@ -155,18 +186,19 @@ export function MapTab({ activityId, view }: { activityId: number; view: ViewMod
                 pathOptions={{ color: run.color, weight: 5, opacity: 0.9 }}
               />
             ))}
-          {derived.markers.map((m) => (
-            <CircleMarker
-              key={m.km}
-              center={m.position}
-              radius={9}
-              pathOptions={{ color: "#fff", weight: 1.5, fillColor: "#35193e", fillOpacity: 0.9 }}
-            >
-              <Tooltip permanent direction="center" className="km-label">
-                {m.km}
-              </Tooltip>
-            </CircleMarker>
-          ))}
+          {showMarkers &&
+            derived.markers.map((m) => (
+              <CircleMarker
+                key={m.km}
+                center={m.position}
+                radius={9}
+                pathOptions={{ color: "#fff", weight: 1.5, fillColor: "#35193e", fillOpacity: 0.9 }}
+              >
+                <Tooltip permanent direction="center" className="km-label">
+                  {m.km}
+                </Tooltip>
+              </CircleMarker>
+            ))}
           <CircleMarker
             center={start}
             radius={8}
