@@ -1,7 +1,8 @@
 import { Bike, Footprints, LayoutGrid, PersonStanding, type LucideIcon } from "lucide-react";
 
-/** Mirrors `ViewMode` in the Python app (processing/system_settings.py). */
-export type ViewMode = "All" | "Running" | "Cycling" | "Walking";
+import type { ViewMode } from "@/bindings/ViewMode";
+
+export type { ViewMode };
 
 export const VIEW_MODES: { mode: ViewMode; label: string; icon: LucideIcon }[] = [
   { mode: "All", label: "All", icon: LayoutGrid },

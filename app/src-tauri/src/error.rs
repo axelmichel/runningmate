@@ -7,6 +7,21 @@ pub enum AppError {
     NoHomeDir,
     #[error(transparent)]
     Io(#[from] std::io::Error),
+    #[error("database error: {0}")]
+    Db(#[from] rusqlite::Error),
+    #[error("migration {version} failed: {source}")]
+    Migration {
+        version: i64,
+        source: rusqlite::Error,
+    },
+    #[error("database connection is unusable after an earlier panic")]
+    DbPoisoned,
+    #[error("invalid settings file: {0}")]
+    Settings(#[from] serde_json::Error),
+    #[error("{0} not found")]
+    NotFound(String),
+    #[error("{0}")]
+    Invalid(String),
 }
 
 // Commands send errors to the frontend as plain strings.
