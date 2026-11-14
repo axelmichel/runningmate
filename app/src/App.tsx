@@ -8,9 +8,20 @@ import { ActivitiesPage } from "@/features/activities/activities-page";
 import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
 import { api } from "@/lib/api";
 
+const DETAILS_STORAGE_KEY = "runningmate-details-panel";
+
 function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("All");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(
+    () => localStorage.getItem(DETAILS_STORAGE_KEY) !== "closed",
+  );
+
+  const toggleDetails = () =>
+    setDetailsOpen((open) => {
+      localStorage.setItem(DETAILS_STORAGE_KEY, open ? "closed" : "open");
+      return !open;
+    });
   const { data: info } = useQuery({ queryKey: ["appInfo"], queryFn: api.appInfo });
 
   // Cmd/Ctrl+F toggles the search bar, as View → Search did.
@@ -29,7 +40,7 @@ function App() {
 
   return (
     <SidebarProvider>
-      <TitleBar title={title} />
+      <TitleBar title={title} detailsOpen={detailsOpen} onDetailsToggle={toggleDetails} />
       <AppSidebar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -41,6 +52,7 @@ function App() {
           view={viewMode}
           searchOpen={searchOpen}
           onSearchOpenChange={setSearchOpen}
+          detailsOpen={detailsOpen}
           dataDir={info?.dataDir}
         />
       </SidebarInset>

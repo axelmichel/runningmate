@@ -7,6 +7,7 @@ import type { ViewMode } from "@/bindings/ViewMode";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 import { ActivityHeatmap } from "./activity-heatmap";
 import { ActivityPanel } from "./activity-panel";
@@ -22,6 +23,8 @@ type ActivitiesPageProps = {
   view: ViewMode;
   searchOpen: boolean;
   onSearchOpenChange: (open: boolean) => void;
+  /** Whether the right-hand details panel is shown. */
+  detailsOpen: boolean;
   dataDir?: string;
 };
 
@@ -29,6 +32,7 @@ export function ActivitiesPage({
   view,
   searchOpen,
   onSearchOpenChange,
+  detailsOpen,
   dataDir,
 }: ActivitiesPageProps) {
   const queryClient = useQueryClient();
@@ -108,7 +112,7 @@ export function ActivitiesPage({
   const panelId = activeId ?? latest.data?.rows[0]?.id;
 
   return (
-    <div className="flex h-full min-h-0 gap-4 p-4">
+    <div className="flex h-full min-h-0 p-4">
       <div className="flex min-w-0 flex-1 flex-col gap-4">
         {searchOpen && (
           <SearchBar
@@ -141,9 +145,19 @@ export function ActivitiesPage({
           onDelete={(row) => remove.mutate(row.id)}
         />
       </div>
-      <ScrollArea className="w-80 shrink-0">
-        <ActivityPanel activityId={panelId} dataDir={dataDir} />
-      </ScrollArea>
+      {/* Slides in and out like the left sidebar; the inner width stays fixed while animating. */}
+      <aside
+        aria-hidden={!detailsOpen}
+        inert={!detailsOpen}
+        className={cn(
+          "shrink-0 overflow-hidden transition-[width] duration-200 ease-linear",
+          detailsOpen ? "w-84" : "w-0",
+        )}
+      >
+        <ScrollArea className="h-full w-84 pl-4">
+          <ActivityPanel activityId={panelId} dataDir={dataDir} />
+        </ScrollArea>
+      </aside>
     </div>
   );
 }
