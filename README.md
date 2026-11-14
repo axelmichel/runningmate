@@ -1,118 +1,70 @@
-
 ![Logo](./logo-runningmate.png)
 # RunningMate
 
 ![GitHub release](https://img.shields.io/github/v/release/axelmichel/runningmate?include_prereleases)
 
-RunningMate is a Python-based application designed to process, analyze, and visualize activity data. The current release supports cycling, running and walking activity data. The application is built using the [PyQt6](https://pypi.org/project/PyQt6/) library for the GUI, Pandas for data processing, [folium](https://python-visualization.github.io/folium/latest/) and [plotly](https://github.com/plotly) for visualization.
+RunningMate is a desktop app to store, analyse and visualise your running, cycling and walking
+activities. It's built with [Rust](https://www.rust-lang.org) and [Tauri](https://tauri.app), with
+a React interface using [shadcn/ui](https://ui.shadcn.com).
 
-The app does not store any of your data outside your local machine. All collected data can be found in the `runningData` folder within your home directory. The app uses a [SQLite database](https://www.sqlite.org/) for imported activity data.
-Uploaded media files and generated images are stored in the `media` and generated images/charts in the `images` folder. In the current Version this app does not support multiple users.
+The app does not store any of your data outside your computer. Everything lives in the
+`RunningData` folder in your home directory: a [SQLite](https://www.sqlite.org/) database, the
+archived TCX files (`imports`) and your photos and videos (`media`).
 
 ## Documentation
 The documentation can be found [here](https://axelmichel.github.io/runningmate).
 
 ## Features
-- Import activity data from `tcx` files.
-- Import activity data from garmin connect.
-- Syncing activity data from a directory (e.g., iICloud).
-- Weather data for each activity (also historical data).
-- Search and filter activities.
-- Track, Pace, abd Heart Rate Visualization on a map.
-- Abstract map image of the track to share or use as overlay for images.
-- Calculation and visualization of key metrics such as distance, pace, speed, heart rate, power,and elevation gain.
+- **Sync** activities in from TCX files, a watched folder (e.g. an iCloud export of RunGap or
+  HealthFit) or **Garmin Connect** — Garmin works both ways: new Garmin activities are imported,
+  activities recorded elsewhere can be uploaded.
+- Weather for each activity (also historical), from [Open-Meteo](https://open-meteo.com).
+- Search and filter activities; a heatmap of training time over the last year.
+- Route, pace and heart-rate maps, elevation/heart-rate/pace charts, per-km segments and best
+  segments.
+- Heart-rate zones, training effect, fitness/fatigue trend.
+- Photos and videos per activity, picked straight from the Photos library on macOS, dropped onto
+  the app or linked from disk.
+- A route image (PNG/SVG, white on transparent) to share or lay over photos.
+- English and German.
 
-### File Import
-The app supports the import of `tcx` files. The files are stored in the `runningData` folder within your home directory. The imported `tcx` files are zipped, and the extracted data is stored in a SQLite database.
-
-### Garmin Connect Synchronization
-To sync your garmin activity data, you need to provide the username and password of your garmin account. The app uses the [garminconnect](https://pypi.org/project/garminconnect/) library to fetch the data. 
-The data itself is stored in the same way as the imported `tcx` files. Your credentials are stored via [keyring](https://pypi.org/project/keyring/). 
-The keyring library interfaces with the operating system's credential storage mechanisms, such as Keychain on macOS, Windows Credential Locker on Windows.
-
-Be aware that the initial sync can take a while, depending on the number of activities you have. The app will only fetch new activities, so the sync time will decrease over time.
 ## Installation
+Download the latest release from the
+[releases page](https://github.com/axelmichel/runningmate/releases) and open the installer for your
+system (on macOS the `.dmg`). The app isn't code-signed yet, so macOS asks for confirmation the
+first time you open it.
 
-### Prerequisites
-Make sure you have Python 3.13.2 or later installed on your system. You can download it from [python.org](https://www.python.org/downloads/).
-
-### Install Dependencies
-Navigate to the project directory and install the required dependencies using:
+## Development
+Prerequisites: [Rust](https://rustup.rs) (stable), [Node.js](https://nodejs.org) 22 with pnpm 9,
+and the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your system.
 
 ```sh
-pip install -r requirements.txt
+cd app
+pnpm install
+pnpm tauri dev     # run the app in development mode
+pnpm tauri build   # build the installer
 ```
 
-## Usage
+To work against a copy of your data, point the app at another folder:
+`RUNNINGMATE_DATA_DIR=/path/to/copy pnpm tauri dev`.
 
-Run the application with:
-   ```sh
-   python main.py
-   ```
+### Checks
+All pull requests run these:
+
+```sh
+cd app
+pnpm typecheck && pnpm lint && pnpm format:check && pnpm test
+cd src-tauri
+cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
+```
+
+See [`app/README.md`](app/README.md) for the layout of the code.
+
+### Documentation
+The documentation is written in Markdown in the `docs` folder and built with
+[MkDocs](https://www.mkdocs.org/) (`pip install mkdocs mkdocs-material`, then `mkdocs serve`).
+Changes on `main` are published to GitHub Pages automatically.
 
 ## Contributing
-Feel free to contribute by submitting issues or pull requests on GitHub. Make sure to follow best practices and include documentation for any new features.
-
-### Development
-```sh
-pip install -r requirements.txt -r dev-requirements.txt
-```
-
-#### Debugging
-Copy the env.example file to .env and adjust the values to your needs. Set `DEBUG_MODE` to True to enable logging and debugging features.
-
-#### Testing
-All pull requests will run the tests. Run the tests locally with:
-
-```sh 
-pytest
-```
-
-#### Linting
-All pull requests will be linted. Run it upfront with:
-
-```sh
-black . && isort . &&  ruff check .
-# or in case you want to fix what is fixable
-black . && isort . &&  ruff format .
-```
-### Documentation
-The documentation is written in markdown and can be found in the `docs` folder. The documentation is built using [MkDocs](https://www.mkdocs.org/). To build and run the documentation you need to install the following dependencies:
-```sh
-pip install mkdocs mkdocs-material https://github.com/mitya57/python-markdown-math/archive/master.zip  
-```
-To build the documentation run:
-```sh
-mkdocs build
-```
-To run the documentation locally run:
-```sh
-mkdocs serve
-```
-
-## Future Enhancements
-- Calendar with activities
-- Weekly, monthly, and yearly statistics with comparisons
-- Integration of other activity data formats (e.g. GPX)
-- Integration of other activity data sources (e.g. Strava)
-- Activity details (e.g., splits, laps)
-- Tools to clean and repair data (e.g., remove outliers)
-- Dashboard with key metrics
-
-## Copyrights and Licenses
-
-### Icons
-All Icons made by [RemixIcon](https://remixicon.com/). RemixIcon is licensed based on the [Apache License](https://github.com/Remix-Design/remixicon/blob/master/License) and all rights of products are reserved for RemixIcon.
-
-### Maps
-The maps are created with [Folium](https://python-visualization.github.io/folium/latest/index.html), [OpenStreetMap](https://www.openstreetmap.org) and [Leaflet](https://leafletjs.com/).
-
-### Charts
-The charts are created with [Plotly](https://github.com/plotly/plotly.py). `plotly.py` is [MIT](https://github.com/plotly/plotly.py/blob/main/LICENSE.txt) Licensed.
-
-### Weather Data
-The weather data is fetched from [Open-Meteo](https://open-meteo.com/). API data are offered under Attribution 4.0 International (CC BY 4.0), for further details see [here](https://open-meteo.com/en/license).
-
----
-
-Happy Running! 🏃‍♂️🏃‍♀️
+Feel free to contribute by submitting issues or pull requests on GitHub. Please follow the existing
+style and include documentation for new features.

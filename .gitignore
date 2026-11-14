@@ -1,18 +1,11 @@
-# created by virtualenv automatically
-venv/
-files
-dist
-build
 .DS_Store
-.env.local
-
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-
-# dev
-.project
-site/
 .idea
-identifier.sqlite
-.coverage
+.project
+
+# Built documentation site (mkdocs build)
+site/
+
+# Local activity files from the early script version; personal data, never committed.
+files/
+
+# The app has its own ignores in app/.gitignore and app/src-tauri/.gitignore.

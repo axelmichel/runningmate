@@ -1,0 +1,35 @@
+name: Docs - deploy MkDocs to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs.yml"
+
+jobs:
+  deploy:
+    name: Deploy MkDocs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      # MkDocs is a Python tool; it's only used to build the documentation site.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Install MkDocs
+        run: |
+          pip install mkdocs mkdocs-material
+          pip install https://github.com/mitya57/python-markdown-math/archive/master.zip
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mkdocs gh-deploy --force --remote-branch gh-pages

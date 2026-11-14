@@ -2,7 +2,7 @@
 # RunningMate
 ![Alt Text](images/logo-runningmate.png)
 ## Introduction
-RunningMate is an application for storing and analyzing sport activities written in Python. 
+RunningMate is a desktop application for storing and analyzing sport activities, built with Rust and Tauri. 
 In the current version it can handle running, cycling and walking activities. 
 This is - and will be for a while - work in progress, so expect some bugs and missing features. 
 But I try my best and I really "eat my own dogfood". I am using this for my own runs and rides, 
@@ -28,25 +28,21 @@ A collection of tools to store, analyze and visualize your very own activity dat
 And with that, happy running, riding, or walking! (*There might be more in the future*)
 
 ## Installation
-The plan is to make this an executable application which can be installed on your system, but for now it's just a script.
+Download the latest release from [GitHub](https://github.com/axelmichel/runningmate/releases) and open the installer for your system
+(on macOS the `.dmg`). The app is not code-signed yet, so macOS asks for confirmation the first time you open it.
 
-### Prerequisites
-For the moment you'll require python 3.13.2 or later to run the application. You can download it from [python.org](https://www.python.org/downloads/). 
+All data stays on your computer in the `RunningData` folder in your home directory: the database, the archived TCX files and your photos and videos.
+Activities come in through **Sync**: TCX files, a watched folder (e.g. an iCloud export) or Garmin Connect, which also works in the other direction.
 
-### Install Dependencies
-Extract the downloaded zip-file to a directory of your choice and navigate to it in your terminal. From the project directory install the required dependencies using:
+### Building it yourself
+You need [Rust](https://rustup.rs), [Node.js](https://nodejs.org) 22 with pnpm, and the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your system.
 
-   ```sh
-   pip install -r requirements.txt
-   ```
-
-*Keep in mind, that you might have to rerun this command if you update to a newer version of the application.*
-
-### Run the application
-
-   ```sh
-   python main.py
-   ```
+```sh
+cd app
+pnpm install
+pnpm tauri dev     # run in development mode
+pnpm tauri build   # build the installer
+```
 
 ## Contributing
 Feel free to contribute by submitting issues or pull requests on [Github](https://github.com/axelmichel/runningmate). Make sure to follow best practices and include documentation for any new features.
@@ -54,13 +50,13 @@ Feel free to contribute by submitting issues or pull requests on [Github](https:
 ## Copyrights and Licenses
 
 ### Icons
-All Icons made by [RemixIcon](https://remixicon.com/). RemixIcon is licensed based on the [Apache License](https://github.com/Remix-Design/remixicon/blob/master/License) and all rights of products are reserved for RemixIcon.
+Icons from [Lucide](https://lucide.dev), licensed under the [ISC License](https://lucide.dev/license).
 
 ### Maps
-The maps are created with [Folium](https://python-visualization.github.io/folium/latest/index.html), [OpenStreetMap](https://www.openstreetmap.org) and [Leaflet](https://leafletjs.com/).
+The maps are drawn with [Leaflet](https://leafletjs.com/) on [Esri](https://www.esri.com) basemap tiles with data from [OpenStreetMap](https://www.openstreetmap.org) contributors.
 
 ### Charts
-The charts are created with [Plotly](https://github.com/plotly/plotly.py). `plotly.py` is [MIT](https://github.com/plotly/plotly.py/blob/main/LICENSE.txt) Licensed.
+The charts are created with [Recharts](https://recharts.org) (MIT licensed).
 
 ### Weather Data
 The weather data is fetched from [Open-Meteo](https://open-meteo.com/). API data are offered under Attribution 4.0 International (CC BY 4.0), for further details see [here](https://open-meteo.com/en/license).
