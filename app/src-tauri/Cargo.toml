@@ -24,6 +24,14 @@ dirs = "6"
 rusqlite = { version = "0.42.0", features = ["bundled"] }
 ts-rs = "12.0.1"
 chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+roxmltree = "0.21.2"
+geographiclib-rs = "0.2.7"
+utm = "0.1.6"
+tar = "0.4.46"
+flate2 = "1.1.11"
+tauri-plugin-dialog = "2.8.4"
+tokio = { version = "1.54.1", features = ["rt", "macros", "time"] }
+reqwest = { version = "0.13.5", features = ["json", "query"] }
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
 [profile.release]

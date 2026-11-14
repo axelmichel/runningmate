@@ -108,6 +108,17 @@ export function ActivitiesPage({
     onError: (error) => toast.error(`Could not delete the activity: ${error}`),
   });
 
+  const reimport = useMutation({
+    mutationFn: (id: number) => api.reimportActivity(id),
+    onSuccess: (_, id) => {
+      toast.success("Activity recomputed from its TCX file");
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      queryClient.invalidateQueries({ queryKey: ["activity", id] });
+      queryClient.invalidateQueries({ queryKey: ["bestPerformances", id] });
+    },
+    onError: (error) => toast.error(`Could not re-import: ${error}`),
+  });
+
   const heatmapEndDate = useMemo(() => heatmapEnd(filter), [filter]);
   const panelId = activeId ?? latest.data?.rows[0]?.id;
 
@@ -143,6 +154,7 @@ export function ActivitiesPage({
           selection={selection}
           onSelectionChange={setSelection}
           onDelete={(row) => remove.mutate(row.id)}
+          onReimport={(row) => reimport.mutate(row.id)}
         />
       </div>
       {/* Slides in and out like the left sidebar; the inner width stays fixed while animating. */}

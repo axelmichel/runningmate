@@ -9,6 +9,8 @@ export type Column = {
   header: string;
   sortField: SortField;
   align?: "right";
+  /** Fixed width in px; required for columns that can be pinned (the first two of a view). */
+  width?: number;
   render: (row: ActivityRow) => ReactNode;
 };
 
@@ -27,13 +29,24 @@ type ColumnKey =
   | "pause";
 
 const COLUMNS: Record<ColumnKey, Column> = {
-  type: { header: "Type", sortField: "type", render: (row) => row.displayType },
-  date: { header: "Date", sortField: "date", render: (row) => formatDateTime(row.date) },
+  type: {
+    header: "Type",
+    sortField: "type",
+    width: 120,
+    render: (row) => <span className="block truncate">{row.displayType}</span>,
+  },
+  date: {
+    header: "Date",
+    sortField: "date",
+    width: 150,
+    render: (row) => formatDateTime(row.date),
+  },
   title: {
     header: "Title",
     sortField: "title",
+    width: 240,
     render: (row) => (
-      <span className="block max-w-72 truncate" title={row.title ?? undefined}>
+      <span className="block truncate" title={row.title ?? undefined}>
         {row.title}
       </span>
     ),

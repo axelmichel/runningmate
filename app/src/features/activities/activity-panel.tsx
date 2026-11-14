@@ -43,6 +43,41 @@ function TrackImage({ dataDir, fileId }: { dataDir: string; fileId: string }) {
   );
 }
 
+/** Route shape drawn from the archived TCX; falls back to the Python image without one. */
+function Route({ activity, dataDir }: { activity: ActivityDetail; dataDir?: string }) {
+  const { data: route, isPending } = useQuery({
+    queryKey: ["route", activity.id],
+    queryFn: () => api.activityRoute(activity.id),
+    staleTime: Infinity,
+  });
+  if (isPending) return <Skeleton className="h-40 w-full" />;
+  if (!route) {
+    return dataDir && activity.fileId ? (
+      <TrackImage dataDir={dataDir} fileId={activity.fileId} />
+    ) : null;
+  }
+  const pad = 0.04;
+  const points = route.points.map(([x, y]) => `${x.toFixed(4)},${y.toFixed(4)}`).join(" ");
+  return (
+    <svg
+      role="img"
+      aria-label="Route"
+      viewBox={`${-pad} ${-pad} ${route.width + 2 * pad} ${route.height + 2 * pad}`}
+      className="mx-auto h-40 w-full text-primary"
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <polyline
+        points={points}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={0.012}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function Overview({ activity, dataDir }: { activity: ActivityDetail; dataDir?: string }) {
   return (
     <Card size="sm">
@@ -57,7 +92,7 @@ function Overview({ activity, dataDir }: { activity: ActivityDetail; dataDir?: s
           <Metric label="Duration" value={formatDuration(activity.duration)} />
           <Metric label="Pace (/km)" value={formatMinSec(activity.avgPace)} align="right" />
         </div>
-        {dataDir && activity.fileId && <TrackImage dataDir={dataDir} fileId={activity.fileId} />}
+        <Route activity={activity} dataDir={dataDir} />
         <div className="grid grid-cols-2 gap-2">
           <Metric label="Distance" value={`${formatNumber(activity.distance, 2)} km`} />
           <Metric

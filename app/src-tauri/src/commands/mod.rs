@@ -3,5 +3,6 @@
 
 pub mod activities;
 pub mod app;
+pub mod import;
 pub mod settings;
 pub mod users;

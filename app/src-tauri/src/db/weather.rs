@@ -42,13 +42,6 @@ pub fn get(conn: &Connection, activity_id: i64) -> AppResult<Option<Weather>> {
         .optional()?)
 }
 
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "used by the weather fetch after import (milestone 3)"
-    )
-)]
 pub fn upsert(conn: &Connection, activity_id: i64, weather: &Weather) -> AppResult<()> {
     // `weather.activity_id` is a TEXT column in the Python schema.
     conn.execute(

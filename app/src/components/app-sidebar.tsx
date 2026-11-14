@@ -1,4 +1,4 @@
-import { Search, Settings, User } from "lucide-react";
+import { FolderSync, Import, Search, Settings, User } from "lucide-react";
 
 import {
   Sidebar,
@@ -18,6 +18,8 @@ type AppSidebarProps = {
   onViewModeChange: (mode: ViewMode) => void;
   searchOpen: boolean;
   onSearchToggle: () => void;
+  onImport: () => void;
+  onFolderSync: () => void;
 };
 
 export function AppSidebar({
@@ -25,6 +27,8 @@ export function AppSidebar({
   onViewModeChange,
   searchOpen,
   onSearchToggle,
+  onImport,
+  onFolderSync,
 }: AppSidebarProps) {
   return (
     <Sidebar
@@ -58,6 +62,18 @@ export function AppSidebar({
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Import TCX (⌘O)" onClick={onImport}>
+              <Import />
+              <span>Import</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Sync folder" onClick={onFolderSync}>
+              <FolderSync />
+              <span>Sync folder</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton tooltip="Search (⌘F)" isActive={searchOpen} onClick={onSearchToggle}>
               <Search />

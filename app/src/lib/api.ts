@@ -10,7 +10,10 @@ import type { BestPerformance } from "@/bindings/BestPerformance";
 import type { DayTotal } from "@/bindings/DayTotal";
 import type { Equipment } from "@/bindings/Equipment";
 import type { EquipmentKind } from "@/bindings/EquipmentKind";
+import type { FolderSyncStatus } from "@/bindings/FolderSyncStatus";
+import type { ImportSummary } from "@/bindings/ImportSummary";
 import type { Media } from "@/bindings/Media";
+import type { RouteOutline } from "@/bindings/RouteOutline";
 import type { SystemSettings } from "@/bindings/SystemSettings";
 import type { User } from "@/bindings/User";
 import type { UserInput } from "@/bindings/UserInput";
@@ -40,6 +43,14 @@ export const api = {
   deleteActivity: (id: number) => invoke<void>("delete_activity", { id }),
   activityTypeDetails: (viewMode: ViewMode) =>
     invoke<string[]>("activity_type_details", { viewMode }),
+
+  // Import and folder sync (progress arrives as `import://progress` events)
+  importFiles: (paths: string[]) => invoke<ImportSummary>("import_files", { paths }),
+  reimportActivity: (id: number) => invoke<void>("reimport_activity", { id }),
+  activityRoute: (id: number) => invoke<RouteOutline | null>("activity_route", { id }),
+  folderSyncStatus: () => invoke<FolderSyncStatus>("folder_sync_status"),
+  setSyncFolder: (folder: string) => invoke<FolderSyncStatus>("set_sync_folder", { folder }),
+  syncFolder: () => invoke<ImportSummary>("sync_folder"),
 
   // Media, weather, best performances
   listMedia: (activityId: number) => invoke<Media[]>("list_media", { activityId }),

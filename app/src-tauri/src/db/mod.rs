@@ -234,6 +234,22 @@ mod real_database {
         }
         println!("decoded {} activities", ids.len());
 
+        // Optionally also outline the newest routes from the archives (read-only).
+        if let Ok(imports) = std::env::var("RUNNINGMATE_TEST_IMPORTS") {
+            let started = std::time::Instant::now();
+            let mut outlined = 0;
+            for id in ids.iter().rev().take(50) {
+                let route =
+                    crate::importer::route_outline(&conn, *id, Path::new(&imports)).unwrap();
+                outlined += usize::from(route.is_some());
+            }
+            println!(
+                "outlined {outlined}/50 routes in {:?} ({:?} each)",
+                started.elapsed(),
+                started.elapsed() / 50
+            );
+        }
+
         println!("user: {:?}", users::get(&conn).unwrap().map(|u| u.zones));
         for kind in [users::EquipmentKind::Shoe, users::EquipmentKind::Bike] {
             println!(

@@ -2,8 +2,12 @@ mod activity_type;
 mod commands;
 mod db;
 mod error;
+mod importer;
+mod menu;
+mod open_meteo;
 mod paths;
 mod settings;
+mod sync;
 
 use std::fs;
 
@@ -22,8 +26,10 @@ fn open_database() -> AppResult<Db> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             app.manage(open_database()?);
+            menu::install(app)?;
             // Lets the webview load track images and media from the data folder.
             app.asset_protocol_scope()
                 .allow_directory(paths::data_dir()?, true)?;
@@ -53,6 +59,12 @@ pub fn run() {
             commands::users::add_equipment,
             commands::users::set_equipment_in_use,
             commands::users::delete_equipment,
+            commands::import::import_files,
+            commands::import::reimport_activity,
+            commands::import::activity_route,
+            commands::import::folder_sync_status,
+            commands::import::set_sync_folder,
+            commands::import::sync_folder,
             commands::settings::get_settings,
             commands::settings::save_settings,
         ])

@@ -28,3 +28,8 @@ pub fn appdata_dir() -> AppResult<PathBuf> {
 pub fn media_dir() -> AppResult<PathBuf> {
     Ok(data_dir()?.join("media"))
 }
+
+/// Archived `{file_id}.tcx.tar.gz` files.
+pub fn imports_dir() -> AppResult<PathBuf> {
+    Ok(data_dir()?.join("imports"))
+}
