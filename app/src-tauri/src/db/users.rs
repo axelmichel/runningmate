@@ -106,10 +106,11 @@ pub fn age_on(birthday: &str, today: NaiveDate) -> Option<i64> {
     (age >= 0).then_some(i64::from(age))
 }
 
-/// Suggested zone bounds, as `window_user_settings.calculate_heart_rate_zones` computes them:
-/// 60/70/80/90/100 % of `(hr_max or 220) - age`.
+/// Suggested zone bounds: 60/70/80/90/100 % of the maximum heart rate, which is the profile's
+/// value or, without one, `220 - age`. (The Python app subtracted the age from the profile value
+/// too, so a measured maximum of 185 at 56 gave a zone 5 of 129.)
 pub fn suggested_zones(hr_max: Option<i64>, age: i64) -> [i64; 5] {
-    let max = (hr_max.unwrap_or(220) - age) as f64;
+    let max = hr_max.filter(|m| *m > 0).unwrap_or(220 - age) as f64;
     [0.6, 0.7, 0.8, 0.9, 1.0].map(|share| (max * share) as i64)
 }
 
@@ -352,9 +353,10 @@ mod tests {
     }
 
     #[test]
-    fn suggested_zones_match_python() {
-        // hr_max 220 and age 56 give the zone5 bound stored in the real database (164).
-        assert_eq!(suggested_zones(Some(220), 56), [98, 114, 131, 147, 164]);
+    fn suggested_zones_use_the_maximum_heart_rate() {
+        assert_eq!(suggested_zones(Some(185), 56), [111, 129, 148, 166, 185]);
+        // Without one, 220 - age; age 56 gives the zone5 bound stored in the real database.
+        assert_eq!(suggested_zones(None, 56), [98, 114, 131, 147, 164]);
     }
 
     #[test]
