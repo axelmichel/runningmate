@@ -33,6 +33,23 @@ pub fn start_date(last_sync: Option<&str>) -> String {
         .map_or_else(|| "2000-01-01".to_string(), |d| d.to_string())
 }
 
+/// Key in `sync.json` for when a sync last ran to the end (RFC 3339); Rust app only.
+pub const LAST_RUN_KEY: &str = "last_garmin_sync_run";
+
+/// Where the next open-ended sync should start, after one that saw activities up to `newest`:
+/// the oldest day with a failed download, so it is retried and nothing older is skipped, or
+/// else the newest day. `None` when nothing changes.
+pub fn resume_day(
+    previous: Option<&str>,
+    newest: Option<&str>,
+    oldest_failed: Option<&str>,
+) -> Option<String> {
+    oldest_failed
+        .or(newest)
+        .filter(|day| Some(*day) != previous)
+        .map(String::from)
+}
+
 pub fn today() -> String {
     Local::now().date_naive().to_string()
 }
@@ -93,6 +110,23 @@ mod tests {
             distance: None,
         };
         assert_eq!(file_id(&activity), "garmin_activity_2025-05-06_18412345678");
+    }
+
+    #[test]
+    fn resumes_at_the_oldest_failure_or_the_newest_day() {
+        assert_eq!(
+            resume_day(Some("2026-09-01"), Some("2026-09-27"), None).as_deref(),
+            Some("2026-09-27")
+        );
+        assert_eq!(
+            resume_day(None, Some("2026-09-27"), Some("2026-03-05")).as_deref(),
+            Some("2026-03-05")
+        );
+        assert_eq!(
+            resume_day(Some("2026-09-27"), Some("2026-09-27"), None),
+            None
+        );
+        assert_eq!(resume_day(Some("2026-09-27"), None, None), None);
     }
 
     #[test]

@@ -9,7 +9,7 @@ import { ImportProgressView } from "@/features/import/import-progress";
 import { useImportRun } from "@/features/import/use-import-run";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 
 import { OPEN_RANGE, toDateRange, type RangeInput } from "./range";
 import { RangeFields } from "./range-fields";
@@ -188,10 +188,17 @@ export function GarminPanel({ onRunningChange }: { onRunningChange: (running: bo
       <Section title={t("Import from Garmin Connect")}>
         <p className="text-sm text-muted-foreground">
           {t("Last sync: {{date}}", {
-            date: status.data.lastSync
-              ? formatDate(Date.parse(status.data.lastSync) / 1000)
-              : t("never"),
+            // Syncs from the Python app only left the synced day behind.
+            date: status.data.lastRun
+              ? formatDateTime(status.data.lastRun)
+              : status.data.lastSync
+                ? formatDate(Date.parse(status.data.lastSync) / 1000)
+                : t("never"),
           })}
+          {status.data.lastSync &&
+            ` · ${t("The next sync starts at {{date}}.", {
+              date: formatDate(Date.parse(status.data.lastSync) / 1000),
+            })}`}
         </p>
         <RangeFields
           id="garmin-import"
