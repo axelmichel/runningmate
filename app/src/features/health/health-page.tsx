@@ -11,6 +11,8 @@ import {
   YAxis,
 } from "recharts";
 
+import type { CardioFitness } from "@/bindings/CardioFitness";
+import type { FitnessDay } from "@/bindings/FitnessDay";
 import type { HealthHeartPoint } from "@/bindings/HealthHeartPoint";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +34,8 @@ import { formatDate, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { DEFAULT_MONTHS, PRESET_MONTHS, lastMonths, periodBounds } from "./period";
+import { ScaleBar } from "./scale-bar";
+import { CARDIO_LEVELS, FORM_SCALE, cardioScale, formPercent, segmentOf } from "./scales";
 
 const fitnessConfig = () =>
   ({
@@ -106,6 +110,104 @@ function PeriodPicker({
         </div>
       ))}
     </div>
+  );
+}
+
+/** VO2max against people of the same age group and sex (Cooper Institute norms). */
+function CardioCard({ cardio }: { cardio: CardioFitness }) {
+  const { vo2max, rating } = cardio;
+  return (
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle className="text-sm">{t("Cardio fitness (VO2max)")}</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-3 text-sm">
+        {vo2max === null ? (
+          <p className="text-muted-foreground">
+            {t("At least 3 runs of 3 km or more are needed for an estimate.")}
+          </p>
+        ) : (
+          <>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-semibold text-primary tabular-nums">
+                {formatNumber(vo2max, 1)}
+              </span>
+              <span className="text-muted-foreground">ml/kg/min</span>
+              {rating && (
+                <span className="ml-auto font-medium">{t(CARDIO_LEVELS[rating.level])}</span>
+              )}
+            </div>
+            {rating ? (
+              <>
+                <ScaleBar scale={cardioScale(rating.bounds)} value={vo2max} />
+                <p className="text-xs text-muted-foreground">
+                  {rating.gender === "female"
+                    ? t(
+                        "Compared with women aged {{from}}–{{to}} (Cooper Institute norms, as used by Garmin).",
+                        { from: rating.ageGroup, to: rating.ageGroup + 9 },
+                      )
+                    : t(
+                        "Compared with men aged {{from}}–{{to}} (Cooper Institute norms, as used by Garmin).",
+                        { from: rating.ageGroup, to: rating.ageGroup + 9 },
+                      )}
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  "Add your birthday and sex in the user settings to compare with people of your age.",
+                )}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {cardio.source === "profile"
+                ? t(
+                    "From your user settings; there are too few runs in this period to estimate it.",
+                  )
+                : t(
+                    "Estimated from your faster runs of 3 km or more in this period ({{count}} runs), not measured.",
+                    { count: cardio.runs },
+                  )}
+            </p>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Today's form as a share of fitness, in the training zones of TrainingPeaks and intervals.icu. */
+function FormCard({ latest }: { latest: FitnessDay | undefined }) {
+  const percent = latest ? formPercent(latest.form, latest.fitness) : null;
+  const zone = percent === null ? null : segmentOf(FORM_SCALE, percent);
+  return (
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle className="text-sm">{t("Form")}</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-3 text-sm">
+        {percent === null || !zone || !latest ? (
+          <p className="text-muted-foreground">{t("No training in this period.")}</p>
+        ) : (
+          <>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-semibold text-primary tabular-nums">
+                {formatNumber(percent)} %
+              </span>
+              <span className="text-muted-foreground">{t("of your fitness")}</span>
+              <span className="ml-auto font-medium">{t(zone.label)}</span>
+            </div>
+            <ScaleBar scale={FORM_SCALE} value={percent} format={(v) => `${formatNumber(v)} %`} />
+            {zone.description && <p>{t(zone.description)}</p>}
+            <p className="text-xs text-muted-foreground">
+              {t("Form is fitness minus fatigue, on {{date}}.", {
+                date: formatDate(dayTimestamp(latest.day)),
+              })}
+            </p>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -294,6 +396,12 @@ export function HealthPage() {
             hint={latest && t("on {{date}}", { date: formatDate(dayTimestamp(latest.day)) })}
           />
         </div>
+        {report && (
+          <div className="grid gap-3 lg:grid-cols-2">
+            <CardioCard cardio={report.cardio} />
+            <FormCard latest={latest} />
+          </div>
+        )}
         <FitnessCard fitness={report?.fitness ?? []} />
         <HeartRateCard points={heart} references={report?.references ?? null} />
         <Card size="sm">

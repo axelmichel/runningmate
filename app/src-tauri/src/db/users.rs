@@ -12,6 +12,32 @@ use crate::error::{AppError, AppResult};
 /// Birthday format stored by the Python app.
 const BIRTHDAY_FORMAT: &str = "%d.%m.%Y";
 
+/// Sex for the VO2max comparison tables, which only exist for men and women.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(export)]
+pub enum Gender {
+    Male,
+    Female,
+}
+
+impl Gender {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Male => "male",
+            Self::Female => "female",
+        }
+    }
+
+    fn parse(value: &str) -> Option<Self> {
+        match value {
+            "male" => Some(Self::Male),
+            "female" => Some(Self::Female),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
@@ -33,6 +59,7 @@ pub struct User {
     #[ts(type = "number | null")]
     pub hr_max: Option<i64>,
     pub vo2max: Option<f64>,
+    pub gender: Option<Gender>,
     /// Upper bound (bpm) of zones 1–5; `None` until the zones have been saved.
     #[ts(type = "[number, number, number, number, number] | null")]
     pub zones: Option<[i64; 5]>,
@@ -52,6 +79,9 @@ pub struct UserInput {
     pub hr_min: i64,
     #[ts(type = "number")]
     pub hr_max: i64,
+    #[serde(default)]
+    #[ts(optional)]
+    pub gender: Option<Gender>,
 }
 
 #[derive(Debug, Clone, Deserialize, TS)]
@@ -103,6 +133,9 @@ pub fn get(conn: &Connection) -> AppResult<Option<User>> {
                 hr_min: opt_i64(row, "hr_min")?,
                 hr_max: opt_i64(row, "hr_max")?,
                 vo2max: opt_f64(row, "vo2max")?,
+                gender: opt_string(row, "gender")?
+                    .as_deref()
+                    .and_then(Gender::parse),
                 zones: zones
                     .iter()
                     .all(Option::is_some)
@@ -127,10 +160,11 @@ pub fn save(conn: &Connection, input: &UserInput) -> AppResult<User> {
             "resting heart rate must be below maximum heart rate".into(),
         ));
     }
+    let gender = input.gender.map(Gender::as_str);
     match get(conn)? {
         Some(user) => conn.execute(
             "UPDATE users SET name = ?1, weight = ?2, age = ?3, height = ?4, hr_min = ?5,
-                hr_max = ?6, birthday = ?7 WHERE id = ?8",
+                hr_max = ?6, birthday = ?7, gender = ?8 WHERE id = ?9",
             params![
                 input.name,
                 input.weight,
@@ -139,12 +173,13 @@ pub fn save(conn: &Connection, input: &UserInput) -> AppResult<User> {
                 input.hr_min,
                 input.hr_max,
                 input.birthday,
+                gender,
                 user.id
             ],
         )?,
         None => conn.execute(
-            "INSERT INTO users (name, weight, age, height, hr_min, hr_max, birthday)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            "INSERT INTO users (name, weight, age, height, hr_min, hr_max, birthday, gender)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
             params![
                 input.name,
                 input.weight,
@@ -152,7 +187,8 @@ pub fn save(conn: &Connection, input: &UserInput) -> AppResult<User> {
                 input.height,
                 input.hr_min,
                 input.hr_max,
-                input.birthday
+                input.birthday,
+                gender
             ],
         )?,
     };
@@ -303,6 +339,7 @@ mod tests {
             birthday: "31.10.1968".into(),
             hr_min: 50,
             hr_max: 185,
+            gender: Some(Gender::Male),
         }
     }
 
@@ -328,6 +365,7 @@ mod tests {
 
         let user = save(&conn, &input()).unwrap();
         assert!(user.zones.is_none());
+        assert_eq!(user.gender, Some(Gender::Male));
         let again = save(
             &conn,
             &UserInput {

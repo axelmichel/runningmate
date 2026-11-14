@@ -2,10 +2,18 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import type { Gender } from "@/bindings/Gender";
 import type { User } from "@/bindings/User";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { t, tk } from "@/i18n";
 import { api } from "@/lib/api";
 
@@ -20,6 +28,11 @@ const FIELDS: { key: keyof ProfileForm; label: string; placeholder?: string; typ
   { key: "hrMax", label: tk("Maximum heart rate (bpm)"), type: "number" },
 ];
 
+const GENDERS: [Gender, string][] = [
+  ["female", tk("Female")],
+  ["male", tk("Male")],
+];
+
 /** General user data (the "General" page of `window_user_settings.py`). */
 export function ProfileFormView({ user }: { user: User | null }) {
   const queryClient = useQueryClient();
@@ -31,6 +44,8 @@ export function ProfileFormView({ user }: { user: User | null }) {
     hrMin: user?.hrMin?.toString() ?? "",
     hrMax: user?.hrMax?.toString() ?? "",
   });
+  // Optional; only used to compare VO2max with people of the same age and sex.
+  const [gender, setGender] = useState<Gender | null>(user?.gender ?? null);
   const [touched, setTouched] = useState(false);
   const errors = validateProfile(form);
   const valid = Object.keys(errors).length === 0;
@@ -44,6 +59,7 @@ export function ProfileFormView({ user }: { user: User | null }) {
         birthday: form.birthday.trim(),
         hrMin: Number(form.hrMin),
         hrMax: Number(form.hrMax),
+        gender: gender ?? undefined,
       }),
     onSuccess: (saved) => {
       queryClient.setQueryData(["user"], saved);
@@ -76,6 +92,24 @@ export function ProfileFormView({ user }: { user: User | null }) {
             {touched && errors[key] && <p className="text-xs text-destructive">{t(errors[key])}</p>}
           </div>
         ))}
+        <div className="grid gap-1.5">
+          <Label htmlFor="profile-gender">{t("Sex")}</Label>
+          <Select value={gender ?? ""} onValueChange={(value) => setGender(value as Gender)}>
+            <SelectTrigger id="profile-gender" className="w-full">
+              <SelectValue placeholder={t("Not specified")} />
+            </SelectTrigger>
+            <SelectContent>
+              {GENDERS.map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {t(label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {t("Optional. Compares your cardio fitness with people of your age and sex.")}
+          </p>
+        </div>
       </div>
       <p className="text-xs text-muted-foreground">
         {t(

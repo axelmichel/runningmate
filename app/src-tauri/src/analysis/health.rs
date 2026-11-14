@@ -5,7 +5,14 @@ use rusqlite::Connection;
 use serde::Serialize;
 use ts_rs::TS;
 
-use super::{fitness::FitnessDay, fitness_between, segment_time, zones, zones::ZoneTime};
+use chrono::DateTime;
+
+use super::{
+    cardio::{self, CardioRating},
+    fitness::FitnessDay,
+    fitness_between, segment_time, zones,
+    zones::ZoneTime,
+};
 use crate::{
     activity_type::ViewMode,
     db::{users, value::opt_f64},
@@ -44,6 +51,35 @@ pub struct HealthReport {
     /// Activities in the period (with or without heart rate).
     #[ts(type = "number")]
     pub activities: i64,
+    pub cardio: CardioFitness,
+}
+
+/// Where a VO2max value comes from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum Vo2maxSource {
+    /// Estimated from the period's runs.
+    Runs,
+    /// Entered in the user settings (no runs to estimate from).
+    Profile,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct CardioFitness {
+    /// ml/kg/min; `None` without enough runs and without a value in the profile.
+    pub vo2max: Option<f64>,
+    pub source: Option<Vo2maxSource>,
+    /// Runs of at least 3 km in the period that the estimate is based on.
+    #[ts(type = "number")]
+    pub runs: i64,
+    /// Age at the end of the period.
+    #[ts(type = "number | null")]
+    pub age: Option<i64>,
+    /// Comparison with the same age group and sex; needs a VO2max, age and sex.
+    pub rating: Option<CardioRating>,
 }
 
 fn heart_rate_points(conn: &Connection, from: i64, to: i64) -> AppResult<Vec<HealthHeartPoint>> {
@@ -119,8 +155,64 @@ fn segment_heart_rates(conn: &Connection, from: i64, to: i64) -> AppResult<Vec<(
         .collect::<Result<_, _>>()?)
 }
 
+/// Per-run VO2max values of the period's runs of at least [`cardio::MIN_RUN_KM`].
+fn run_vo2max(conn: &Connection, from: i64, to: i64) -> AppResult<Vec<f64>> {
+    let mut stmt = conn.prepare(
+        "SELECT activities.distance AS km, activities.duration AS seconds, runs.pause AS pause
+         FROM runs JOIN activities ON activities.id = runs.activity_id
+         WHERE activities.date BETWEEN ?1 AND ?2 AND activities.distance >= ?3",
+    )?;
+    let rows = stmt.query_map(rusqlite::params![from, to, cardio::MIN_RUN_KM], |row| {
+        let km = opt_f64(row, "km")?.unwrap_or(0.0);
+        let seconds = opt_f64(row, "seconds")?.unwrap_or(0.0);
+        let pause: Option<String> = row.get("pause")?;
+        let moving = seconds - cardio::pause_seconds(pause.as_deref().unwrap_or_default());
+        Ok(cardio::vdot(km * 1000.0, moving))
+    })?;
+    Ok(rows
+        .filter_map(|r| r.transpose())
+        .collect::<Result<_, _>>()?)
+}
+
+fn cardio_fitness(
+    conn: &Connection,
+    user: Option<&users::User>,
+    from: i64,
+    to: i64,
+) -> AppResult<CardioFitness> {
+    let values = run_vo2max(conn, from, to)?;
+    let runs = values.len() as i64;
+    let (vo2max, source) = match cardio::estimate(values) {
+        Some(value) => (Some(value), Some(Vo2maxSource::Runs)),
+        None => match user.and_then(|u| u.vo2max).filter(|v| *v > 0.0) {
+            Some(value) => (Some(value), Some(Vo2maxSource::Profile)),
+            None => (None, None),
+        },
+    };
+    let end = DateTime::from_timestamp(to, 0).map(|t| t.date_naive());
+    let age = user.and_then(|u| {
+        u.birthday
+            .as_deref()
+            .zip(end)
+            .and_then(|(birthday, end)| users::age_on(birthday, end))
+            .or(u.age)
+    });
+    let rating = match (vo2max, age, user.and_then(|u| u.gender)) {
+        (Some(vo2max), Some(age), Some(gender)) => Some(cardio::rating(vo2max, age, gender)),
+        _ => None,
+    };
+    Ok(CardioFitness {
+        vo2max,
+        source,
+        runs,
+        age,
+        rating,
+    })
+}
+
 pub fn report(conn: &Connection, from: i64, to: i64) -> AppResult<HealthReport> {
-    let bounds = users::get(conn)?.and_then(|u| u.zones);
+    let user = users::get(conn)?;
+    let bounds = user.as_ref().and_then(|u| u.zones);
     let zones = match bounds {
         Some(bounds) => Some(zones::from_segments(
             &segment_heart_rates(conn, from, to)?,
@@ -139,6 +231,7 @@ pub fn report(conn: &Connection, from: i64, to: i64) -> AppResult<HealthReport> 
         references: bounds.map(|z| [z[0], z[2], z[4]]),
         zones,
         activities,
+        cardio: cardio_fitness(conn, user.as_ref(), from, to)?,
     })
 }
 
@@ -156,6 +249,7 @@ mod tests {
         insert_activity(&conn, 3, "Running", 9_000, 5.0, "Later run");
         conn.execute_batch(
             "UPDATE runs SET avg_heart_rate = 150 WHERE activity_id = 1;
+             UPDATE activities SET duration = 1500 WHERE id = 1;
              UPDATE cycling SET avg_heart_rate = 130 WHERE activity_id = 2;",
         )
         .unwrap();
@@ -175,5 +269,8 @@ mod tests {
             ]
         );
         assert_eq!(report.zones, None);
+        // One run (5 km in 25 minutes) is too few for an estimate, and there is no profile.
+        assert_eq!(report.cardio.runs, 1);
+        assert_eq!(report.cardio.vo2max, None);
     }
 }

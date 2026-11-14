@@ -112,7 +112,7 @@ mod tests {
         let db = Db::open_in_memory().unwrap();
         let conn = db.conn().unwrap();
 
-        assert_eq!(current_version(&conn).unwrap(), 56);
+        assert_eq!(current_version(&conn).unwrap(), 57);
         assert_eq!(
             columns(&conn, "activities"),
             [
@@ -272,6 +272,16 @@ mod real_database {
         }
 
         println!("user: {:?}", users::get(&conn).unwrap().map(|u| u.zones));
+        let now = chrono::Utc::now().timestamp();
+        for days in [90, 365] {
+            let report = crate::analysis::health::report(&conn, now - days * 86_400, now).unwrap();
+            println!(
+                "health {days} days: {} activities, {} with heart rate, {:?}",
+                report.activities,
+                report.heart_rate.len(),
+                report.cardio
+            );
+        }
         for kind in [users::EquipmentKind::Shoe, users::EquipmentKind::Bike] {
             println!(
                 "{kind:?}: {}",
