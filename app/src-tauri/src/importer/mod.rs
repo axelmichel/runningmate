@@ -18,7 +18,7 @@ use ts_rs::TS;
 use self::{metrics::ActivityMetrics, segments::Segment, track::Track};
 use crate::{
     activity_type::ViewMode,
-    db::{Db, ai_summaries, performances, users},
+    db::{Db, activities, ai_summaries, performances, users},
     error::{AppError, AppResult},
 };
 
@@ -460,6 +460,7 @@ fn store(
             tx.last_insert_rowid()
         }
         Some(id) => {
+            let previous = activities::distance_of(&tx, id)?;
             tx.execute(
                 "UPDATE activities SET distance = ?1, activity_type = ?2, duration = ?3, date = ?4,
                     calories = ?5, elevation_gain = ?6
@@ -474,6 +475,7 @@ fn store(
                     id
                 ],
             )?;
+            activities::add_to_equipment(&tx, id, m.distance - previous)?;
             id
         }
     };

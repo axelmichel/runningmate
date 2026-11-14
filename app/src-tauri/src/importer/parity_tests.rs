@@ -261,13 +261,24 @@ fn import_stores_activity_and_reimport_keeps_edits() {
     let (again, _) = import_file(&mut conn, &source, &imports, "en").unwrap();
     assert_eq!(again, ImportOutcome::Duplicate { activity_id });
 
-    // Re-import keeps the user's title and doesn't duplicate best performances.
+    // Re-import keeps the user's title and doesn't duplicate best performances. It restores the
+    // distance changed to 5 km, and the shoe follows.
     conn.execute(
-        "UPDATE activities SET title = 'My run' WHERE id = ?1",
+        "UPDATE activities SET title = 'My run', distance = 5 WHERE id = ?1",
         [activity_id],
     )
     .unwrap();
+    conn.execute(
+        "INSERT INTO shoes (id, name, distance, status) VALUES (7, 'Racer', 100, 1)",
+        [],
+    )
+    .unwrap();
+    activities::set_equipment(&mut conn, activity_id, Some(7)).unwrap();
     reimport(&mut conn, activity_id, &imports, "en").unwrap();
+    let shoe: f64 = conn
+        .query_row("SELECT distance FROM shoes WHERE id = 7", [], |r| r.get(0))
+        .unwrap();
+    assert!((shoe - (100.0 + 3.21)).abs() < 1e-9, "{shoe}");
     assert_eq!(
         activities::get(&conn, activity_id)
             .unwrap()
