@@ -1,9 +1,0 @@
-[run]
-omit =
-    ui/*
-    */ui/*
-    runningmate.py
-    main.py
-    tests/*
-    config.py
-    config-3.py

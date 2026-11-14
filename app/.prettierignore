@@ -1,0 +1,6 @@
+src/components/ui
+dist
+src-tauri
+pnpm-lock.yaml
+src/hooks/use-mobile.ts
+src/bindings

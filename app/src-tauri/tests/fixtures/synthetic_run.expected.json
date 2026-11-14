@@ -1,0 +1,80 @@
+{
+ "activity_type": "Running",
+ "points": 1100,
+ "date": 1740814201.0,
+ "distance": 3.21,
+ "duration": 1143.0,
+ "calories": 255,
+ "elevation_gain": 102,
+ "avg_heart_rate": 142,
+ "avg_speed": 10.1,
+ "avg_power": 186,
+ "avg_pace": 5.7407148051354335,
+ "fastest_pace": 5.214025466097045,
+ "slowest_pace": 6.393933501392964,
+ "avg_pace_text": "05:44",
+ "pause_minutes": 0.0,
+ "avg_steps": 160.0,
+ "total_steps": 3045.133333333333,
+ "segments": [
+  {
+   "seg_latitude": 48.6000261,
+   "seg_longitude": -3.8299999,
+   "seg_avg_heart_rate": 147,
+   "seg_avg_power": 186,
+   "seg_avg_speed": 2.9582588292093313,
+   "seg_avg_pace": 5.633944704940253,
+   "seg_avg_steps": 80,
+   "seg_avg_elevation": 47,
+   "seg_elevation_gain": 27.482000000000006,
+   "seg_distance": 1.0028497431019634,
+   "seg_time_start": "2025-03-01 07:30:01+00:00",
+   "seg_time_end": "2025-03-01 07:35:40+00:00"
+  },
+  {
+   "seg_latitude": 48.6040528,
+   "seg_longitude": -3.8202803,
+   "seg_avg_heart_rate": 136,
+   "seg_avg_power": 186,
+   "seg_avg_speed": 2.8429846425626075,
+   "seg_avg_pace": 6.497757707238698,
+   "seg_avg_steps": 80,
+   "seg_avg_elevation": 36,
+   "seg_elevation_gain": 50.14999999999999,
+   "seg_distance": 1.0003450871611916,
+   "seg_time_start": "2025-03-01 07:35:41+00:00",
+   "seg_time_end": "2025-03-01 07:42:11+00:00"
+  },
+  {
+   "seg_latitude": 48.5965526,
+   "seg_longitude": -3.8188545,
+   "seg_avg_heart_rate": 139,
+   "seg_avg_power": 186,
+   "seg_avg_speed": 2.8738948562297253,
+   "seg_avg_pace": 5.782713706021772,
+   "seg_avg_steps": 80,
+   "seg_avg_elevation": 39,
+   "seg_elevation_gain": 12.547999999999984,
+   "seg_distance": 1.002989304824174,
+   "seg_time_start": "2025-03-01 07:42:12+00:00",
+   "seg_time_end": "2025-03-01 07:48:00+00:00"
+  },
+  {
+   "seg_latitude": 48.5988381,
+   "seg_longitude": -3.8297688,
+   "seg_avg_heart_rate": 166,
+   "seg_avg_power": 179,
+   "seg_avg_speed": 3.165744497741584,
+   "seg_avg_pace": 5.1824302345638085,
+   "seg_avg_steps": 80,
+   "seg_avg_elevation": 31,
+   "seg_elevation_gain": 12.081999999999994,
+   "seg_distance": 0.20260764785546134,
+   "seg_time_start": "2025-03-01 07:48:01+00:00",
+   "seg_time_end": "2025-03-01 07:49:04+00:00"
+  }
+ ],
+ "best": {
+  "1": 5.633944704940253
+ }
+}

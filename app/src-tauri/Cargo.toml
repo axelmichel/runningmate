@@ -1,0 +1,60 @@
+[package]
+name = "runningmate"
+version = "0.4.0"
+description = "Process, analyse and visualise running, cycling and walking activities"
+authors = ["Axel Michel"]
+edition = "2024"
+
+[lib]
+# The `_lib` suffix avoids a name clash between the lib and bin targets on Windows,
+# see https://github.com/rust-lang/cargo/issues/8519
+name = "runningmate_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+dirs = "6"
+rusqlite = { version = "0.42.0", features = ["bundled"] }
+ts-rs = "12.0.1"
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+roxmltree = "0.21.2"
+geographiclib-rs = "0.2.7"
+utm = "0.1.6"
+tar = "0.4.46"
+flate2 = "1.1.11"
+tauri-plugin-dialog = "2.8.4"
+tokio = { version = "1.54.1", features = ["rt", "macros", "time", "sync"] }
+reqwest = { version = "0.13.5", features = ["json", "query", "form", "cookies", "multipart"] }
+hmac = "0.13.0"
+sha1 = "0.11.0"
+base64 = "0.23.1"
+rand = "0.10.3"
+regex = "1.13.1"
+url = "2.5.8"
+keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
+tiny-skia = "0.12.0"
+
+# Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true
+
+[dev-dependencies]
+tempfile = "3.27.0"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+block2 = "0.6"
+objc2 = "0.6"
+objc2-app-kit = "0.3"
+objc2-foundation = "0.3"
+objc2-photos-ui = "0.3"
