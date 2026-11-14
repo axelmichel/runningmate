@@ -11,16 +11,18 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { api } from "@/lib/api";
+import { t } from "@/i18n";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { effectDescription, formatRecovery } from "./training-effect";
 
-const fitnessConfig = {
-  fitness: { label: "Fitness", color: "var(--chart-1)" },
-  fatigue: { label: "Fatigue", color: "var(--chart-3)" },
-  form: { label: "Form", color: "var(--chart-5)" },
-} satisfies ChartConfig;
+const fitnessConfig = () =>
+  ({
+    fitness: { label: t("Fitness"), color: "var(--chart-1)" },
+    fatigue: { label: t("Fatigue"), color: "var(--chart-3)" },
+    form: { label: t("Form"), color: "var(--chart-5)" },
+  }) satisfies ChartConfig;
 
 /** Twelve rising bars, filled up to the score (the Python `TrainingEffectChart`). */
 function EffectMeter({ score }: { score: number }) {
@@ -31,6 +33,7 @@ function EffectMeter({ score }: { score: number }) {
       aria-valuemin={1}
       aria-valuemax={12}
       aria-valuenow={score}
+      aria-label={t("Training effect")}
     >
       {Array.from({ length: 12 }, (_, i) => (
         <div
@@ -60,7 +63,7 @@ export function EffectTab({ activityId }: { activityId: number }) {
     <div className="grid gap-4">
       <Card size="sm">
         <CardHeader>
-          <CardTitle className="text-sm">Training effect</CardTitle>
+          <CardTitle className="text-sm">{t("Training effect")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap items-end gap-6">
           {effect && <EffectMeter score={effect.score} />}
@@ -69,7 +72,9 @@ export function EffectTab({ activityId }: { activityId: number }) {
               <div className="text-3xl font-semibold text-primary tabular-nums">{effect.score}</div>
               <p>{effectDescription(effect.score)}</p>
               <p className="text-muted-foreground">
-                To fully recover you should rest for {formatRecovery(effect.recoveryHours)}.
+                {t("To fully recover you should rest for {{time}}.", {
+                  time: formatRecovery(effect.recoveryHours),
+                })}
               </p>
             </div>
           )}
@@ -77,15 +82,15 @@ export function EffectTab({ activityId }: { activityId: number }) {
       </Card>
       <Card size="sm">
         <CardHeader>
-          <CardTitle className="text-sm">Fitness trend (90 days)</CardTitle>
+          <CardTitle className="text-sm">{t("Fitness trend (90 days)")}</CardTitle>
         </CardHeader>
         <CardContent>
           {fitness.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No training in the 90 days before this activity.
+              {t("No training in the 90 days before this activity.")}
             </p>
           ) : (
-            <ChartContainer config={fitnessConfig} className="aspect-auto h-56 w-full">
+            <ChartContainer config={fitnessConfig()} className="aspect-auto h-56 w-full">
               <LineChart data={fitness}>
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="day" tickLine={false} axisLine={false} minTickGap={32} />

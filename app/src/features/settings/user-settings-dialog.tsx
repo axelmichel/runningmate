@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { t, tk } from "@/i18n";
 import { api } from "@/lib/api";
 
 import { EquipmentList } from "./equipment-list";
@@ -36,19 +37,19 @@ export function UserSettingsDialog({
   });
   // Zones, shoes and bikes need a saved profile, as in Python.
   const items: (NavItem & { value: Page })[] = [
-    { value: "profile", label: "Profile", icon: UserRound },
-    { value: "zones", label: "Heart rate zones", icon: HeartPulse, disabled: !user },
-    { value: "shoes", label: "Shoes", icon: Footprints, disabled: !user },
-    { value: "bikes", label: "Bikes", icon: Bike, disabled: !user },
+    { value: "profile", label: tk("Profile"), icon: UserRound },
+    { value: "zones", label: tk("Heart rate zones"), icon: HeartPulse, disabled: !user },
+    { value: "shoes", label: tk("Shoes"), icon: Footprints, disabled: !user },
+    { value: "bikes", label: tk("Bikes"), icon: Bike, disabled: !user },
   ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[70vh] max-w-4xl flex-col gap-4 sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>User settings</DialogTitle>
+          <DialogTitle>{t("User settings")}</DialogTitle>
           <DialogDescription className="sr-only">
-            Profile, heart-rate zones, shoes and bikes
+            {t("Profile, heart-rate zones, shoes and bikes")}
           </DialogDescription>
         </DialogHeader>
         {isPending ? (

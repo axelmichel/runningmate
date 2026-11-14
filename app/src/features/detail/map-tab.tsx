@@ -9,6 +9,7 @@ import type { TrackPoint } from "@/bindings/TrackPoint";
 import type { ViewMode } from "@/bindings/ViewMode";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { t } from "@/i18n";
 import { formatNumber, formatPace } from "@/lib/format";
 
 import { HEART_RATE_RAMP, PACE_RAMP, rampColor, robustRange } from "./color-scale";
@@ -127,7 +128,11 @@ export function MapTab({ activityId, view }: { activityId: number; view: ViewMod
 
   if (isPending) return <Skeleton className="h-full w-full" />;
   if (!points || !derived) {
-    return <p className="text-sm text-muted-foreground">No archived TCX file for this activity.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        {t("No archived TCX file for this activity.")}
+      </p>
+    );
   }
   const start = derived.line[0];
   const end = derived.line[derived.line.length - 1];
@@ -137,9 +142,9 @@ export function MapTab({ activityId, view }: { activityId: number; view: ViewMod
       <div className="flex flex-wrap items-center gap-2">
         {(
           [
-            ["track", "Track", true],
-            ["pace", "Pace", derived.hasPace],
-            ["heartRate", "Heart rate", derived.hasHeartRate],
+            ["track", t("Track"), true],
+            ["pace", t("Pace"), derived.hasPace],
+            ["heartRate", t("Heart rate"), derived.hasHeartRate],
           ] as const
         ).map(([value, label, enabled]) => (
           <Button
@@ -156,11 +161,11 @@ export function MapTab({ activityId, view }: { activityId: number; view: ViewMod
           size="sm"
           variant={showMarkers ? "secondary" : "ghost"}
           aria-pressed={showMarkers}
-          title={showMarkers ? "Hide distance markers" : "Show distance markers"}
+          title={showMarkers ? t("Hide distance markers") : t("Show distance markers")}
           onClick={toggleMarkers}
         >
           <MapPin />
-          {view === "Cycling" ? "5 km markers" : "Km markers"}
+          {view === "Cycling" ? t("5 km markers") : t("Km markers")}
         </Button>
         {mode !== "track" && <Legend mode={mode} points={points} />}
       </div>
@@ -204,14 +209,14 @@ export function MapTab({ activityId, view }: { activityId: number; view: ViewMod
             radius={8}
             pathOptions={{ color: "#fff", weight: 2, fillColor: "#f6b48f", fillOpacity: 1 }}
           >
-            <Tooltip>Start</Tooltip>
+            <Tooltip>{t("Start")}</Tooltip>
           </CircleMarker>
           <CircleMarker
             center={end}
             radius={8}
             pathOptions={{ color: "#fff", weight: 2, fillColor: "#e13342", fillOpacity: 1 }}
           >
-            <Tooltip>Finish</Tooltip>
+            <Tooltip>{t("Finish")}</Tooltip>
           </CircleMarker>
         </MapContainer>
       </div>

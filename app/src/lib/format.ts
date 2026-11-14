@@ -1,11 +1,23 @@
-/** Display formatting for the raw values the Rust commands return. */
+/** Display formatting for the raw values the Rust commands return, in the app language. */
 
+let locale: string | undefined;
 const numberFormats = new Map<number, Intl.NumberFormat>();
+let dateTimeFormat: Intl.DateTimeFormat;
+let dateFormat: Intl.DateTimeFormat;
+
+/** Switches number and date formatting to the app language ("en", "de", "fr"). */
+export function setFormatLocale(language: string | undefined) {
+  locale = language;
+  numberFormats.clear();
+  dateTimeFormat = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
+  dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
+}
+setFormatLocale(undefined);
 
 function numberFormat(digits: number) {
   let format = numberFormats.get(digits);
   if (!format) {
-    format = new Intl.NumberFormat(undefined, {
+    format = new Intl.NumberFormat(locale, {
       minimumFractionDigits: digits,
       maximumFractionDigits: digits,
     });
@@ -59,12 +71,6 @@ export function formatMinSec(value: string | null | undefined): string {
   if (!match) return value || "–";
   return formatPace(Number(match[1]) + Number(match[2]) / 60).replace("–", "0:00");
 }
-
-const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
-const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
 /** Unix timestamp → localised date and time. */
 export function formatDateTime(timestamp: number | null | undefined): string {

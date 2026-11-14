@@ -1,13 +1,14 @@
 import type { ActivitySummary } from "@/bindings/ActivitySummary";
 import { Card, CardContent } from "@/components/ui/card";
+import { t } from "@/i18n";
 import { formatHours, formatNumber } from "@/lib/format";
 
 export function InfoCards({ summary }: { summary: ActivitySummary | undefined }) {
   const items = [
-    { label: "Activities", value: formatNumber(summary?.count) },
-    { label: "Distance", value: `${formatNumber(summary?.distance, 2)} km` },
-    { label: "Duration", value: summary ? formatHours(summary.duration) : "–" },
-    { label: "Elevation", value: `${formatNumber(summary?.elevationGain)} m` },
+    { label: t("Activities"), value: formatNumber(summary?.count) },
+    { label: t("Distance"), value: `${formatNumber(summary?.distance, 2)} km` },
+    { label: t("Duration"), value: summary ? formatHours(summary.duration) : "–" },
+    { label: t("Elevation"), value: `${formatNumber(summary?.elevationGain)} m` },
   ];
   return (
     <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">

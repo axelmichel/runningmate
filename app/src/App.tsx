@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { listen } from "@tauri-apps/api/event";
 import { open as pickFiles } from "@tauri-apps/plugin-dialog";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { TitleBar } from "@/components/title-bar";
@@ -14,6 +15,7 @@ import { useImportRun } from "@/features/import/use-import-run";
 import { SystemSettingsDialog } from "@/features/settings/system-settings-dialog";
 import { UserSettingsDialog } from "@/features/settings/user-settings-dialog";
 import { useTheme, type Theme } from "@/hooks/use-theme";
+import { setLanguage, t } from "@/i18n";
 import { api } from "@/lib/api";
 
 const DETAILS_STORAGE_KEY = "runningmate-details-panel";
@@ -30,6 +32,8 @@ function App() {
   const [userSettingsOpen, setUserSettingsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { setTheme } = useTheme();
+  // Re-renders the whole app when the language changes (see src/i18n).
+  useTranslation();
   const importRun = useImportRun();
   const { data: info } = useQuery({ queryKey: ["appInfo"], queryFn: api.appInfo });
 
@@ -43,7 +47,10 @@ function App() {
   useEffect(() => {
     api
       .getSettings()
-      .then((settings) => setTheme(settings.layout as Theme))
+      .then((settings) => {
+        setTheme(settings.layout as Theme);
+        setLanguage(settings.language);
+      })
       .catch(() => {});
   }, [setTheme]);
 
@@ -82,7 +89,7 @@ function App() {
     };
   }, [queryClient]);
 
-  const title = VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode;
+  const title = t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
 
   return (
     <SidebarProvider>

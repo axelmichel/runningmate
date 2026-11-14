@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
 
@@ -34,7 +35,28 @@ import { formatNumber } from "@/lib/format";
 export function EquipmentList({ kind }: { kind: EquipmentKind }) {
   const queryClient = useQueryClient();
   const bikes = kind === "bike";
-  const noun = bikes ? "bike" : "shoe";
+  // Separate texts per kind, since German nouns differ in gender and plural.
+  const text = bikes
+    ? {
+        none: t("No bikes yet."),
+        add: t("New bike"),
+        retired: t(
+          "Retired bikes (not in use) keep their distance but aren't offered for new activities.",
+        ),
+        unassign: t(
+          "Activities using it will no longer have a bike assigned. To keep the history, mark it as not in use instead.",
+        ),
+      }
+    : {
+        none: t("No shoes yet."),
+        add: t("New shoe"),
+        retired: t(
+          "Retired shoes (not in use) keep their distance but aren't offered for new activities.",
+        ),
+        unassign: t(
+          "Activities using them will no longer have shoes assigned. To keep the history, mark them as not in use instead.",
+        ),
+      };
   const [name, setName] = useState("");
   const [weight, setWeight] = useState("");
   const [deleting, setDeleting] = useState<Equipment | null>(null);
@@ -71,10 +93,10 @@ export function EquipmentList({ kind }: { kind: EquipmentKind }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              {bikes && <TableHead className="text-right">Weight (kg)</TableHead>}
-              <TableHead className="text-right">Distance (km)</TableHead>
-              <TableHead className="w-20 text-center">In use</TableHead>
+              <TableHead>{t("Name")}</TableHead>
+              {bikes && <TableHead className="text-right">{t("Weight (kg)")}</TableHead>}
+              <TableHead className="text-right">{t("Distance (km)")}</TableHead>
+              <TableHead className="w-20 text-center">{t("In use")}</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
@@ -92,7 +114,7 @@ export function EquipmentList({ kind }: { kind: EquipmentKind }) {
                 </TableCell>
                 <TableCell className="text-center">
                   <Checkbox
-                    aria-label={`${item.name} in use`}
+                    aria-label={t("{{name}} in use", { name: item.name })}
                     checked={item.inUse}
                     onCheckedChange={(checked) =>
                       setInUse.mutate({ id: item.id, inUse: checked === true })
@@ -103,7 +125,7 @@ export function EquipmentList({ kind }: { kind: EquipmentKind }) {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={`Delete ${item.name}`}
+                    aria-label={t("Delete {{name}}", { name: item.name })}
                     className="text-muted-foreground hover:text-destructive"
                     onClick={() => setDeleting(item)}
                   >
@@ -118,7 +140,7 @@ export function EquipmentList({ kind }: { kind: EquipmentKind }) {
                   colSpan={bikes ? 5 : 4}
                   className="py-6 text-center text-muted-foreground"
                 >
-                  No {noun}s yet.
+                  {text.none}
                 </TableCell>
               </TableRow>
             )}
@@ -140,17 +162,17 @@ export function EquipmentList({ kind }: { kind: EquipmentKind }) {
         }}
       >
         <div className="grid min-w-56 flex-1 gap-1.5">
-          <Label htmlFor={`${kind}-name`}>New {noun}</Label>
+          <Label htmlFor={`${kind}-name`}>{text.add}</Label>
           <Input
             id={`${kind}-name`}
             value={name}
-            placeholder="Name"
+            placeholder={t("Name")}
             onChange={(e) => setName(e.target.value)}
           />
         </div>
         {bikes && (
           <div className="grid w-32 gap-1.5">
-            <Label htmlFor="bike-weight">Weight (kg)</Label>
+            <Label htmlFor="bike-weight">{t("Weight (kg)")}</Label>
             <Input
               id="bike-weight"
               type="number"
@@ -162,29 +184,24 @@ export function EquipmentList({ kind }: { kind: EquipmentKind }) {
         )}
         <Button type="submit" disabled={!canAdd || add.isPending}>
           <Plus />
-          Add
+          {t("Add")}
         </Button>
       </form>
-      <p className="text-xs text-muted-foreground">
-        Retired {noun}s (not in use) keep their distance but aren't offered for new activities.
-      </p>
+      <p className="text-xs text-muted-foreground">{text.retired}</p>
 
       <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete “{deleting?.name}”?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Activities using it will no longer have a {noun} assigned. To keep the history, mark
-              it as not in use instead.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("Delete “{{name}}”?", { name: deleting?.name })}</AlertDialogTitle>
+            <AlertDialogDescription>{text.unassign}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               onClick={() => deleting && remove.mutate(deleting.id)}
             >
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

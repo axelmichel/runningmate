@@ -6,6 +6,7 @@ import type { User } from "@/bindings/User";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { t } from "@/i18n";
 import { api } from "@/lib/api";
 
 import { validateZones } from "./validation";
@@ -39,9 +40,9 @@ export function ZonesFormView({ user }: { user: User }) {
       queryClient.setQueryData(["user"], saved);
       queryClient.invalidateQueries({ queryKey: ["zones"] });
       queryClient.invalidateQueries({ queryKey: ["heartRateTrend"] });
-      toast.success("Heart-rate zones saved");
+      toast.success(t("Heart-rate zones saved"));
     },
-    onError: (e) => toast.error(`Could not save: ${e}`),
+    onError: (e) => toast.error(t("Could not save: {{error}}", { error: String(e) })),
   });
 
   return (
@@ -54,7 +55,7 @@ export function ZonesFormView({ user }: { user: User }) {
     >
       {user.zones == null && (
         <p className="text-sm text-muted-foreground">
-          Suggested from your maximum heart rate and age (60–100 %). Adjust and save them.
+          {t("Suggested from your maximum heart rate and age (60–100 %). Adjust and save them.")}
         </p>
       )}
       {values.map((value, i) => {
@@ -62,7 +63,7 @@ export function ZonesFormView({ user }: { user: User }) {
         return (
           <div key={i} className="grid grid-cols-[1rem_6rem_1fr_6rem] items-center gap-3">
             <span className="size-3 rounded-full" style={{ backgroundColor: ZONE_COLORS[i] }} />
-            <Label htmlFor={`zone-${i}`}>Zone {i + 1}</Label>
+            <Label htmlFor={`zone-${i}`}>{t("Zone {{zone}}", { zone: i + 1 })}</Label>
             <span className="text-sm text-muted-foreground tabular-nums">
               {Number.isFinite(lower) ? `${lower} –` : ""}
             </span>
@@ -79,7 +80,7 @@ export function ZonesFormView({ user }: { user: User }) {
           </div>
         );
       })}
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-xs text-destructive">{t(error)}</p>}
       <div className="grid grid-cols-[1rem_6rem_1fr_6rem] items-center gap-3">
         <span />
         <Label htmlFor="vo2max">VO2max</Label>
@@ -95,7 +96,7 @@ export function ZonesFormView({ user }: { user: User }) {
       </div>
       <div>
         <Button type="submit" disabled={Boolean(error) || vo2Invalid || save.isPending}>
-          Save
+          {t("Save")}
         </Button>
       </div>
     </form>

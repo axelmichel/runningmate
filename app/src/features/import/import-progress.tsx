@@ -3,6 +3,7 @@ import { CircleAlert, CircleCheck, Copy } from "lucide-react";
 import type { ImportProgress as Progress } from "@/bindings/ImportProgress";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { t } from "@/i18n";
 
 import type { ImportRun } from "./use-import-run";
 
@@ -16,7 +17,7 @@ function Entry({ entry }: { entry: Progress }) {
       <div className="min-w-0">
         <div className="truncate">{entry.file}</div>
         {outcome.status === "duplicate" && (
-          <div className="text-xs text-muted-foreground">Already imported</div>
+          <div className="text-xs text-muted-foreground">{t("Already imported")}</div>
         )}
         {outcome.status === "failed" && (
           <div className="text-xs break-words text-destructive">{outcome.error}</div>
@@ -34,9 +35,16 @@ export function ImportProgressView({ run }: { run: ImportRun }) {
     <div className="grid gap-3">
       <ProgressBar value={percent} />
       <div className="text-sm text-muted-foreground">
-        {run.running && (last ? `${last.done} of ${last.total} files` : "Starting…")}
+        {run.running &&
+          (last
+            ? t("{{done}} of {{total}} files", { done: last.done, total: last.total })
+            : t("Starting…"))}
         {run.summary &&
-          `${run.summary.imported} imported · ${run.summary.duplicates} already imported · ${run.summary.failed} failed`}
+          t("{{imported}} imported · {{duplicates}} already imported · {{failed}} failed", {
+            imported: run.summary.imported,
+            duplicates: run.summary.duplicates,
+            failed: run.summary.failed,
+          })}
         {run.error && <span className="text-destructive">{run.error}</span>}
       </div>
       {run.log.length > 0 && (

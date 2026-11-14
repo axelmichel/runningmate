@@ -6,17 +6,18 @@ import type { User } from "@/bindings/User";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { t, tk } from "@/i18n";
 import { api } from "@/lib/api";
 
 import { validateProfile, type ProfileForm } from "./validation";
 
 const FIELDS: { key: keyof ProfileForm; label: string; placeholder?: string; type?: string }[] = [
-  { key: "name", label: "Name" },
-  { key: "birthday", label: "Birthday", placeholder: "DD.MM.YYYY" },
-  { key: "weight", label: "Weight (kg)", type: "number" },
-  { key: "height", label: "Height (cm)", type: "number" },
-  { key: "hrMin", label: "Resting heart rate (bpm)", type: "number" },
-  { key: "hrMax", label: "Maximum heart rate (bpm)", type: "number" },
+  { key: "name", label: tk("Name") },
+  { key: "birthday", label: tk("Birthday"), placeholder: tk("DD.MM.YYYY") },
+  { key: "weight", label: tk("Weight (kg)"), type: "number" },
+  { key: "height", label: tk("Height (cm)"), type: "number" },
+  { key: "hrMin", label: tk("Resting heart rate (bpm)"), type: "number" },
+  { key: "hrMax", label: tk("Maximum heart rate (bpm)"), type: "number" },
 ];
 
 /** General user data (the "General" page of `window_user_settings.py`). */
@@ -46,9 +47,9 @@ export function ProfileFormView({ user }: { user: User | null }) {
       }),
     onSuccess: (saved) => {
       queryClient.setQueryData(["user"], saved);
-      toast.success("Profile saved");
+      toast.success(t("Profile saved"));
     },
-    onError: (error) => toast.error(`Could not save: ${error}`),
+    onError: (error) => toast.error(t("Could not save: {{error}}", { error: String(error) })),
   });
 
   return (
@@ -63,26 +64,27 @@ export function ProfileFormView({ user }: { user: User | null }) {
       <div className="grid gap-4 sm:grid-cols-2">
         {FIELDS.map(({ key, label, placeholder, type }) => (
           <div key={key} className="grid gap-1.5">
-            <Label htmlFor={`profile-${key}`}>{label}</Label>
+            <Label htmlFor={`profile-${key}`}>{t(label)}</Label>
             <Input
               id={`profile-${key}`}
               type={type}
-              placeholder={placeholder}
+              placeholder={placeholder && t(placeholder)}
               value={form[key]}
               aria-invalid={touched && Boolean(errors[key])}
               onChange={(event) => setForm({ ...form, [key]: event.target.value })}
             />
-            {touched && errors[key] && <p className="text-xs text-destructive">{errors[key]}</p>}
+            {touched && errors[key] && <p className="text-xs text-destructive">{t(errors[key])}</p>}
           </div>
         ))}
       </div>
       <p className="text-xs text-muted-foreground">
-        Your age is calculated from the birthday. Heart-rate zones, shoes and bikes need a saved
-        profile.
+        {t(
+          "Your age is calculated from the birthday. Heart-rate zones, shoes and bikes need a saved profile.",
+        )}
       </p>
       <div>
         <Button type="submit" disabled={save.isPending}>
-          Save
+          {t("Save")}
         </Button>
       </div>
     </form>

@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 
@@ -66,9 +67,9 @@ export function FolderSyncDialog({ open, onOpenChange }: FolderSyncDialogProps) 
     <Dialog open={open} onOpenChange={close}>
       <DialogContent showCloseButton={!run.running}>
         <DialogHeader>
-          <DialogTitle>Sync folder</DialogTitle>
+          <DialogTitle>{t("Sync folder")}</DialogTitle>
           <DialogDescription>
-            Imports TCX files added or changed in the folder since the last sync.
+            {t("Imports TCX files added or changed in the folder since the last sync.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -77,7 +78,7 @@ export function FolderSyncDialog({ open, onOpenChange }: FolderSyncDialogProps) 
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="grid min-w-0 gap-0.5">
               <span className="truncate font-medium">
-                {status.data?.folder ? folderName(status.data.folder) : "No folder chosen"}
+                {status.data?.folder ? folderName(status.data.folder) : t("No folder chosen")}
               </span>
               {status.data?.folder && (
                 <span className="text-xs break-all text-muted-foreground">
@@ -93,14 +94,16 @@ export function FolderSyncDialog({ open, onOpenChange }: FolderSyncDialogProps) 
               onClick={chooseFolder}
             >
               <FolderOpen />
-              Choose…
+              {t("Choose…")}
             </Button>
           </div>
           <span className="text-muted-foreground">
-            Last sync: {status.data?.lastSync ? formatDateTime(status.data.lastSync) : "never"}
+            {t("Last sync: {{date}}", {
+              date: status.data?.lastSync ? formatDateTime(status.data.lastSync) : t("never"),
+            })}
             {status.data?.folder &&
               !started &&
-              ` · ${newFiles} new file${newFiles === 1 ? "" : "s"}`}
+              ` · ${t("{{count}} new file", { count: newFiles })}`}
           </span>
         </div>
 
@@ -109,12 +112,12 @@ export function FolderSyncDialog({ open, onOpenChange }: FolderSyncDialogProps) 
         <DialogFooter>
           {started ? (
             <Button disabled={run.running} onClick={() => close(false)}>
-              {run.running ? "Syncing…" : "Done"}
+              {run.running ? t("Syncing…") : t("Done")}
             </Button>
           ) : (
             <Button disabled={newFiles === 0} onClick={() => start(api.syncFolder)}>
               <RefreshCw />
-              Sync {newFiles > 0 ? `${newFiles} file${newFiles === 1 ? "" : "s"}` : ""}
+              {newFiles > 0 ? t("Sync {{count}} file", { count: newFiles }) : t("Sync")}
             </Button>
           )}
         </DialogFooter>

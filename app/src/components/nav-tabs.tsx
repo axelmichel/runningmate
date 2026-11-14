@@ -2,8 +2,10 @@ import type { LucideIcon } from "lucide-react";
 
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { t } from "@/i18n";
 import { cn } from "@/lib/utils";
 
+/** `label` is a translation key. */
 export type NavItem = { value: string; label: string; icon: LucideIcon; disabled?: boolean };
 
 /**
@@ -24,7 +26,7 @@ export function NavTabs({ items, open = true }: { items: NavItem[]; open?: boole
             key={value}
             value={value}
             disabled={disabled}
-            aria-label={label}
+            aria-label={t(label)}
             className={cn(
               "h-8 justify-start gap-2 overflow-hidden border-transparent px-2.5 hover:bg-muted/60",
               // Set for both themes: the trigger's own dark-mode active style is nearly invisible
@@ -34,7 +36,7 @@ export function NavTabs({ items, open = true }: { items: NavItem[]; open?: boole
             )}
           >
             <Icon className="shrink-0" />
-            <span className={cn("truncate", !open && "sr-only")}>{label}</span>
+            <span className={cn("truncate", !open && "sr-only")}>{t(label)}</span>
           </TabsTrigger>
         );
         return open ? (
@@ -42,7 +44,7 @@ export function NavTabs({ items, open = true }: { items: NavItem[]; open?: boole
         ) : (
           <Tooltip key={value}>
             <TooltipTrigger asChild>{trigger}</TooltipTrigger>
-            <TooltipContent side="right">{label}</TooltipContent>
+            <TooltipContent side="right">{t(label)}</TooltipContent>
           </Tooltip>
         );
       })}

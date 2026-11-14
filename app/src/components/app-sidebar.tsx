@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
+import { t } from "@/i18n";
 
 type AppSidebarProps = {
   viewMode: ViewMode;
@@ -52,11 +53,11 @@ export function AppSidebar({
                 <SidebarMenuItem key={mode}>
                   <SidebarMenuButton
                     isActive={viewMode === mode}
-                    tooltip={label}
+                    tooltip={t(label)}
                     onClick={() => onViewModeChange(mode)}
                   >
                     <Icon />
-                    <span>{label}</span>
+                    <span>{t(label)}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -67,26 +68,35 @@ export function AppSidebar({
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Import TCX (⌘O)" onClick={onImport}>
+            <SidebarMenuButton tooltip={`${t("Import TCX")} (⌘O)`} onClick={onImport}>
               <Import />
-              <span>Import</span>
+              <span>{t("Import")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Sync folder" onClick={onFolderSync}>
+            <SidebarMenuButton tooltip={t("Sync folder")} onClick={onFolderSync}>
               <FolderSync />
-              <span>Sync folder</span>
+              <span>{t("Sync folder")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Search (⌘F)" isActive={searchOpen} onClick={onSearchToggle}>
+            <SidebarMenuButton
+              tooltip={`${t("Search")} (⌘F)`}
+              isActive={searchOpen}
+              onClick={onSearchToggle}
+            >
               <Search />
-              <span>Search</span>
+              <span>{t("Search")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           {[
-            { label: "User", tooltip: "User settings", icon: User, onClick: onUserSettings },
-            { label: "Settings", tooltip: "Settings (⌘,)", icon: Settings, onClick: onSettings },
+            { label: t("User"), tooltip: t("User settings"), icon: User, onClick: onUserSettings },
+            {
+              label: t("Settings"),
+              tooltip: `${t("Settings")} (⌘,)`,
+              icon: Settings,
+              onClick: onSettings,
+            },
           ].map(({ label, tooltip, icon: Icon, onClick }) => (
             <SidebarMenuItem key={label}>
               <SidebarMenuButton tooltip={tooltip} onClick={onClick}>

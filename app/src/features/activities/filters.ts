@@ -1,4 +1,5 @@
 import type { ActivityFilter } from "@/bindings/ActivityFilter";
+import { t } from "@/i18n";
 import { formatDate, formatNumber } from "@/lib/format";
 
 /** Form values as typed; empty strings mean "not set". */
@@ -88,14 +89,24 @@ export function filterLabels(filter: ActivityFilter): string[] {
     return [min != null ? `${label} ≥ ${show(min)}` : `${label} ≤ ${show(max!)}`];
   };
   return [
-    ...range("Date", filter.minDate, filter.maxDate, formatDate),
-    ...range("Distance", filter.minDistance, filter.maxDistance, (v) => `${formatNumber(v, 1)} km`),
+    ...range(t("Date"), filter.minDate, filter.maxDate, formatDate),
     ...range(
-      "Duration",
+      t("Distance"),
+      filter.minDistance,
+      filter.maxDistance,
+      (v) => `${formatNumber(v, 1)} km`,
+    ),
+    ...range(
+      t("Duration"),
       filter.minDuration,
       filter.maxDuration,
       (v) => `${Math.round(v / 60)} min`,
     ),
-    ...range("Elevation", filter.minElevation, filter.maxElevation, (v) => `${formatNumber(v)} m`),
+    ...range(
+      t("Elevation"),
+      filter.minElevation,
+      filter.maxElevation,
+      (v) => `${formatNumber(v)} m`,
+    ),
   ];
 }

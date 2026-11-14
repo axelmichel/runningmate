@@ -15,8 +15,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { formatNumber, parseDuration } from "@/lib/format";
+
+import { MediaGallery } from "./media-gallery";
 
 /** Unix timestamp → `datetime-local` input value in local time. */
 function toLocalInput(timestamp: number | null): string {
@@ -45,20 +48,25 @@ function EquipmentPicker({ activity }: { activity: ActivityDetail }) {
       queryClient.setQueryData(["activity", activity.id], updated);
       queryClient.invalidateQueries({ queryKey: ["equipment", kind] });
     },
-    onError: (error) => toast.error(`Could not change ${kind}: ${error}`),
+    onError: (error) =>
+      toast.error(
+        kind === "bike"
+          ? t("Could not change bike: {{error}}", { error: String(error) })
+          : t("Could not change shoes: {{error}}", { error: String(error) }),
+      ),
   });
   // Retired items stay listed only while they're assigned to this activity.
   const options = equipment.filter((e) => e.inUse || e.id === activity.equipment?.id);
   return (
-    <div className="grid gap-2">
-      <Label>{kind === "bike" ? "Bike" : "Shoes"}</Label>
+    <div className="grid content-start gap-2 self-start">
+      <Label>{kind === "bike" ? t("Bike") : t("Shoes")}</Label>
       <RadioGroup
         value={String(activity.equipment?.id ?? "none")}
         onValueChange={(value) => assign.mutate(value === "none" ? null : Number(value))}
         disabled={assign.isPending}
       >
         {[
-          { id: "none", label: "None" },
+          { id: "none", label: t("None") },
           ...options.map((e) => ({
             id: String(e.id),
             label: `${e.name} · ${formatNumber(e.distance)} km`,
@@ -73,7 +81,7 @@ function EquipmentPicker({ activity }: { activity: ActivityDetail }) {
         ))}
       </RadioGroup>
       <p className="text-xs text-muted-foreground">
-        Changes apply right away and move the distance between items.
+        {t("Changes apply right away and move the distance between items.")}
       </p>
     </div>
   );
@@ -117,10 +125,10 @@ export function EditTab({ activity, onSaved }: { activity: ActivityDetail; onSav
     onSuccess: (updated) => {
       queryClient.setQueryData(["activity", activity.id], updated);
       queryClient.invalidateQueries({ queryKey: ["activities"] });
-      toast.success("Activity saved");
+      toast.success(t("Activity saved"));
       onSaved();
     },
-    onError: (error) => toast.error(`Could not save: ${error}`),
+    onError: (error) => toast.error(t("Could not save: {{error}}", { error: String(error) })),
   });
 
   const set = (key: keyof typeof form) => (event: { target: { value: string } }) =>
@@ -128,83 +136,88 @@ export function EditTab({ activity, onSaved }: { activity: ActivityDetail; onSav
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_16rem]">
-      <form
-        className="grid content-start gap-4"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (valid) save.mutate();
-        }}
-      >
-        <div className="grid gap-2">
-          <Label htmlFor="title">Title</Label>
-          <Input id="title" value={form.title} onChange={set("title")} />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="comment">Comment</Label>
-          <Textarea id="comment" rows={5} value={form.comment} onChange={set("comment")} />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid content-start gap-8">
+        <form
+          className="grid content-start gap-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (valid) save.mutate();
+          }}
+        >
           <div className="grid gap-2">
-            <Label>Type</Label>
-            <Select
-              value={form.typeDetail || "default"}
-              onValueChange={(v) => setForm({ ...form, typeDetail: v === "default" ? "" : v })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="default">{activity.activityType ?? "Default"}</SelectItem>
-                {typeDetails.map((detail) => (
-                  <SelectItem key={detail} value={detail}>
-                    {detail}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="title">{t("Title")}</Label>
+            <Input id="title" value={form.title} onChange={set("title")} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="date">Start</Label>
-            <Input id="date" type="datetime-local" value={form.date} onChange={set("date")} />
+            <Label htmlFor="comment">{t("Comment")}</Label>
+            <Textarea id="comment" rows={5} value={form.comment} onChange={set("comment")} />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="duration">Duration (h:mm:ss)</Label>
-            <Input
-              id="duration"
-              value={form.duration}
-              onChange={set("duration")}
-              aria-invalid={duration == null}
-            />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>{t("Type")}</Label>
+              <Select
+                value={form.typeDetail || "default"}
+                onValueChange={(v) => setForm({ ...form, typeDetail: v === "default" ? "" : v })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">{t(activity.activityType ?? "Default")}</SelectItem>
+                  {typeDetails.map((detail) => (
+                    <SelectItem key={detail} value={detail}>
+                      {t(detail)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="date">{t("Start")}</Label>
+              <Input id="date" type="datetime-local" value={form.date} onChange={set("date")} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="duration">{t("Duration (h:mm:ss)")}</Label>
+              <Input
+                id="duration"
+                value={form.duration}
+                onChange={set("duration")}
+                aria-invalid={duration == null}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="distance">{t("Distance (km)")}</Label>
+              <Input
+                id="distance"
+                type="number"
+                min={0}
+                step="0.01"
+                value={form.distance}
+                onChange={set("distance")}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="elevation">{t("Elevation (m)")}</Label>
+              <Input
+                id="elevation"
+                type="number"
+                min={0}
+                step="1"
+                value={form.elevation}
+                onChange={set("elevation")}
+              />
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="distance">Distance (km)</Label>
-            <Input
-              id="distance"
-              type="number"
-              min={0}
-              step="0.01"
-              value={form.distance}
-              onChange={set("distance")}
-            />
+          <div>
+            <Button type="submit" disabled={!valid || save.isPending}>
+              {t("Save")}
+            </Button>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="elevation">Elevation (m)</Label>
-            <Input
-              id="elevation"
-              type="number"
-              min={0}
-              step="1"
-              value={form.elevation}
-              onChange={set("elevation")}
-            />
-          </div>
-        </div>
-        <div>
-          <Button type="submit" disabled={!valid || save.isPending}>
-            Save
-          </Button>
-        </div>
-      </form>
+        </form>
+        {/* Outside the form: its buttons would otherwise submit it. Media changes apply right
+          away, like on the General page. */}
+        <MediaGallery activityId={activity.id} />
+      </div>
       {activity.viewMode !== "All" && <EquipmentPicker activity={activity} />}
     </div>
   );

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import type { DayTotal } from "@/bindings/DayTotal";
+import { t } from "@/i18n";
 import { formatDuration } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +20,7 @@ export function ActivityHeatmap({ days, end }: { days: DayTotal[]; end: Date }) 
   const weeks = useMemo(() => heatmapWeeks(days, end), [days, end]);
   return (
     <div className="overflow-x-auto">
-      <div className="flex w-max gap-[3px]" role="img" aria-label="Training time per day">
+      <div className="flex w-max gap-[3px]" role="img" aria-label={t("Training time per day")}>
         {weeks.map((week) => (
           <div key={week[0].day} className="flex flex-col gap-[3px]">
             {week.map((cell) => (
@@ -28,7 +29,7 @@ export function ActivityHeatmap({ days, end }: { days: DayTotal[]; end: Date }) 
                 title={
                   cell.outside
                     ? undefined
-                    : `${cell.day}: ${cell.duration ? formatDuration(cell.duration) : "no activity"}`
+                    : `${cell.day}: ${cell.duration ? formatDuration(cell.duration) : t("no activity")}`
                 }
                 className={cn(
                   "size-2.5 rounded-[2px]",

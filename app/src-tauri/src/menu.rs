@@ -1,77 +1,185 @@
 //! Native menu, after `ui/main_menu.py`. App-specific items are sent to the frontend as `menu`
-//! events carrying the item id; the standard items are handled by the OS.
+//! events carrying the item id; the standard items are handled by the OS. The menu is rebuilt
+//! in the app language whenever the language setting changes.
 
 use tauri::{
-    App, AppHandle, Emitter, Runtime,
-    menu::{MenuBuilder, MenuEvent, MenuItemBuilder, SubmenuBuilder},
+    App, AppHandle, Emitter, Manager, Runtime,
+    menu::{Menu, MenuBuilder, MenuEvent, MenuItemBuilder, SubmenuBuilder},
 };
 use tauri_plugin_opener::OpenerExt;
+
+use crate::settings;
 
 pub const MENU_EVENT: &str = "menu";
 const HELP_URL: &str = "https://axelmichel.github.io/runningmate/";
 
-pub fn install<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
-    let import = MenuItemBuilder::with_id("import", "Import TCX…")
-        .accelerator("CmdOrCtrl+O")
-        .build(app)?;
-    let folder_sync = MenuItemBuilder::with_id("folder-sync", "Sync Folder…").build(app)?;
-    let search = MenuItemBuilder::with_id("search", "Search")
-        .accelerator("CmdOrCtrl+F")
-        .build(app)?;
-    let settings = MenuItemBuilder::with_id("settings", "Settings…")
-        .accelerator("CmdOrCtrl+,")
-        .build(app)?;
-    let user = MenuItemBuilder::with_id("user", "User Profile…").build(app)?;
-    let help = MenuItemBuilder::with_id("help", "RunningMate Help")
-        .accelerator("F1")
-        .build(app)?;
+/// Menu texts in one language.
+struct Labels {
+    about: &'static str,
+    settings: &'static str,
+    user: &'static str,
+    services: &'static str,
+    hide: &'static str,
+    hide_others: &'static str,
+    show_all: &'static str,
+    quit: &'static str,
+    file: &'static str,
+    import: &'static str,
+    folder_sync: &'static str,
+    close_window: &'static str,
+    edit: &'static str,
+    undo: &'static str,
+    redo: &'static str,
+    cut: &'static str,
+    copy: &'static str,
+    paste: &'static str,
+    select_all: &'static str,
+    view: &'static str,
+    search: &'static str,
+    fullscreen: &'static str,
+    window: &'static str,
+    minimize: &'static str,
+    zoom: &'static str,
+    help: &'static str,
+    help_item: &'static str,
+}
 
-    let app_menu = SubmenuBuilder::new(app, "RunningMate")
-        .about(None)
+const EN: Labels = Labels {
+    about: "About RunningMate",
+    settings: "Settings…",
+    user: "User Profile…",
+    services: "Services",
+    hide: "Hide RunningMate",
+    hide_others: "Hide Others",
+    show_all: "Show All",
+    quit: "Quit RunningMate",
+    file: "File",
+    import: "Import TCX…",
+    folder_sync: "Sync Folder…",
+    close_window: "Close Window",
+    edit: "Edit",
+    undo: "Undo",
+    redo: "Redo",
+    cut: "Cut",
+    copy: "Copy",
+    paste: "Paste",
+    select_all: "Select All",
+    view: "View",
+    search: "Search",
+    fullscreen: "Enter Full Screen",
+    window: "Window",
+    minimize: "Minimize",
+    zoom: "Zoom",
+    help: "Help",
+    help_item: "RunningMate Help",
+};
+
+const DE: Labels = Labels {
+    about: "Über RunningMate",
+    settings: "Einstellungen…",
+    user: "Benutzerprofil…",
+    services: "Dienste",
+    hide: "RunningMate ausblenden",
+    hide_others: "Andere ausblenden",
+    show_all: "Alle einblenden",
+    quit: "RunningMate beenden",
+    file: "Ablage",
+    import: "TCX importieren…",
+    folder_sync: "Ordner synchronisieren…",
+    close_window: "Fenster schließen",
+    edit: "Bearbeiten",
+    undo: "Widerrufen",
+    redo: "Wiederholen",
+    cut: "Ausschneiden",
+    copy: "Kopieren",
+    paste: "Einsetzen",
+    select_all: "Alles auswählen",
+    view: "Darstellung",
+    search: "Suchen",
+    fullscreen: "Vollbildmodus",
+    window: "Fenster",
+    minimize: "Im Dock ablegen",
+    zoom: "Zoomen",
+    help: "Hilfe",
+    help_item: "RunningMate-Hilfe",
+};
+
+fn labels(language: &str) -> &'static Labels {
+    if language == "de" { &DE } else { &EN }
+}
+
+fn build<R: Runtime, M: Manager<R>>(manager: &M, language: &str) -> tauri::Result<Menu<R>> {
+    let l = labels(language);
+    let item = |id: &str, text: &str, accelerator: Option<&str>| {
+        let builder = MenuItemBuilder::with_id(id, text);
+        match accelerator {
+            Some(a) => builder.accelerator(a).build(manager),
+            None => builder.build(manager),
+        }
+    };
+    let settings = item("settings", l.settings, Some("CmdOrCtrl+,"))?;
+    let user = item("user", l.user, None)?;
+    let import = item("import", l.import, Some("CmdOrCtrl+O"))?;
+    let folder_sync = item("folder-sync", l.folder_sync, None)?;
+    let search = item("search", l.search, Some("CmdOrCtrl+F"))?;
+    let help = item("help", l.help_item, Some("F1"))?;
+
+    let app_menu = SubmenuBuilder::new(manager, "RunningMate")
+        .about_with_text(l.about, None)
         .separator()
         .item(&settings)
         .item(&user)
         .separator()
-        .services()
+        .services_with_text(l.services)
         .separator()
-        .hide()
-        .hide_others()
-        .show_all()
+        .hide_with_text(l.hide)
+        .hide_others_with_text(l.hide_others)
+        .show_all_with_text(l.show_all)
         .separator()
-        .quit()
+        .quit_with_text(l.quit)
         .build()?;
-    let file = SubmenuBuilder::new(app, "File")
+    let file = SubmenuBuilder::new(manager, l.file)
         .item(&import)
         .item(&folder_sync)
         .separator()
-        .close_window()
+        .close_window_with_text(l.close_window)
         .build()?;
     // Without an Edit menu, copy and paste stop working in text fields on macOS.
-    let edit = SubmenuBuilder::new(app, "Edit")
-        .undo()
-        .redo()
+    let edit = SubmenuBuilder::new(manager, l.edit)
+        .undo_with_text(l.undo)
+        .redo_with_text(l.redo)
         .separator()
-        .cut()
-        .copy()
-        .paste()
-        .select_all()
+        .cut_with_text(l.cut)
+        .copy_with_text(l.copy)
+        .paste_with_text(l.paste)
+        .select_all_with_text(l.select_all)
         .build()?;
-    let view = SubmenuBuilder::new(app, "View")
+    let view = SubmenuBuilder::new(manager, l.view)
         .item(&search)
         .separator()
-        .fullscreen()
+        .fullscreen_with_text(l.fullscreen)
         .build()?;
-    let window = SubmenuBuilder::new(app, "Window")
-        .minimize()
-        .maximize()
+    let window = SubmenuBuilder::new(manager, l.window)
+        .minimize_with_text(l.minimize)
+        .maximize_with_text(l.zoom)
         .build()?;
-    let help_menu = SubmenuBuilder::new(app, "Help").item(&help).build()?;
+    let help_menu = SubmenuBuilder::new(manager, l.help).item(&help).build()?;
 
-    let menu = MenuBuilder::new(app)
+    MenuBuilder::new(manager)
         .items(&[&app_menu, &file, &edit, &view, &window, &help_menu])
-        .build()?;
-    app.set_menu(menu)?;
+        .build()
+}
+
+pub fn install<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
+    let language = settings::load().map(|s| s.language).unwrap_or_default();
+    app.set_menu(build(app, &language)?)?;
     app.on_menu_event(handle);
+    Ok(())
+}
+
+/// Rebuilds the menu after the language setting changed.
+pub fn set_language<R: Runtime>(app: &AppHandle<R>, language: &str) -> tauri::Result<()> {
+    app.set_menu(build(app, language)?)?;
     Ok(())
 }
 

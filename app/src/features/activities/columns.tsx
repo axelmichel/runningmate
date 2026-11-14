@@ -3,9 +3,11 @@ import type { ReactNode } from "react";
 import type { ActivityRow } from "@/bindings/ActivityRow";
 import type { SortField } from "@/bindings/SortField";
 import type { ViewMode } from "@/bindings/ViewMode";
+import { t, tk } from "@/i18n";
 import { formatDateTime, formatDuration, formatMinSec, formatNumber } from "@/lib/format";
 
 export type Column = {
+  /** Translation key. */
   header: string;
   sortField: SortField;
   align?: "right";
@@ -30,19 +32,19 @@ type ColumnKey =
 
 const COLUMNS: Record<ColumnKey, Column> = {
   type: {
-    header: "Type",
+    header: tk("Type"),
     sortField: "type",
     width: 120,
-    render: (row) => <span className="block truncate">{row.displayType}</span>,
+    render: (row) => <span className="block truncate">{t(row.displayType ?? "")}</span>,
   },
   date: {
-    header: "Date",
+    header: tk("Date"),
     sortField: "date",
     width: 150,
     render: (row) => formatDateTime(row.date),
   },
   title: {
-    header: "Title",
+    header: tk("Title"),
     sortField: "title",
     width: 240,
     render: (row) => (
@@ -52,55 +54,55 @@ const COLUMNS: Record<ColumnKey, Column> = {
     ),
   },
   duration: {
-    header: "Duration",
+    header: tk("Duration"),
     sortField: "duration",
     align: "right",
     render: (row) => formatDuration(row.duration),
   },
   distance: {
-    header: "Distance (km)",
+    header: tk("Distance (km)"),
     sortField: "distance",
     align: "right",
     render: (row) => formatNumber(row.distance, 2),
   },
   elevationGain: {
-    header: "Elevation (m)",
+    header: tk("Elevation (m)"),
     sortField: "elevationGain",
     align: "right",
     render: (row) => formatNumber(row.elevationGain),
   },
   avgSpeed: {
-    header: "Speed (km/h)",
+    header: tk("Speed (km/h)"),
     sortField: "avgSpeed",
     align: "right",
     render: (row) => formatNumber(row.avgSpeed, 1),
   },
   avgPace: {
-    header: "Pace (/km)",
+    header: tk("Pace (/km)"),
     sortField: "avgPace",
     align: "right",
     render: (row) => formatMinSec(row.avgPace),
   },
   avgHeartRate: {
-    header: "HR (bpm)",
+    header: tk("HR (bpm)"),
     sortField: "avgHeartRate",
     align: "right",
     render: (row) => formatNumber(row.avgHeartRate),
   },
   totalSteps: {
-    header: "Steps",
+    header: tk("Steps"),
     sortField: "totalSteps",
     align: "right",
     render: (row) => formatNumber(row.totalSteps),
   },
   avgPower: {
-    header: "Power (W)",
+    header: tk("Power (W)"),
     sortField: "avgPower",
     align: "right",
     render: (row) => formatNumber(row.avgPower),
   },
   pause: {
-    header: "Pause",
+    header: tk("Pause"),
     sortField: "pause",
     align: "right",
     render: (row) => formatMinSec(row.pause),

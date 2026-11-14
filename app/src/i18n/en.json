@@ -1,0 +1,16 @@
+{
+  "Sync {{count}} file_one": "Sync {{count}} file",
+  "Sync {{count}} file_other": "Sync {{count}} files",
+  "{{count}} day_one": "{{count}} day",
+  "{{count}} day_other": "{{count}} days",
+  "{{count}} file added_one": "{{count}} file added",
+  "{{count}} file added_other": "{{count}} files added",
+  "{{count}} files · {{size}}_one": "{{files}} file · {{size}}",
+  "{{count}} files · {{size}}_other": "{{files}} files · {{size}}",
+  "{{count}} hour_one": "{{count}} hour",
+  "{{count}} hour_other": "{{count}} hours",
+  "{{count}} new file_one": "{{count}} new file",
+  "{{count}} new file_other": "{{count}} new files",
+  "{{count}} selected · {{distance}} km_one": "{{count}} selected · {{distance}} km",
+  "{{count}} selected · {{distance}} km_other": "{{count}} selected · {{distance}} km"
+}

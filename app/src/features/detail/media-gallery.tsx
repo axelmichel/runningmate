@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { t } from "@/i18n";
 import { api } from "@/lib/api";
 
 const EXTENSIONS = ["png", "jpg", "jpeg", "heic", "mp4", "mov", "avi"];
@@ -34,7 +35,7 @@ function Thumbnail({
   const src = convertFileSrc(media.filePath);
   return (
     <div className="group relative aspect-square overflow-hidden rounded-md border bg-muted">
-      <button type="button" className="size-full" onClick={onOpen} aria-label="Open">
+      <button type="button" className="size-full" onClick={onOpen} aria-label={t("Open")}>
         {media.mediaType === "video" ? (
           <>
             {/* The first frame serves as the thumbnail (Python used OpenCV for this). */}
@@ -48,7 +49,7 @@ function Thumbnail({
       <Button
         variant="secondary"
         size="icon-sm"
-        aria-label="Remove"
+        aria-label={t("Remove")}
         className="absolute top-1 right-1 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
         onClick={onDelete}
       >
@@ -73,33 +74,34 @@ export function MediaGallery({ activityId }: { activityId: number }) {
     mutationFn: async () => {
       const files = await pickFiles({
         multiple: true,
-        filters: [{ name: "Photos and videos", extensions: EXTENSIONS }],
+        filters: [{ name: t("Photos and videos"), extensions: EXTENSIONS }],
       });
       for (const file of files ?? []) await api.addMedia(activityId, file);
       return files?.length ?? 0;
     },
-    onSuccess: (count) => count && toast.success(`${count} file${count === 1 ? "" : "s"} added`),
-    onError: (error) => toast.error(`Could not add media: ${error}`),
+    onSuccess: (count) => count && toast.success(t("{{count}} file added", { count })),
+    onError: (error) => toast.error(t("Could not add media: {{error}}", { error: String(error) })),
     onSettled: refresh,
   });
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteMedia(id),
-    onError: (error) => toast.error(`Could not remove media: ${error}`),
+    onError: (error) =>
+      toast.error(t("Could not remove media: {{error}}", { error: String(error) })),
     onSettled: refresh,
   });
 
   return (
     <div className="grid gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Photos and videos</span>
+        <span className="text-sm font-medium">{t("Photos and videos")}</span>
         <Button variant="outline" size="sm" disabled={add.isPending} onClick={() => add.mutate()}>
           <ImagePlus />
-          Add
+          {t("Add")}
         </Button>
       </div>
       {media.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No photos or videos yet. Added files are copied into the media folder.
+          {t("No photos or videos yet. Added files are copied into the media folder.")}
         </p>
       ) : (
         <div className="grid grid-cols-3 gap-2">
@@ -116,7 +118,7 @@ export function MediaGallery({ activityId }: { activityId: number }) {
 
       <Dialog open={viewing !== null} onOpenChange={(open) => !open && setViewing(null)}>
         <DialogContent className="max-w-4xl p-2 sm:max-w-4xl">
-          <DialogTitle className="sr-only">Media</DialogTitle>
+          <DialogTitle className="sr-only">{t("Media")}</DialogTitle>
           {viewing?.mediaType === "video" ? (
             <video
               src={convertFileSrc(viewing.filePath)}
@@ -139,18 +141,18 @@ export function MediaGallery({ activityId }: { activityId: number }) {
       <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove this file?</AlertDialogTitle>
+            <AlertDialogTitle>{t("Remove this file?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              The file is deleted from the media folder.
+              {t("The file is deleted from the media folder.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               onClick={() => deleting && remove.mutate(deleting.id)}
             >
-              Remove
+              {t("Remove")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { t } from "@/i18n";
 
 import { draftToFilter, toDraft, type Draft } from "./filters";
 
@@ -82,32 +83,32 @@ function FilterForm({
       }}
     >
       <DialogHeader>
-        <DialogTitle>Filter activities</DialogTitle>
-        <DialogDescription>Leave a field empty to not filter by it.</DialogDescription>
+        <DialogTitle>{t("Filter activities")}</DialogTitle>
+        <DialogDescription>{t("Leave a field empty to not filter by it.")}</DialogDescription>
       </DialogHeader>
       <div className="grid gap-3">
         <div className="grid grid-cols-[7rem_1fr_1fr] gap-2 text-xs text-muted-foreground">
           <span />
-          <span>From</span>
-          <span>To</span>
+          <span>{t("From")}</span>
+          <span>{t("To")}</span>
         </div>
-        {row("Date", "", field("minDate", "date"), field("maxDate", "date"), "minDate")}
+        {row(t("Date"), "", field("minDate", "date"), field("maxDate", "date"), "minDate")}
         {row(
-          "Distance",
+          t("Distance"),
           "km",
           field("minDistance", "number"),
           field("maxDistance", "number"),
           "minDistance",
         )}
         {row(
-          "Duration",
+          t("Duration"),
           "min",
           field("minDuration", "number"),
           field("maxDuration", "number"),
           "minDuration",
         )}
         {row(
-          "Elevation",
+          t("Elevation"),
           "m",
           field("minElevation", "number"),
           field("maxElevation", "number"),
@@ -116,9 +117,9 @@ function FilterForm({
       </div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {t("Cancel")}
         </Button>
-        <Button type="submit">Apply</Button>
+        <Button type="submit">{t("Apply")}</Button>
       </DialogFooter>
     </form>
   );

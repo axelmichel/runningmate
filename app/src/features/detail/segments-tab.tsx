@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { formatDuration, formatNumber, formatPace } from "@/lib/format";
 
@@ -27,14 +28,14 @@ export function SegmentsTab({ activityId, view }: { activityId: number; view: Vi
         <TableHeader className="sticky top-0 bg-background">
           <TableRow>
             <TableHead>#</TableHead>
-            <TableHead className={head}>Distance (km)</TableHead>
-            <TableHead className={head}>Time</TableHead>
-            <TableHead className={head}>Pace (/km)</TableHead>
-            <TableHead className={head}>Speed (km/h)</TableHead>
-            <TableHead className={head}>HR (bpm)</TableHead>
-            <TableHead className={head}>Power (W)</TableHead>
-            {steps && <TableHead className={head}>Cadence (spm)</TableHead>}
-            <TableHead className={head}>Elevation (m)</TableHead>
+            <TableHead className={head}>{t("Distance (km)")}</TableHead>
+            <TableHead className={head}>{t("Time")}</TableHead>
+            <TableHead className={head}>{t("Pace (/km)")}</TableHead>
+            <TableHead className={head}>{t("Speed (km/h)")}</TableHead>
+            <TableHead className={head}>{t("HR (bpm)")}</TableHead>
+            <TableHead className={head}>{t("Power (W)")}</TableHead>
+            {steps && <TableHead className={head}>{t("Cadence (spm)")}</TableHead>}
+            <TableHead className={head}>{t("Elevation (m)")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -58,7 +59,7 @@ export function SegmentsTab({ activityId, view }: { activityId: number; view: Vi
           {segments.length === 0 && (
             <TableRow>
               <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
-                No segments for this activity.
+                {t("No segments for this activity.")}
               </TableCell>
             </TableRow>
           )}

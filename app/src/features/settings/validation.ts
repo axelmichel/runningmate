@@ -1,3 +1,8 @@
+import { tk } from "@/i18n";
+import { formatNumber } from "@/lib/format";
+
+/** Messages are translation keys; forms show them with `t()`. */
+
 /** Checks for the settings forms. Each returns a message per invalid field (empty when valid). */
 
 export type ProfileForm = {
@@ -34,19 +39,19 @@ export function validateProfile(form: ProfileForm): Errors<ProfileForm> {
   const height = number(form.height);
   const hrMin = number(form.hrMin);
   const hrMax = number(form.hrMax);
-  if (!form.name.trim()) errors.name = "Enter a name.";
-  if (!(weight >= 20 && weight <= 300)) errors.weight = "Weight in kg, between 20 and 300.";
+  if (!form.name.trim()) errors.name = tk("Enter a name.");
+  if (!(weight >= 20 && weight <= 300)) errors.weight = tk("Weight in kg, between 20 and 300.");
   if (!(Number.isInteger(height) && height >= 100 && height <= 250)) {
-    errors.height = "Height in cm, between 100 and 250.";
+    errors.height = tk("Height in cm, between 100 and 250.");
   }
-  if (!isBirthday(form.birthday)) errors.birthday = "Use DD.MM.YYYY.";
+  if (!isBirthday(form.birthday)) errors.birthday = tk("Use DD.MM.YYYY.");
   if (!(Number.isInteger(hrMin) && hrMin >= 30 && hrMin <= 120)) {
-    errors.hrMin = "Resting heart rate between 30 and 120 bpm.";
+    errors.hrMin = tk("Resting heart rate between 30 and 120 bpm.");
   }
   if (!(Number.isInteger(hrMax) && hrMax >= 100 && hrMax <= 230)) {
-    errors.hrMax = "Maximum heart rate between 100 and 230 bpm.";
+    errors.hrMax = tk("Maximum heart rate between 100 and 230 bpm.");
   } else if (!errors.hrMin && hrMin >= hrMax) {
-    errors.hrMax = "Must be above the resting heart rate.";
+    errors.hrMax = tk("Must be above the resting heart rate.");
   }
   return errors;
 }
@@ -55,10 +60,10 @@ export function validateProfile(form: ProfileForm): Errors<ProfileForm> {
 export function validateZones(zones: string[]): string | null {
   const values = zones.map(number);
   if (values.some((v) => !Number.isInteger(v) || v < 40 || v > 240)) {
-    return "Each zone needs a whole number between 40 and 240 bpm.";
+    return tk("Each zone needs a whole number between 40 and 240 bpm.");
   }
   if (values.some((v, i) => i > 0 && v <= values[i - 1])) {
-    return "Each zone must end above the previous one.";
+    return tk("Each zone must end above the previous one.");
   }
   return null;
 }
@@ -73,5 +78,5 @@ export function formatBytes(bytes: number): string {
     unit += 1;
   }
   const digits = unit === 0 || value >= 100 ? 0 : 1;
-  return `${new Intl.NumberFormat(undefined, { maximumFractionDigits: digits }).format(value)} ${units[unit]}`;
+  return `${formatNumber(value, digits)} ${units[unit]}`;
 }

@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+import { t } from "@/i18n";
+
 import { FilterDialog } from "./filter-dialog";
 import { filterLabels } from "./filters";
 
@@ -42,7 +44,7 @@ export function SearchBar({ filter, onFilterChange, onClose }: SearchBarProps) {
         <Input
           ref={input}
           value={text}
-          placeholder="Search title or comment…"
+          placeholder={t("Search title or comment…")}
           className="pl-8"
           onChange={(event) => setText(event.target.value)}
           onKeyDown={(event) => event.key === "Escape" && onClose()}
@@ -50,7 +52,7 @@ export function SearchBar({ filter, onFilterChange, onClose }: SearchBarProps) {
       </div>
       <Button variant="outline" size="sm" onClick={() => setDialogOpen(true)}>
         <Filter />
-        Filter
+        {t("Filter")}
       </Button>
       {labels.map((label) => (
         <Badge key={label} variant="secondary">
@@ -67,7 +69,7 @@ export function SearchBar({ filter, onFilterChange, onClose }: SearchBarProps) {
           }}
         >
           <X />
-          Reset
+          {t("Reset")}
         </Button>
       )}
       <FilterDialog

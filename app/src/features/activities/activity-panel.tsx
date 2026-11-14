@@ -7,6 +7,7 @@ import type { ActivityDetail } from "@/bindings/ActivityDetail";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import {
   formatDateTime,
@@ -36,7 +37,7 @@ function TrackImage({ dataDir, fileId }: { dataDir: string; fileId: string }) {
     <div className="rounded-md bg-[#35193e] p-3">
       <img
         src={convertFileSrc(`${dataDir}/images/${fileId}_track.png`)}
-        alt="Route"
+        alt={t("Route")}
         className="mx-auto h-40 object-contain"
         onError={() => setFailed(true)}
       />
@@ -62,7 +63,7 @@ function Route({ activity, dataDir }: { activity: ActivityDetail; dataDir?: stri
   return (
     <svg
       role="img"
-      aria-label="Route"
+      aria-label={t("Route")}
       viewBox={`${-pad} ${-pad} ${route.width + 2 * pad} ${route.height + 2 * pad}`}
       className="mx-auto h-40 w-full text-primary"
       preserveAspectRatio="xMidYMid meet"
@@ -97,8 +98,8 @@ function Overview({
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label="Open details"
-              title="Open details"
+              aria-label={t("Open details")}
+              title={t("Open details")}
               onClick={() => onOpenDetails(activity.id)}
             >
               <Maximize2 />
@@ -106,19 +107,19 @@ function Overview({
           </CardAction>
         )}
         <div className="text-xs text-muted-foreground">
-          {formatDateTime(activity.date)} · {activity.typeDetail || activity.activityType}
+          {formatDateTime(activity.date)} · {t(activity.typeDetail || activity.activityType || "")}
         </div>
       </CardHeader>
       <CardContent className="grid gap-4">
         <div className="grid grid-cols-2 gap-2">
-          <Metric label="Duration" value={formatDuration(activity.duration)} />
-          <Metric label="Pace (/km)" value={formatMinSec(activity.avgPace)} align="right" />
+          <Metric label={t("Duration")} value={formatDuration(activity.duration)} />
+          <Metric label={t("Pace (/km)")} value={formatMinSec(activity.avgPace)} align="right" />
         </div>
         <Route activity={activity} dataDir={dataDir} />
         <div className="grid grid-cols-2 gap-2">
-          <Metric label="Distance" value={`${formatNumber(activity.distance, 2)} km`} />
+          <Metric label={t("Distance")} value={`${formatNumber(activity.distance, 2)} km`} />
           <Metric
-            label="Elevation"
+            label={t("Elevation")}
             value={`${formatNumber(activity.elevationGain)} m`}
             align="right"
           />
@@ -172,7 +173,7 @@ function BestPerformances({ activityId }: { activityId: number }) {
   return (
     <Card size="sm">
       <CardHeader>
-        <CardTitle className="text-sm">Best segments</CardTitle>
+        <CardTitle className="text-sm">{t("Best segments")}</CardTitle>
       </CardHeader>
       <CardContent className="grid divide-y text-sm">
         {performances.map((p) => (
@@ -206,7 +207,7 @@ export function ActivityPanel({
   });
 
   if (activityId == null) {
-    return <p className="p-2 text-sm text-muted-foreground">No activity yet.</p>;
+    return <p className="p-2 text-sm text-muted-foreground">{t("No activity yet.")}</p>;
   }
   if (isPending || !activity) {
     return <Skeleton className="h-80 w-full" />;

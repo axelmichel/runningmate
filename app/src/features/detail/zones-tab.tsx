@@ -9,15 +9,17 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { api } from "@/lib/api";
+import { t } from "@/i18n";
 import { formatDate, formatDuration, formatNumber } from "@/lib/format";
 
 /** Zone colours from dark to light, after `ui/widget_heart_rate_zones.py`. */
 const ZONE_COLORS = ["#35193e", "#701f57", "#ad1759", "#f37651", "#f6b48f"];
 
-const trendConfig = {
-  avgHeartRate: { label: "Activity", color: "var(--chart-2)" },
-  trend: { label: "Trend", color: "var(--chart-4)" },
-} satisfies ChartConfig;
+const trendConfig = () =>
+  ({
+    avgHeartRate: { label: t("Activity"), color: "var(--chart-2)" },
+    trend: { label: t("Trend"), color: "var(--chart-4)" },
+  }) satisfies ChartConfig;
 
 export function ZonesTab({ activityId }: { activityId: number }) {
   const { data: zones, isPending } = useQuery({
@@ -33,18 +35,18 @@ export function ZonesTab({ activityId }: { activityId: number }) {
     <div className="grid gap-4">
       <Card size="sm">
         <CardHeader>
-          <CardTitle className="text-sm">Time in heart-rate zones</CardTitle>
+          <CardTitle className="text-sm">{t("Time in heart-rate zones")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-2 text-sm">
           {!isPending && !zones && (
             <p className="text-muted-foreground">
-              Set your heart-rate zones in the user settings to see this.
+              {t("Set your heart-rate zones in the user settings to see this.")}
             </p>
           )}
           {zones?.map((zone) => (
             <div key={zone.zone} className="grid grid-cols-[9rem_1fr_6rem] items-center gap-3">
               <span>
-                Zone {zone.zone}{" "}
+                {t("Zone {{zone}}", { zone: zone.zone })}{" "}
                 <span className="text-muted-foreground">
                   ({zone.minBpm}–{zone.maxBpm})
                 </span>
@@ -64,13 +66,15 @@ export function ZonesTab({ activityId }: { activityId: number }) {
       </Card>
       <Card size="sm">
         <CardHeader>
-          <CardTitle className="text-sm">Heart-rate trend (90 days, same activity type)</CardTitle>
+          <CardTitle className="text-sm">
+            {t("Heart-rate trend (90 days, same activity type)")}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {!trend?.points.length ? (
             <p className="text-sm text-muted-foreground">No heart-rate data in this period.</p>
           ) : (
-            <ChartContainer config={trendConfig} className="aspect-auto h-56 w-full">
+            <ChartContainer config={trendConfig()} className="aspect-auto h-56 w-full">
               <ComposedChart data={trend.points}>
                 <CartesianGrid vertical={false} />
                 <XAxis
@@ -102,7 +106,7 @@ export function ZonesTab({ activityId }: { activityId: number }) {
                     stroke="var(--muted-foreground)"
                     strokeDasharray="4 4"
                     label={{
-                      value: `${["Min", "Ideal", "Max"][i]} ${bpm}`,
+                      value: `${[t("Min"), t("Ideal"), t("Max")][i]} ${bpm}`,
                       position: "insideTopLeft",
                       fontSize: 10,
                     }}

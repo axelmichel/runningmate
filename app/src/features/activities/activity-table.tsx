@@ -42,6 +42,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { t } from "@/i18n";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -144,6 +145,8 @@ export function ActivityTable({
       : selectedOnPage === rows.length
         ? true
         : ("indeterminate" as const);
+  const pageLabel =
+    pageState === true ? t("Deselect all on this page") : t("Select all on this page");
   const togglePage = () => {
     const next = new Set(selection);
     for (const row of rows) {
@@ -170,12 +173,8 @@ export function ActivityTable({
             <TableRow>
               <TableHead className={pinClass(pins[0], PINNED_HEAD)} style={pinStyle(pins[0])}>
                 <Checkbox
-                  aria-label={
-                    pageState === true ? "Deselect all on this page" : "Select all on this page"
-                  }
-                  title={
-                    pageState === true ? "Deselect all on this page" : "Select all on this page"
-                  }
+                  aria-label={pageLabel}
+                  title={pageLabel}
                   disabled={rows.length === 0}
                   checked={pageState}
                   onCheckedChange={togglePage}
@@ -205,7 +204,7 @@ export function ActivityTable({
                     )}
                     onClick={() => toggleSort(column.sortField)}
                   >
-                    {column.header}
+                    {t(column.header)}
                     {sort.field === column.sortField &&
                       (sort.direction === "asc" ? (
                         <ArrowUp className="size-3" />
@@ -233,7 +232,7 @@ export function ActivityTable({
                   onClick={(event) => event.stopPropagation()}
                 >
                   <Checkbox
-                    aria-label="Include in distance total"
+                    aria-label={t("Include in distance total")}
                     checked={selection.has(row.id)}
                     onCheckedChange={(checked) => toggle(row.id, checked === true)}
                   />
@@ -256,7 +255,7 @@ export function ActivityTable({
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        aria-label="Activity actions"
+                        aria-label={t("Activity actions")}
                         className="text-muted-foreground"
                       >
                         <EllipsisVertical />
@@ -265,11 +264,11 @@ export function ActivityTable({
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onSelect={() => onOpenDetails(row)}>
                         <Eye />
-                        View details
+                        {t("View details")}
                       </DropdownMenuItem>
                       <DropdownMenuItem onSelect={() => onReimport(row)}>
                         <RotateCcw />
-                        Re-import from TCX
+                        {t("Re-import from TCX")}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -277,7 +276,7 @@ export function ActivityTable({
                         onSelect={() => setPendingDelete(row)}
                       >
                         <Trash2 />
-                        Delete…
+                        {t("Delete…")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -290,7 +289,7 @@ export function ActivityTable({
                   colSpan={columns.length + 2}
                   className="py-10 text-center text-muted-foreground"
                 >
-                  No activities match.
+                  {t("No activities match.")}
                 </TableCell>
               </TableRow>
             )}
@@ -301,17 +300,25 @@ export function ActivityTable({
       <div className="flex items-center justify-between gap-4 pt-3 text-sm text-muted-foreground">
         <span>
           {selection.size > 0 &&
-            `${selection.size} selected · ${formatNumber(selectedDistance, 2)} km`}
+            t("{{count}} selected · {{distance}} km", {
+              count: selection.size,
+              distance: formatNumber(selectedDistance, 2),
+            })}
         </span>
         <div className="flex items-center gap-2">
           <span className="tabular-nums">
-            Page {pageIndex + 1} / {pageCount} · {total === 0 ? 0 : pageIndex * pageSize + 1}–
-            {Math.min(total, (pageIndex + 1) * pageSize)} of {total}
+            {t("Page {{page}} / {{pages}} · {{from}}–{{to}} of {{total}}", {
+              page: pageIndex + 1,
+              pages: pageCount,
+              from: total === 0 ? 0 : pageIndex * pageSize + 1,
+              to: Math.min(total, (pageIndex + 1) * pageSize),
+              total,
+            })}
           </span>
           <Button
             variant="outline"
             size="icon-sm"
-            aria-label="Previous page"
+            aria-label={t("Previous page")}
             disabled={pageIndex === 0}
             onClick={() => onPageChange(pageIndex - 1)}
           >
@@ -320,7 +327,7 @@ export function ActivityTable({
           <Button
             variant="outline"
             size="icon-sm"
-            aria-label="Next page"
+            aria-label={t("Next page")}
             disabled={pageIndex + 1 >= pageCount}
             onClick={() => onPageChange(pageIndex + 1)}
           >
@@ -335,19 +342,21 @@ export function ActivityTable({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete activity?</AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete activity?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              “{pendingDelete?.title}” and its segments, weather and best performances will be
-              removed. Photos and videos stay in the media folder.
+              {t(
+                "“{{title}}” and its segments, weather and best performances will be removed. Photos and videos stay in the media folder.",
+                { title: pendingDelete?.title },
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               onClick={() => pendingDelete && onDelete(pendingDelete)}
             >
-              Delete
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

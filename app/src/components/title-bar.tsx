@@ -3,6 +3,7 @@ import { PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { isMac } from "@/lib/platform";
+import { t } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 type TitleBarProps = {
@@ -31,7 +32,7 @@ export function TitleBar({ title, detailsOpen, onDetailsToggle }: TitleBarProps)
       </span>
       <Button variant="ghost" size="icon-sm" aria-pressed={detailsOpen} onClick={onDetailsToggle}>
         <PanelRight />
-        <span className="sr-only">Toggle details panel</span>
+        <span className="sr-only">{t("Toggle details panel")}</span>
       </Button>
     </header>
   );

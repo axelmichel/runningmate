@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useTheme, type Theme } from "@/hooks/use-theme";
+import { setLanguage, t, tk } from "@/i18n";
 import { api } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
 
@@ -31,8 +32,8 @@ import { formatBytes } from "./validation";
 type Page = "general" | "storage";
 
 const ITEMS: (NavItem & { value: Page })[] = [
-  { value: "general", label: "General", icon: SlidersHorizontal },
-  { value: "storage", label: "Storage", icon: HardDrive },
+  { value: "general", label: tk("General"), icon: SlidersHorizontal },
+  { value: "storage", label: tk("Storage"), icon: HardDrive },
 ];
 
 const LANGUAGES = [
@@ -42,9 +43,9 @@ const LANGUAGES = [
 ] as const;
 
 const THEMES: [Theme, string][] = [
-  ["system", "Follow the system"],
-  ["light", "Light"],
-  ["dark", "Dark"],
+  ["system", tk("Follow the system")],
+  ["light", tk("Light")],
+  ["dark", tk("Dark")],
 ];
 
 function GeneralPage() {
@@ -57,15 +58,17 @@ function GeneralPage() {
     onSuccess: (saved) => {
       queryClient.setQueryData(["settings"], saved);
       setTheme(saved.layout as Theme);
+      setLanguage(saved.language);
     },
-    onError: (error) => toast.error(`Could not save settings: ${error}`),
+    onError: (error) =>
+      toast.error(t("Could not save settings: {{error}}", { error: String(error) })),
   });
   if (!settings) return null;
 
   return (
     <div className="grid max-w-md gap-6">
       <div className="grid gap-2">
-        <Label>Language</Label>
+        <Label>{t("Language")}</Label>
         <Select
           value={settings.language}
           onValueChange={(language) => save.mutate({ ...settings, language })}
@@ -82,11 +85,13 @@ function GeneralPage() {
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          Used for new activity titles. Translating the interface comes in a later update.
+          {t(
+            "Also used for the titles of newly imported activities. French falls back to English.",
+          )}
         </p>
       </div>
       <div className="grid gap-2">
-        <Label>Appearance</Label>
+        <Label>{t("Appearance")}</Label>
         <RadioGroup
           value={settings.layout}
           onValueChange={(layout) => save.mutate({ ...settings, layout })}
@@ -95,7 +100,7 @@ function GeneralPage() {
             <div key={value} className="flex items-center gap-2">
               <RadioGroupItem value={value} id={`theme-${value}`} />
               <Label htmlFor={`theme-${value}`} className="font-normal">
-                {label}
+                {t(label)}
               </Label>
             </div>
           ))}
@@ -109,12 +114,16 @@ function StoragePage() {
   const { data: info } = useQuery({ queryKey: ["storage"], queryFn: api.storageInfo });
   if (!info) return null;
   const rows = [
-    ["Data folder", info.dataDir],
+    [t("Data folder"), info.dataDir],
     [
-      "Photos and videos",
-      `${formatNumber(info.mediaFiles)} files · ${formatBytes(info.mediaSize)}`,
+      t("Photos and videos"),
+      t("{{count}} files · {{size}}", {
+        count: info.mediaFiles,
+        files: formatNumber(info.mediaFiles),
+        size: formatBytes(info.mediaSize),
+      }),
     ],
-    ["Total size", formatBytes(info.totalSize)],
+    [t("Total size"), formatBytes(info.totalSize)],
   ];
   return (
     <dl className="grid max-w-xl gap-3 text-sm">
@@ -125,8 +134,9 @@ function StoragePage() {
         </div>
       ))}
       <p className="text-xs text-muted-foreground">
-        All data stays on this computer. The folder is shared with the previous Python version of
-        RunningMate.
+        {t(
+          "All data stays on this computer. The folder is shared with the previous Python version of RunningMate.",
+        )}
       </p>
     </dl>
   );
@@ -145,9 +155,9 @@ export function SystemSettingsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[60vh] max-w-3xl flex-col gap-4 sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
+          <DialogTitle>{t("Settings")}</DialogTitle>
           <DialogDescription className="sr-only">
-            Language, appearance and storage
+            {t("Language, appearance and storage")}
           </DialogDescription>
         </DialogHeader>
         <Tabs

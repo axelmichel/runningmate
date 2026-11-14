@@ -10,14 +10,16 @@ import {
 } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber, formatPace } from "@/lib/format";
+import { t } from "@/i18n";
 
 import { useSeries } from "./use-series";
 
-const config = {
-  elevation: { label: "Elevation (m)", color: "var(--chart-2)" },
-  heartRate: { label: "Heart rate (bpm)", color: "var(--chart-3)" },
-  pace: { label: "Pace (/km)", color: "var(--chart-4)" },
-} satisfies ChartConfig;
+const chartConfig = () =>
+  ({
+    elevation: { label: t("Elevation (m)"), color: "var(--chart-2)" },
+    heartRate: { label: t("Heart rate (bpm)"), color: "var(--chart-3)" },
+    pace: { label: t("Pace (/km)"), color: "var(--chart-4)" },
+  }) satisfies ChartConfig;
 
 const distanceAxis = (
   <XAxis
@@ -44,9 +46,14 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 /** Elevation, heart rate and pace over distance (the Python statistics page). */
 export function StatsTab({ activityId }: { activityId: number }) {
   const { data: points, isPending } = useSeries(activityId);
+  const config = chartConfig();
   if (isPending) return <Skeleton className="h-96 w-full" />;
   if (!points) {
-    return <p className="text-sm text-muted-foreground">No archived TCX file for this activity.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        {t("No archived TCX file for this activity.")}
+      </p>
+    );
   }
   const hasHeartRate = points.some((p) => p.heartRate != null);
   const hasPace = points.some((p) => p.pace != null);
@@ -63,7 +70,7 @@ export function StatsTab({ activityId }: { activityId: number }) {
   );
   return (
     <div className="grid gap-4">
-      <ChartCard title="Elevation">
+      <ChartCard title={t("Elevation")}>
         <ChartContainer config={config} className="aspect-auto h-48 w-full">
           <AreaChart data={points}>
             <CartesianGrid vertical={false} />
@@ -88,7 +95,7 @@ export function StatsTab({ activityId }: { activityId: number }) {
         </ChartContainer>
       </ChartCard>
       {hasHeartRate && (
-        <ChartCard title="Heart rate">
+        <ChartCard title={t("Heart rate")}>
           <ChartContainer config={config} className="aspect-auto h-48 w-full">
             <LineChart data={points}>
               <CartesianGrid vertical={false} />
@@ -113,7 +120,7 @@ export function StatsTab({ activityId }: { activityId: number }) {
         </ChartCard>
       )}
       {hasPace && (
-        <ChartCard title="Pace">
+        <ChartCard title={t("Pace")}>
           <ChartContainer config={config} className="aspect-auto h-48 w-full">
             <LineChart data={points}>
               <CartesianGrid vertical={false} />

@@ -7,6 +7,7 @@ import type { ViewMode } from "@/bindings/ViewMode";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ActivityDetailDialog } from "@/features/detail/activity-detail-dialog";
+import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -98,7 +99,7 @@ export function ActivitiesPage({
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteActivity(id),
     onSuccess: (_, id) => {
-      toast.success("Activity deleted");
+      toast.success(t("Activity deleted"));
       if (activeId === id) setActiveId(null);
       setSelection((current) => {
         const next = new Set(current);
@@ -107,19 +108,61 @@ export function ActivitiesPage({
       });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
     },
-    onError: (error) => toast.error(`Could not delete the activity: ${error}`),
+    onError: (error) =>
+      toast.error(t("Could not delete the activity: {{error}}", { error: String(error) })),
   });
 
   const reimport = useMutation({
     mutationFn: (id: number) => api.reimportActivity(id),
     onSuccess: (_, id) => {
-      toast.success("Activity recomputed from its TCX file");
+      toast.success(t("Activity recomputed from its TCX file"));
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       queryClient.invalidateQueries({ queryKey: ["activity", id] });
       queryClient.invalidateQueries({ queryKey: ["bestPerformances", id] });
     },
-    onError: (error) => toast.error(`Could not re-import: ${error}`),
+    onError: (error) => toast.error(t("Could not re-import: {{error}}", { error: String(error) })),
   });
+
+  // Previous/next in the detail window follow the table order across pages: within the page
+  // the neighbour is at hand, at a page edge it's fetched and the table turns the page too.
+  const rows = page.data?.rows ?? [];
+  const total = page.data?.total ?? 0;
+  const detailIndex = detailId === null ? -1 : rows.findIndex((row) => row.id === detailId);
+  const detailPosition = detailIndex < 0 ? -1 : pageIndex * PAGE_SIZE + detailIndex;
+  const showActivity = (id: number) => {
+    setDetailId(id);
+    setActiveId(id);
+  };
+  const step = async (delta: -1 | 1) => {
+    const neighbour = rows[detailIndex + delta];
+    if (neighbour) {
+      showActivity(neighbour.id);
+      return;
+    }
+    const position = detailPosition + delta;
+    try {
+      const found = await queryClient.fetchQuery({
+        queryKey: ["activities", "at", view, filter, sort, position],
+        queryFn: () =>
+          api.listActivities({
+            viewMode: view,
+            offset: position,
+            limit: 1,
+            sortField: sort.field,
+            sortDirection: sort.direction,
+            filter,
+          }),
+      });
+      const next = found.rows[0];
+      if (!next) return;
+      setPageIndex(Math.floor(position / PAGE_SIZE));
+      showActivity(next.id);
+    } catch (error) {
+      toast.error(String(error));
+    }
+  };
+  const canStep = (delta: -1 | 1) =>
+    detailPosition >= 0 && detailPosition + delta >= 0 && detailPosition + delta < total;
 
   const heatmapEndDate = useMemo(() => heatmapEnd(filter), [filter]);
   const panelId = activeId ?? latest.data?.rows[0]?.id;
@@ -157,7 +200,7 @@ export function ActivitiesPage({
           onSelectionChange={setSelection}
           onDelete={(row) => remove.mutate(row.id)}
           onReimport={(row) => reimport.mutate(row.id)}
-          onOpenDetails={(row) => setDetailId(row.id)}
+          onOpenDetails={(row) => showActivity(row.id)}
         />
       </div>
       {/* Slides in and out like the left sidebar; the inner width stays fixed while animating. */}
@@ -170,12 +213,14 @@ export function ActivitiesPage({
         )}
       >
         <ScrollArea className="h-full w-84 pl-4">
-          <ActivityPanel activityId={panelId} dataDir={dataDir} onOpenDetails={setDetailId} />
+          <ActivityPanel activityId={panelId} dataDir={dataDir} onOpenDetails={showActivity} />
         </ScrollArea>
       </aside>
       <ActivityDetailDialog
         activityId={detailId}
         onClose={() => setDetailId(null)}
+        onPrevious={canStep(-1) ? () => void step(-1) : undefined}
+        onNext={canStep(1) ? () => void step(1) : undefined}
         dataDir={dataDir}
       />
     </div>
