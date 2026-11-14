@@ -8,6 +8,7 @@ mod menu;
 mod open_meteo;
 mod paths;
 mod settings;
+mod storage;
 mod sync;
 
 use std::fs;
@@ -74,6 +75,7 @@ pub fn run() {
             commands::import::sync_folder,
             commands::settings::get_settings,
             commands::settings::save_settings,
+            commands::settings::storage_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

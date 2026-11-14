@@ -405,9 +405,13 @@ pub struct ActivityDetail {
     #[ts(type = "number | null")]
     pub calories: Option<i64>,
     pub file_id: Option<String>,
-    /// Imported but not yet reviewed; the detail window opens on the edit page.
+    /// Imported but not yet reviewed.
     pub is_new: bool,
     pub edited: bool,
+    /// Saved on the edit page, or given a comment or media (the Python app never set `edited`,
+    /// so older activities only show their review through these). The detail window opens on
+    /// the edit page until this is true.
+    pub reviewed: bool,
     pub avg_speed: Option<f64>,
     pub avg_pace: Option<String>,
     pub fastest_pace: Option<String>,
@@ -488,7 +492,8 @@ pub fn get(conn: &Connection, id: i64) -> AppResult<ActivityDetail> {
     let sql = format!(
         "SELECT activities.*, {} AS avg_speed, {} AS avg_pace, {} AS fastest_pace,
             {} AS slowest_pace, {} AS avg_heart_rate, {} AS avg_power, {} AS avg_steps,
-            {} AS total_steps, {} AS pause, {equipment_cols}
+            {} AS total_steps, {} AS pause, {equipment_cols},
+            EXISTS (SELECT 1 FROM media WHERE media.activity_id = activities.id) AS has_media
          FROM activities{equipment_join}
          WHERE activities.id = ?1",
         typed("avg_speed"),
@@ -512,12 +517,18 @@ pub fn get(conn: &Connection, id: i64) -> AppResult<ActivityDetail> {
             }),
             None => None,
         };
+        let edited = bool_or(row, "edited", false)?;
+        let comment = opt_string(row, "comment")?;
+        let has_media: bool = row.get("has_media")?;
         Ok(ActivityDetail {
+            reviewed: edited
+                || has_media
+                || comment.as_deref().is_some_and(|c| !c.trim().is_empty()),
             id,
             view_mode: view,
             date: opt_i64(row, "date")?,
             title: opt_string(row, "title")?,
-            comment: opt_string(row, "comment")?,
+            comment,
             activity_type: opt_string(row, "activity_type")?,
             type_detail: opt_string(row, "type_detail")?,
             duration: opt_i64(row, "duration")?,
@@ -526,7 +537,7 @@ pub fn get(conn: &Connection, id: i64) -> AppResult<ActivityDetail> {
             calories: opt_i64(row, "calories")?,
             file_id: opt_string(row, "file_id")?,
             is_new: bool_or(row, "new", false)?,
-            edited: bool_or(row, "edited", false)?,
+            edited,
             avg_speed: opt_f64(row, "avg_speed")?,
             avg_pace: opt_string(row, "avg_pace")?,
             fastest_pace: opt_string(row, "fastest_pace")?,
@@ -849,6 +860,16 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn comment_or_media_counts_as_reviewed() {
+        let db = seeded();
+        let conn = db.conn().unwrap();
+        assert!(!get(&conn, 1).unwrap().reviewed);
+        assert!(get(&conn, 4).unwrap().reviewed, "activity 4 has a comment");
+        crate::db::media::insert(&conn, 2, crate::db::media::MediaType::Image, "/m/a.jpg").unwrap();
+        assert!(get(&conn, 2).unwrap().reviewed);
+    }
+
+    #[test]
     fn update_saves_all_fields_and_marks_reviewed() {
         let db = seeded();
         let conn = db.conn().unwrap();
@@ -872,6 +893,7 @@ pub(crate) mod tests {
         assert_eq!(detail.distance, Some(10.2));
         assert!(!detail.is_new);
         assert!(detail.edited);
+        assert!(detail.reviewed);
     }
 
     #[test]

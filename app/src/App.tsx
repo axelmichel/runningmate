@@ -11,6 +11,9 @@ import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
 import { FolderSyncDialog } from "@/features/import/folder-sync-dialog";
 import { ImportDialog } from "@/features/import/import-dialog";
 import { useImportRun } from "@/features/import/use-import-run";
+import { SystemSettingsDialog } from "@/features/settings/system-settings-dialog";
+import { UserSettingsDialog } from "@/features/settings/user-settings-dialog";
+import { useTheme, type Theme } from "@/hooks/use-theme";
 import { api } from "@/lib/api";
 
 const DETAILS_STORAGE_KEY = "runningmate-details-panel";
@@ -24,6 +27,9 @@ function App() {
   );
   const [importOpen, setImportOpen] = useState(false);
   const [folderSyncOpen, setFolderSyncOpen] = useState(false);
+  const [userSettingsOpen, setUserSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { setTheme } = useTheme();
   const importRun = useImportRun();
   const { data: info } = useQuery({ queryKey: ["appInfo"], queryFn: api.appInfo });
 
@@ -32,6 +38,14 @@ function App() {
       localStorage.setItem(DETAILS_STORAGE_KEY, open ? "closed" : "open");
       return !open;
     });
+
+  // settings.json is the source of truth for the theme (shared with the Python app).
+  useEffect(() => {
+    api
+      .getSettings()
+      .then((settings) => setTheme(settings.layout as Theme))
+      .catch(() => {});
+  }, [setTheme]);
 
   const { start: startImport } = importRun;
   const importTcx = useCallback(async () => {
@@ -50,6 +64,8 @@ function App() {
       if (payload === "import") importTcx();
       if (payload === "folder-sync") setFolderSyncOpen(true);
       if (payload === "search") setSearchOpen((open) => !open);
+      if (payload === "settings") setSettingsOpen(true);
+      if (payload === "user") setUserSettingsOpen(true);
     });
     return () => {
       unlisten.then((stop) => stop());
@@ -78,6 +94,8 @@ function App() {
         onSearchToggle={() => setSearchOpen((open) => !open)}
         onImport={importTcx}
         onFolderSync={() => setFolderSyncOpen(true)}
+        onUserSettings={() => setUserSettingsOpen(true)}
+        onSettings={() => setSettingsOpen(true)}
       />
       <SidebarInset className="h-svh min-w-0 overflow-hidden pt-(--titlebar-height)">
         <ActivitiesPage
@@ -97,6 +115,8 @@ function App() {
         run={importRun.run}
       />
       <FolderSyncDialog open={folderSyncOpen} onOpenChange={setFolderSyncOpen} />
+      <UserSettingsDialog open={userSettingsOpen} onOpenChange={setUserSettingsOpen} />
+      <SystemSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </SidebarProvider>
   );
 }

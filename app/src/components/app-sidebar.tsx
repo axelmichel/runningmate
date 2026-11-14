@@ -20,6 +20,8 @@ type AppSidebarProps = {
   onSearchToggle: () => void;
   onImport: () => void;
   onFolderSync: () => void;
+  onUserSettings: () => void;
+  onSettings: () => void;
 };
 
 export function AppSidebar({
@@ -29,6 +31,8 @@ export function AppSidebar({
   onSearchToggle,
   onImport,
   onFolderSync,
+  onUserSettings,
+  onSettings,
 }: AppSidebarProps) {
   return (
     <Sidebar
@@ -81,11 +85,11 @@ export function AppSidebar({
             </SidebarMenuButton>
           </SidebarMenuItem>
           {[
-            { label: "User", icon: User },
-            { label: "Settings", icon: Settings },
-          ].map(({ label, icon: Icon }) => (
+            { label: "User", tooltip: "User settings", icon: User, onClick: onUserSettings },
+            { label: "Settings", tooltip: "Settings (⌘,)", icon: Settings, onClick: onSettings },
+          ].map(({ label, tooltip, icon: Icon, onClick }) => (
             <SidebarMenuItem key={label}>
-              <SidebarMenuButton tooltip={label} disabled>
+              <SidebarMenuButton tooltip={tooltip} onClick={onClick}>
                 <Icon />
                 <span>{label}</span>
               </SidebarMenuButton>

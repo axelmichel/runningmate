@@ -8,9 +8,15 @@ import type { ViewMode } from "./ViewMode";
  */
 export type ActivityDetail = { id: number, viewMode: ViewMode, date: number | null, title: string | null, comment: string | null, activityType: string | null, typeDetail: string | null, duration: number | null, distance: number | null, elevationGain: number | null, calories: number | null, fileId: string | null, 
 /**
- * Imported but not yet reviewed; the detail window opens on the edit page.
+ * Imported but not yet reviewed.
  */
-isNew: boolean, edited: boolean, avgSpeed: number | null, avgPace: string | null, fastestPace: string | null, slowestPace: string | null, avgHeartRate: number | null, avgPower: number | null, avgSteps: number | null, totalSteps: number | null, pause: string | null, 
+isNew: boolean, edited: boolean, 
+/**
+ * Saved on the edit page, or given a comment or media (the Python app never set `edited`,
+ * so older activities only show their review through these). The detail window opens on
+ * the edit page until this is true.
+ */
+reviewed: boolean, avgSpeed: number | null, avgPace: string | null, fastestPace: string | null, slowestPace: string | null, avgHeartRate: number | null, avgPower: number | null, avgSteps: number | null, totalSteps: number | null, pause: string | null, 
 /**
  * Shoe (runs, walks) or bike (rides).
  */

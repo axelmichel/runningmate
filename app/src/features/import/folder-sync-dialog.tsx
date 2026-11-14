@@ -18,6 +18,11 @@ import { formatDateTime } from "@/lib/format";
 import { ImportProgressView } from "./import-progress";
 import { useImportRun } from "./use-import-run";
 
+/** Last segment of a folder path ("…/RunGap/Documents/Export" → "Export"). */
+function folderName(path: string): string {
+  return path.split(/[\\/]/).filter(Boolean).at(-1) ?? path;
+}
+
 type FolderSyncDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -67,12 +72,26 @@ export function FolderSyncDialog({ open, onOpenChange }: FolderSyncDialogProps) 
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-1 rounded-md border p-3 text-sm">
-          <div className="flex items-center justify-between gap-3">
-            <span className="min-w-0 truncate font-medium" title={status.data?.folder ?? ""}>
-              {status.data?.folder ?? "No folder chosen"}
-            </span>
-            <Button variant="outline" size="sm" disabled={run.running} onClick={chooseFolder}>
+        {/* min-w-0 stops long paths from widening the dialog; the path wraps instead. */}
+        <div className="grid min-w-0 gap-1 rounded-md border p-3 text-sm">
+          <div className="flex min-w-0 items-start justify-between gap-3">
+            <div className="grid min-w-0 gap-0.5">
+              <span className="truncate font-medium">
+                {status.data?.folder ? folderName(status.data.folder) : "No folder chosen"}
+              </span>
+              {status.data?.folder && (
+                <span className="text-xs break-all text-muted-foreground">
+                  {status.data.folder}
+                </span>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              disabled={run.running}
+              onClick={chooseFolder}
+            >
               <FolderOpen />
               Choose…
             </Button>

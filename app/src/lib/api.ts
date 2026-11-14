@@ -17,6 +17,7 @@ import type { ImportSummary } from "@/bindings/ImportSummary";
 import type { Media } from "@/bindings/Media";
 import type { RouteOutline } from "@/bindings/RouteOutline";
 import type { SegmentRow } from "@/bindings/SegmentRow";
+import type { StorageInfo } from "@/bindings/StorageInfo";
 import type { SystemSettings } from "@/bindings/SystemSettings";
 import type { TrackPoint } from "@/bindings/TrackPoint";
 import type { TrainingEffect } from "@/bindings/TrainingEffect";
@@ -96,4 +97,5 @@ export const api = {
   // System settings
   getSettings: () => invoke<SystemSettings>("get_settings"),
   saveSettings: (settings: SystemSettings) => invoke<SystemSettings>("save_settings", { settings }),
+  storageInfo: () => invoke<StorageInfo>("storage_info"),
 };

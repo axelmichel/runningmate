@@ -8,7 +8,6 @@ import {
   Map as MapIcon,
   PanelLeft,
   Pencil,
-  type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -19,13 +18,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { NavTabs, type NavItem } from "@/components/nav-tabs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
-import { cn } from "@/lib/utils";
 
 import { EditTab } from "./edit-tab";
 import { EffectTab } from "./effect-tab";
@@ -35,17 +33,17 @@ import { SegmentsTab } from "./segments-tab";
 import { StatsTab } from "./stats-tab";
 import { ZonesTab } from "./zones-tab";
 
-const TABS = [
-  ["general", "General", LayoutDashboard],
-  ["segments", "Segments", ListOrdered],
-  ["map", "Map", MapIcon],
-  ["statistics", "Statistics", ChartLine],
-  ["effect", "Effect", Gauge],
-  ["zones", "Heart rate zones", HeartPulse],
-  ["edit", "Edit", Pencil],
-] as const satisfies readonly (readonly [string, string, LucideIcon])[];
+type Tab = "general" | "segments" | "map" | "statistics" | "effect" | "zones" | "edit";
 
-type Tab = (typeof TABS)[number][0];
+const NAV_ITEMS: (NavItem & { value: Tab })[] = [
+  { value: "general", label: "General", icon: LayoutDashboard },
+  { value: "segments", label: "Segments", icon: ListOrdered },
+  { value: "map", label: "Map", icon: MapIcon },
+  { value: "statistics", label: "Statistics", icon: ChartLine },
+  { value: "effect", label: "Effect", icon: Gauge },
+  { value: "zones", label: "Heart rate zones", icon: HeartPulse },
+  { value: "edit", label: "Edit", icon: Pencil },
+];
 
 const NAV_STORAGE_KEY = "runningmate-detail-nav";
 
@@ -73,7 +71,7 @@ function DetailContent({ activityId, dataDir }: { activityId: number; dataDir?: 
     queryKey: ["activity", activityId],
     queryFn: () => api.getActivity(activityId),
   });
-  // Activities that were never saved on the edit page open there; edited ones on General.
+  // Unreviewed activities (no edit, comment or media yet) open on the edit page.
   const [tab, setTab] = useState<Tab | null>(null);
   const [navOpen, setNavOpen] = useState(() => localStorage.getItem(NAV_STORAGE_KEY) !== "closed");
   const toggleNav = () =>
@@ -89,7 +87,7 @@ function DetailContent({ activityId, dataDir }: { activityId: number; dataDir?: 
       </>
     );
   }
-  const current: Tab = tab ?? (activity.edited ? "general" : "edit");
+  const current: Tab = tab ?? (activity.reviewed ? "general" : "edit");
 
   return (
     <>
@@ -118,35 +116,7 @@ function DetailContent({ activityId, dataDir }: { activityId: number; dataDir?: 
         orientation="vertical"
         className="min-h-0 flex-1 flex-row gap-4"
       >
-        {/* Collapses to icons, like the app sidebar; labels then show as tooltips. */}
-        <TabsList
-          className={cn(
-            "h-fit shrink-0 flex-col items-stretch gap-0.5 overflow-hidden bg-transparent p-0 transition-[width] duration-200 ease-linear",
-            navOpen ? "w-48" : "w-10",
-          )}
-        >
-          {TABS.map(([value, label, Icon]) => {
-            const trigger = (
-              <TabsTrigger
-                key={value}
-                value={value}
-                aria-label={label}
-                className="h-8 justify-start gap-2 overflow-hidden px-2.5 hover:bg-muted/60 data-active:bg-muted data-active:text-foreground data-active:shadow-none"
-              >
-                <Icon className="shrink-0" />
-                <span className={cn("truncate", !navOpen && "sr-only")}>{label}</span>
-              </TabsTrigger>
-            );
-            return navOpen ? (
-              trigger
-            ) : (
-              <Tooltip key={value}>
-                <TooltipTrigger asChild>{trigger}</TooltipTrigger>
-                <TooltipContent side="right">{label}</TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </TabsList>
+        <NavTabs items={NAV_ITEMS} open={navOpen} />
         <div className="scrollbar-visible min-h-0 min-w-0 flex-1 overflow-auto pr-1">
           <TabsContent value="general">
             <GeneralTab activity={activity} dataDir={dataDir} />

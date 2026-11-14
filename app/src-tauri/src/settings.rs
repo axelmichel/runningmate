@@ -64,6 +64,14 @@ pub fn load() -> AppResult<SystemSettings> {
 }
 
 pub fn save(settings: &SystemSettings) -> AppResult<()> {
+    let valid = ["en", "de", "fr"].contains(&settings.language.as_str())
+        && settings.measures == "metric"
+        && ["system", "light", "dark"].contains(&settings.layout.as_str());
+    if !valid {
+        return Err(crate::error::AppError::Invalid(format!(
+            "unsupported settings: {settings:?}"
+        )));
+    }
     save_to(&settings_file()?, settings)
 }
 

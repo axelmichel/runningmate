@@ -18,12 +18,19 @@ pub fn install<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
     let search = MenuItemBuilder::with_id("search", "Search")
         .accelerator("CmdOrCtrl+F")
         .build(app)?;
+    let settings = MenuItemBuilder::with_id("settings", "Settings…")
+        .accelerator("CmdOrCtrl+,")
+        .build(app)?;
+    let user = MenuItemBuilder::with_id("user", "User Profile…").build(app)?;
     let help = MenuItemBuilder::with_id("help", "RunningMate Help")
         .accelerator("F1")
         .build(app)?;
 
     let app_menu = SubmenuBuilder::new(app, "RunningMate")
         .about(None)
+        .separator()
+        .item(&settings)
+        .item(&user)
         .separator()
         .services()
         .separator()
@@ -73,7 +80,7 @@ fn handle<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
         "help" => {
             let _ = app.opener().open_url(HELP_URL, None::<&str>);
         }
-        id @ ("import" | "folder-sync" | "search") => {
+        id @ ("import" | "folder-sync" | "search" | "settings" | "user") => {
             let _ = app.emit(MENU_EVENT, id);
         }
         _ => {}
