@@ -1,4 +1,5 @@
 mod activity_type;
+mod ai;
 mod analysis;
 mod commands;
 mod db;
@@ -35,8 +36,13 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             app.manage(open_database()?);
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn_blocking(move || {
+                commands::import::apply_data_fixes(&handle);
+            });
             app.manage(commands::garmin::PendingGarminSignIn::default());
             app.manage(commands::import::ImportCancel::default());
+            app.manage(ai::AiQueue::default());
             menu::install(app)?;
             // Lets the webview load track images and media from the data folder.
             app.asset_protocol_scope()
@@ -96,6 +102,9 @@ pub fn run() {
             commands::import::folder_sync_status,
             commands::import::set_sync_folder,
             commands::import::sync_folder,
+            commands::ai::ai_models,
+            commands::ai::get_ai_summary,
+            commands::ai::generate_ai_summary,
             commands::settings::get_settings,
             commands::settings::save_settings,
             commands::settings::storage_info,

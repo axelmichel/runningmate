@@ -517,4 +517,22 @@ SET elevation_gain = (
     ),
     // "male" or "female", for comparing VO2max with people of the same age and sex.
     (57, &[r#"ALTER TABLE users ADD COLUMN gender TEXT"#]),
+    // Summaries written by a local AI model, cached per activity.
+    (
+        58,
+        &[r#"CREATE TABLE IF NOT EXISTS ai_summaries (
+    activity_id INTEGER PRIMARY KEY,
+    model TEXT NOT NULL,
+    text TEXT NOT NULL,
+    created INTEGER NOT NULL
+)"#],
+    ),
+    // One-time corrections of stored values, by name, so each runs once.
+    (
+        59,
+        &[r#"CREATE TABLE IF NOT EXISTS data_fixes (
+    name TEXT PRIMARY KEY,
+    applied INTEGER NOT NULL
+)"#],
+    ),
 ];

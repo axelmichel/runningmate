@@ -72,11 +72,12 @@ function App() {
     };
   }, []);
 
-  // Weather is fetched in the background after an import.
+  // Weather and the AI summary are fetched in the background after an import.
   useEffect(() => {
-    const unlisten = listen<number>("activity://updated", ({ payload }) =>
-      queryClient.invalidateQueries({ queryKey: ["weather", payload] }),
-    );
+    const unlisten = listen<number>("activity://updated", ({ payload }) => {
+      queryClient.invalidateQueries({ queryKey: ["weather", payload] });
+      queryClient.invalidateQueries({ queryKey: ["aiSummary", payload] });
+    });
     return () => {
       unlisten.then((stop) => stop());
     };

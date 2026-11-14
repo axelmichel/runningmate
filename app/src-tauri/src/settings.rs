@@ -19,7 +19,17 @@ pub struct SystemSettings {
     pub measures: String,
     /// "system", "light" or "dark".
     pub layout: String,
+    /// Writes activity summaries with a local Ollama model.
+    pub ai_enabled: bool,
+    /// Base URL of the Ollama server.
+    pub ai_url: String,
+    /// Ollama model name, e.g. "qwen2.5:7b"; empty until one is chosen.
+    pub ai_model: String,
+    /// Weeks before an activity it is compared with; one of [`AI_PERIOD_WEEKS`].
+    pub ai_period_weeks: u8,
 }
+
+pub const AI_PERIOD_WEEKS: [u8; 4] = [2, 4, 8, 12];
 
 impl Default for SystemSettings {
     fn default() -> Self {
@@ -27,6 +37,10 @@ impl Default for SystemSettings {
             language: "en".into(),
             measures: "metric".into(),
             layout: "system".into(),
+            ai_enabled: false,
+            ai_url: "http://localhost:11434".into(),
+            ai_model: String::new(),
+            ai_period_weeks: 4,
         }
     }
 }
@@ -66,7 +80,9 @@ pub fn load() -> AppResult<SystemSettings> {
 pub fn save(settings: &SystemSettings) -> AppResult<()> {
     let valid = ["en", "de", "fr"].contains(&settings.language.as_str())
         && settings.measures == "metric"
-        && ["system", "light", "dark"].contains(&settings.layout.as_str());
+        && ["system", "light", "dark"].contains(&settings.layout.as_str())
+        && (settings.ai_url.starts_with("http://") || settings.ai_url.starts_with("https://"))
+        && AI_PERIOD_WEEKS.contains(&settings.ai_period_weeks);
     if !valid {
         return Err(crate::error::AppError::Invalid(format!(
             "unsupported settings: {settings:?}"
@@ -96,5 +112,6 @@ mod tests {
         let saved: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
         assert_eq!(saved["layout"], "dark");
         assert_eq!(saved["extra"], 1);
+        assert_eq!(saved["ai_enabled"], false);
     }
 }

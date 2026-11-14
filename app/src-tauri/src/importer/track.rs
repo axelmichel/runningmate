@@ -10,14 +10,34 @@ use crate::activity_type::ViewMode;
 const GRAVITY: f64 = 9.81;
 /// Python's `16.6667`: s/m → min/km.
 const PACE_FACTOR: f64 = 16.6667;
-/// Default body and equipment parameters of `TcxFileParser`, used to estimate missing power.
-const BODY_WEIGHT: f64 = 70.0;
+/// Body weight (kg) when the profile has none.
+pub const DEFAULT_BODY_WEIGHT: f64 = 70.0;
+/// Bike parameters of `TcxFileParser`, used to estimate missing cycling power.
 const BIKE_WEIGHT: f64 = 8.0;
 const ROLLING_RESISTANCE: f64 = 0.004;
 const AIR_DENSITY: f64 = 1.225;
 const DRAG_AREA: f64 = 0.27;
-const RUN_SHOE_RESISTANCE: f64 = 0.02;
-const WALK_SHOE_RESISTANCE: f64 = 0.03;
+/// Share of the energy burned that a rider turns into power at the pedals.
+const CYCLING_EFFICIENCY: f64 = 0.25;
+/// Share of the energy burned (above resting) that a runner or walker turns into mechanical
+/// power; gives the ~1 W/kg per m/s of running power meters.
+const FOOT_EFFICIENCY: f64 = 0.25;
+/// Oxygen at rest, ml/kg/min (1 MET).
+const RESTING_OXYGEN: f64 = 3.5;
+/// Energy per ml of oxygen: 5 kcal per litre, as in the ACSM equations.
+const KCAL_PER_ML_OXYGEN: f64 = 0.005;
+const JOULES_PER_KCAL: f64 = 4184.0;
+
+/// Oxygen cost of the ACSM running and walking equations, ml/kg per metre: horizontal, and per
+/// metre climbed. `VO2 = 3.5 + horizontal × speed + vertical × speed × grade` (ml/kg/min, speed in
+/// m/min); downhill is counted as flat.
+fn oxygen_cost(view: ViewMode) -> Option<(f64, f64)> {
+    match view {
+        ViewMode::Running => Some((0.2, 0.9)),
+        ViewMode::Walking => Some((0.1, 1.8)),
+        ViewMode::Cycling | ViewMode::All => None,
+    }
+}
 
 /// Pace limits (min/km) and the minimum step distance (m) per view, from `_map_pace`.
 pub fn pace_limits(view: ViewMode) -> (f64, f64, f64) {
@@ -41,17 +61,19 @@ pub struct Track {
     pub dist_diff: Vec<f64>,
     /// m/s.
     pub speed: Vec<f64>,
-    /// Measured watts, or estimated from speed when missing.
+    /// Measured watts, or estimated from speed and climb when missing.
     pub power: Vec<f64>,
     /// min/km, `NaN` outside the plausible range for the activity type.
     pub pace: Vec<f64>,
     /// Cumulative km over UTM-projected coordinates.
     pub distance_km: Vec<f64>,
+    /// kcal since the previous point.
     pub calories: Vec<f64>,
 }
 
 impl Track {
-    pub fn new(points: Vec<RawPoint>, view: ViewMode) -> Self {
+    /// `weight` is the body weight in kg.
+    pub fn new(points: Vec<RawPoint>, view: ViewMode, weight: f64) -> Self {
         let n = points.len();
         let raw_time_diff: Vec<f64> = (0..n)
             .map(|i| {
@@ -65,7 +87,7 @@ impl Track {
 
         let one_second = raw_time_diff.iter().filter(|d| **d == 1.0).count();
         // Smoothed over 5 points when more than 80 % of the gaps are exactly 1 s, as in Python.
-        // Speed, pace and calories use this; pauses and steps use the raw gaps.
+        // Speed, pace and power use this; pauses, steps and calories use the raw gaps.
         let time_diff = if one_second as f64 > n as f64 * 0.8 {
             rolling_mean(&raw_time_diff, 5)
         } else {
@@ -96,10 +118,24 @@ impl Track {
             .map(|(d, t)| if *t > 0.0 { d / t } else { f64::NAN })
             .collect();
 
-        let power: Vec<f64> = points
-            .iter()
-            .zip(&speed)
-            .map(|(p, v)| p.power.unwrap_or_else(|| estimate_power(view, *v)))
+        // Metres climbed since the previous point; the activity's elevation gain sums the same.
+        let rise: Vec<f64> = (0..n)
+            .map(|i| {
+                if i == 0 {
+                    0.0
+                } else {
+                    (points[i].elevation - points[i - 1].elevation).max(0.0)
+                }
+            })
+            .collect();
+
+        let power: Vec<f64> = (0..n)
+            .map(|i| {
+                points[i].power.unwrap_or_else(|| {
+                    let climb_rate = rise[i] / time_diff[i];
+                    estimate_power(view, weight, speed[i], climb_rate)
+                })
+            })
             .collect();
 
         let (min_pace, max_pace, min_dist) = pace_limits(view);
@@ -121,20 +157,20 @@ impl Track {
 
         let distance_km = utm_cumulative_km(&points);
 
-        let efficiency = if view == ViewMode::Cycling {
-            0.25
-        } else {
-            0.20
-        };
-        let calories = power
-            .iter()
-            .zip(&time_diff)
-            .map(|(p, t)| {
-                if p.is_nan() || t.is_nan() {
-                    0.0
-                } else {
-                    (p * t / (efficiency * 4184.0)).max(0.0)
-                }
+        let calories = (0..n)
+            .map(|i| {
+                let kcal = match oxygen_cost(view) {
+                    // ACSM equation summed per point: the speed term becomes distance and the
+                    // grade term metres climbed. Measured watts don't change what a run costs.
+                    Some((horizontal, vertical)) => {
+                        let oxygen = horizontal * dist_diff[i]
+                            + vertical * rise[i]
+                            + RESTING_OXYGEN * raw_time_diff[i] / 60.0;
+                        weight * oxygen * KCAL_PER_ML_OXYGEN
+                    }
+                    None => power[i] * time_diff[i] / (CYCLING_EFFICIENCY * JOULES_PER_KCAL),
+                };
+                if kcal.is_nan() { 0.0 } else { kcal.max(0.0) }
             })
             .collect();
 
@@ -157,17 +193,27 @@ impl Track {
     }
 }
 
-/// Watts from speed (m/s), as `TcxFileParser.estimate_power`. Python's `max(0.0, nan)` is
-/// `0.0`, so an unknown speed gives zero rather than `NaN`.
-fn estimate_power(view: ViewMode, v: f64) -> f64 {
-    let watts = match view {
-        ViewMode::Cycling => {
-            let mass = BODY_WEIGHT + BIKE_WEIGHT;
+/// Watts from speed (m/s) and climb rate (m/s). Cycling uses rolling resistance and drag, as
+/// `TcxFileParser.estimate_power`. Running and walking take the energy above resting from the
+/// ACSM equations and [`FOOT_EFFICIENCY`] of it; Python's model (2 % of body weight against
+/// speed, like a cart) came out about five times too low. An unknown speed gives zero rather
+/// than `NaN`, as Python's `max(0.0, nan)` did.
+fn estimate_power(view: ViewMode, weight: f64, v: f64, climb_rate: f64) -> f64 {
+    let climb_rate = if climb_rate.is_finite() {
+        climb_rate
+    } else {
+        0.0
+    };
+    let watts = match oxygen_cost(view) {
+        Some((horizontal, vertical)) => {
+            let oxygen_per_second = weight * (horizontal * v + vertical * climb_rate);
+            oxygen_per_second * KCAL_PER_ML_OXYGEN * JOULES_PER_KCAL * FOOT_EFFICIENCY
+        }
+        None if view == ViewMode::Cycling => {
+            let mass = weight + BIKE_WEIGHT;
             ROLLING_RESISTANCE * mass * GRAVITY * v + 0.5 * AIR_DENSITY * DRAG_AREA * v.powi(3)
         }
-        ViewMode::Running => RUN_SHOE_RESISTANCE * BODY_WEIGHT * GRAVITY * v,
-        ViewMode::Walking => WALK_SHOE_RESISTANCE * BODY_WEIGHT * GRAVITY * v,
-        ViewMode::All => 0.0,
+        None => 0.0,
     };
     if watts > 0.0 { watts } else { 0.0 }
 }
@@ -278,8 +324,38 @@ mod tests {
 
     #[test]
     fn unknown_speed_estimates_zero_power() {
-        assert_eq!(estimate_power(ViewMode::Running, f64::NAN), 0.0);
-        assert!((estimate_power(ViewMode::Running, 3.0) - 41.202).abs() < 1e-9);
+        assert_eq!(estimate_power(ViewMode::Running, 70.0, f64::NAN, 0.0), 0.0);
+    }
+
+    #[test]
+    fn running_power_is_about_one_watt_per_kg_and_metre_per_second() {
+        // 68 kg at 2.36 m/s (6:47 min/km) on the flat.
+        let flat = estimate_power(ViewMode::Running, 68.0, 2.36, 0.0);
+        assert!((flat - 167.9).abs() < 0.1, "{flat}");
+        // Climbing 0.05 m/s (a 2 % grade) on top: 68 × 0.9 × 0.05 ml/s.
+        let climb = estimate_power(ViewMode::Running, 68.0, 2.36, 0.05) - flat;
+        assert!((climb - 16.0).abs() < 0.1, "{climb}");
+    }
+
+    #[test]
+    fn calories_follow_the_acsm_running_equation() {
+        // 1 km in 6 minutes on the flat, one point every 6 s.
+        let points: Vec<RawPoint> = (0..=60)
+            .map(|i| RawPoint {
+                time: chrono::DateTime::UNIX_EPOCH + chrono::TimeDelta::seconds(i * 6),
+                latitude: 48.0 + i as f64 * 1000.0 / 60.0 / 111_195.0,
+                longitude: -3.8,
+                elevation: 50.0,
+                heart_rate: None,
+                cadence: None,
+                power: None,
+            })
+            .collect();
+        let track = Track::new(points, ViewMode::Running, 68.0);
+        let kcal: f64 = track.calories.iter().sum();
+        // 68 kg × (0.2 × 1000 m + 3.5 × 6 min) ml/kg × 5 kcal/l.
+        let expected = 68.0 * (0.2 * 1000.0 + 3.5 * 6.0) * 0.005;
+        assert!((kcal - expected).abs() < 1.0, "{kcal} vs {expected}");
     }
 
     #[test]
