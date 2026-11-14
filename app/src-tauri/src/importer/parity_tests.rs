@@ -19,10 +19,15 @@ fn close(actual: f64, expected: &Value, tolerance: f64, what: &str) {
 }
 
 /// Compares everything except heart rate (which Python misaligns when some trackpoints have
-/// none), pauses (which Python under-counts in 1 s recordings), calories and power (Python's
-/// running and walking estimate for points without measured watts was about five times too
-/// low).
-fn assert_matches_python(p: &Processed, expected: &Value, check_heart_rate: bool) {
+/// none), pauses (which Python under-counts in 1 s recordings), total steps (which Python
+/// counted through pauses), calories and power (Python's running and walking estimate for points
+/// without measured watts was about five times too low).
+fn assert_matches_python(
+    p: &Processed,
+    expected: &Value,
+    check_heart_rate: bool,
+    cuts_match: bool,
+) {
     let m = &p.metrics;
     assert_eq!(p.sport, expected["activity_type"].as_str().unwrap());
     close(m.start.timestamp() as f64, &expected["date"], 0.0, "date");
@@ -60,32 +65,30 @@ fn assert_matches_python(p: &Processed, expected: &Value, check_heart_rate: bool
             "avg_heart_rate",
         );
     }
-    if let Some(total) = expected.get("total_steps") {
-        close(m.total_steps as f64, total, 1.0, "total_steps");
+    // Total steps aren't compared: Python counted the cadence through pauses.
+    if expected.get("total_steps").is_some() {
         let avg = expected["avg_steps"]
             .as_f64()
             .map_or(0, |a| a.round_ties_even() as i64);
         assert_eq!(m.avg_steps, avg, "avg_steps");
     }
 
+    // Segments start where the previous one ended (Python: at the point after the cut, which
+    // dropped that step's time), and are cut on the raw distance, which only matches Python's
+    // cuts in tracks without standing still.
+    if !cuts_match {
+        return;
+    }
     let segments = expected["segments"].as_array().unwrap();
     assert_eq!(p.segments.len(), segments.len(), "segment count");
     for (i, (s, e)) in p.segments.iter().zip(segments).enumerate() {
         let what = |field: &str| format!("segment {i} {field}");
         close(s.distance, &e["seg_distance"], 1e-9, &what("distance"));
-        close(s.avg_pace, &e["seg_avg_pace"], 1e-9, &what("pace"));
         close(
             s.elevation_gain,
             &e["seg_elevation_gain"],
             1e-9,
             &what("elevation_gain"),
-        );
-        close(s.latitude, &e["seg_latitude"], 0.0, &what("latitude"));
-        assert_eq!(
-            segments::format_time(s.time_start),
-            e["seg_time_start"].as_str().unwrap(),
-            "{}",
-            what("start")
         );
         assert_eq!(
             segments::format_time(s.time_end),
@@ -93,6 +96,29 @@ fn assert_matches_python(p: &Processed, expected: &Value, check_heart_rate: bool
             "{}",
             what("end")
         );
+        if i == 0 {
+            close(s.avg_pace, &e["seg_avg_pace"], 1e-9, &what("pace"));
+            close(s.latitude, &e["seg_latitude"], 0.0, &what("latitude"));
+            assert_eq!(
+                segments::format_time(s.time_start),
+                e["seg_time_start"].as_str().unwrap(),
+                "{}",
+                what("start")
+            );
+        } else {
+            assert_eq!(
+                s.time_start,
+                p.segments[i - 1].time_end,
+                "{}",
+                what("start")
+            );
+            let minutes = (s.time_end - s.time_start).as_seconds_f64() / 60.0;
+            assert!(
+                (s.avg_pace - minutes / s.distance).abs() < 1e-9,
+                "{}",
+                what("pace")
+            );
+        }
         match (s.avg_speed, e["seg_avg_speed"].as_f64()) {
             (Some(a), Some(b)) => assert!((a - b).abs() < 1e-9, "{}", what("speed")),
             (a, b) => assert_eq!(a, b, "{}", what("speed")),
@@ -107,6 +133,8 @@ fn assert_matches_python(p: &Processed, expected: &Value, check_heart_rate: bool
         }
     }
 
+    // Best paces are time over distance rather than Python's mean of segment paces, which stays
+    // within a few seconds per km for full-length segments.
     let best = segments::best_segments(&p.segments, performances::segment_distances(p.view));
     let expected_best = expected["best"].as_object().unwrap();
     assert_eq!(best.len(), expected_best.len(), "best segment count");
@@ -114,10 +142,19 @@ fn assert_matches_python(p: &Processed, expected: &Value, check_heart_rate: bool
         close(
             b.pace,
             &expected_best[&(b.distance as i64).to_string()],
-            1e-9,
+            0.05,
             "best pace",
         );
     }
+}
+
+/// Whether no two consecutive trackpoints share a position, so the segment cuts are Python's.
+fn cuts_match(xml: &str) -> bool {
+    tcx::parse(xml)
+        .unwrap()
+        .points
+        .windows(2)
+        .all(|w| (w[0].latitude, w[0].longitude) != (w[1].latitude, w[1].longitude))
 }
 
 #[test]
@@ -129,12 +166,19 @@ fn synthetic_run_matches_python() {
     )
     .unwrap();
     let processed = process("synthetic_run", &xml, track::DEFAULT_BODY_WEIGHT).unwrap();
-    assert_matches_python(&processed, &expected, true);
+    assert!(cuts_match(&xml), "the fixture has no standing still");
+    assert_matches_python(&processed, &expected, true, true);
 
     // The fixture has one 45 s gap. Python reports no pause because it smooths 1 s recordings
     // before detecting pauses.
     assert_eq!(expected["pause_minutes"].as_f64(), Some(0.0));
     assert!((processed.metrics.pause_minutes - 0.75).abs() < 1e-9);
+    // Python also counted 45 s of steps through it, at 156 steps per minute.
+    assert_eq!(
+        expected["total_steps"].as_f64().map(f64::round),
+        Some(3045.0)
+    );
+    assert_eq!(processed.metrics.total_steps, 3045 - 117);
 }
 
 /// Opt-in check against real recordings:
@@ -158,7 +202,7 @@ fn real_files_match_python() {
         // Heart rate only matches Python when every trackpoint with a position has one.
         let points = tcx::parse(&xml).unwrap().points.len();
         let aligned = xml.matches("<HeartRateBpm").count() == points;
-        assert_matches_python(&processed, values, aligned);
+        assert_matches_python(&processed, values, aligned, cuts_match(&xml));
         println!(
             "{name}: ok ({} segments, heart rate {})",
             processed.segments.len(),
@@ -196,7 +240,7 @@ fn import_stores_activity_and_reimport_keeps_edits() {
     assert_eq!(detail.distance, Some(3.21));
     assert_eq!(detail.avg_pace.as_deref(), Some("05:44"));
     assert_eq!(detail.pause.as_deref(), Some("00:45"));
-    assert_eq!(detail.total_steps, Some(3045));
+    assert_eq!(detail.total_steps, Some(2928));
     assert!(detail.is_new);
     let segments: i64 = conn
         .query_row(
@@ -343,6 +387,65 @@ fn energy_is_recomputed_once_and_keeps_edits() {
     spoil();
     apply_data_fixes(&db, &imports, "en").unwrap();
     assert_eq!(energy().0, 1, "runs only once");
+}
+
+#[test]
+fn pauses_and_segments_are_recomputed_once_and_keep_edits() {
+    use crate::db::{Db, activities};
+
+    let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let dir = tempfile::tempdir().unwrap();
+    let source = dir.path().join("synthetic_run.tcx");
+    std::fs::copy(fixtures.join("synthetic_run.tcx"), &source).unwrap();
+    let imports = dir.path().join("imports");
+    let db = Db::open_in_memory().unwrap();
+    let (outcome, _) = import_file(&mut db.conn().unwrap(), &source, &imports, "en").unwrap();
+    let ImportOutcome::Imported { activity_id } = outcome else {
+        panic!("expected an import, got {outcome:?}");
+    };
+    let stored = || -> (Option<i64>, i64, i64, String) {
+        let conn = db.conn().unwrap();
+        let detail = activities::get(&conn, activity_id).unwrap();
+        let (segments, bests) = conn
+            .query_row(
+                "SELECT (SELECT COUNT(*) FROM activity_details WHERE activity_id = ?1),
+                        (SELECT COUNT(*) FROM best_performances WHERE activity_id = ?1)",
+                [activity_id],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        (detail.total_steps, segments, bests, detail.title.unwrap())
+    };
+    let imported = stored();
+    // As an earlier version left it, plus the user's edits.
+    let spoil = || {
+        db.conn()
+            .unwrap()
+            .execute_batch(
+                "UPDATE activities SET title = 'My run', distance = 3.3;
+                 UPDATE runs SET total_steps = 1;
+                 DELETE FROM activity_details WHERE segment_id > 0;
+                 DELETE FROM best_performances;",
+            )
+            .unwrap();
+    };
+
+    spoil();
+    apply_data_fixes(&db, &imports, "en").unwrap();
+    let (steps, segments, bests, title) = stored();
+    assert_eq!(
+        (steps, segments, bests),
+        (imported.0, imported.1, imported.2)
+    );
+    assert_eq!(title, "My run");
+    let distance = activities::get(&db.conn().unwrap(), activity_id)
+        .unwrap()
+        .distance;
+    assert_eq!(distance, Some(3.3));
+
+    spoil();
+    apply_data_fixes(&db, &imports, "en").unwrap();
+    assert_eq!(stored().0, Some(1), "runs only once");
 }
 
 #[test]

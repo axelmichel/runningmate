@@ -3,11 +3,8 @@
 
 use chrono::{DateTime, Local, Timelike, Utc};
 
-use super::track::Track;
+use super::track::{PAUSE_THRESHOLD, Track};
 use crate::activity_type::ViewMode;
-
-/// Gaps longer than this (seconds) count as a pause.
-const PAUSE_THRESHOLD: f64 = 10.0;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActivityMetrics {
@@ -89,9 +86,11 @@ pub fn compute(track: &Track) -> ActivityMetrics {
             .iter()
             .map(|p| p.cadence.map_or(f64::NAN, |c| c * 2.0))
             .collect();
+        // A pause isn't walked through at the cadence of the point after it.
         let total: f64 = steps
             .iter()
             .zip(&track.raw_time_diff)
+            .filter(|(_, t)| **t <= PAUSE_THRESHOLD)
             .map(|(s, t)| s * t / 60.0)
             .filter(|v| !v.is_nan())
             .sum();
@@ -170,6 +169,24 @@ mod tests {
         assert_eq!(quantile_nearest(&values, 0.95), 5.0);
         // 0.5 * 4 = 2 → third value; ties round to even like numpy.
         assert_eq!(quantile_nearest(&[1.0, 2.0, 3.0, 4.0], 0.5), 3.0);
+    }
+
+    #[test]
+    fn steps_are_not_counted_through_a_pause() {
+        let point = |second: i64| super::super::tcx::RawPoint {
+            time: DateTime::UNIX_EPOCH + chrono::TimeDelta::seconds(second),
+            latitude: 48.0 + second as f64 * 1e-5,
+            longitude: -3.8,
+            elevation: 50.0,
+            heart_rate: None,
+            cadence: Some(80.0),
+            power: None,
+        };
+        // 60 s at 160 steps per minute, then a 600 s pause, then 60 s more.
+        let points = (0..=60).chain(660..=720).map(point).collect();
+        let metrics = compute(&Track::new(points, ViewMode::Running, 70.0));
+        assert_eq!(metrics.total_steps, 2 * 160);
+        assert_eq!(metrics.pause_minutes, 10.0);
     }
 
     #[test]

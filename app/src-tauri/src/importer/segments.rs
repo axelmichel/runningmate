@@ -92,13 +92,15 @@ impl Accumulator {
 
 /// Splits the track into segments of `segment_length` km.
 ///
-/// The cut is decided on the interpolated step distance while the stored segment distance sums
-/// the raw geodesic steps, as in Python, so stored distances stay comparable with older rows.
+/// The cut is decided on the segment distance (the sum of the raw geodesic steps), so a full
+/// segment is never shorter than its length. (Python cut on the step distance with standing
+/// still interpolated, which a stop at a traffic light could inflate by 100 m or more, so its
+/// "1 km" segments were often shorter.) Each segment starts where the previous one ended, so
+/// the step into it counts with its time as well as its distance.
 pub fn split(track: &Track) -> Vec<Segment> {
     let length = segment_length(track.view);
     let mut segments = Vec::new();
     let mut current = Accumulator::default();
-    let mut since_cut = 0.0;
     let mut last_time = None;
 
     for i in 0..track.len() {
@@ -120,12 +122,9 @@ pub fn split(track: &Track) -> Vec<Segment> {
             }
         }
         current.distance += track.geodesic[i] / 1000.0;
-
-        let step = track.dist_diff[i];
-        since_cut += if step.is_nan() { 0.0 } else { step / 1000.0 };
-        if since_cut >= length {
+        if current.distance >= length {
             segments.extend(std::mem::take(&mut current).finish(point.time, track.view));
-            since_cut = 0.0;
+            current.start = Some((point.latitude, point.longitude, point.time));
         }
     }
     if current.distance > 0.0
@@ -140,13 +139,14 @@ pub fn split(track: &Track) -> Vec<Segment> {
 pub struct BestSegment {
     /// Target distance in km.
     pub distance: f64,
-    /// Mean of the segment paces covering it, min/km.
+    /// Time over distance of the segments covering it, min/km.
     pub pace: f64,
     pub time_start: DateTime<Utc>,
 }
 
-/// Fastest run of consecutive segments covering each target distance. Like Python, the pace is
-/// the unweighted mean of the segment paces, so results stay comparable with stored ones.
+/// Fastest run of consecutive segments covering each target distance, its pace being the
+/// segments' time over their distance. (Python averaged the segment paces, so a short last
+/// segment weighed as much as a full one, and one with no time counted as pace 0.)
 pub fn best_segments(segments: &[Segment], targets: &[f64]) -> Vec<BestSegment> {
     targets
         .iter()
@@ -154,14 +154,14 @@ pub fn best_segments(segments: &[Segment], targets: &[f64]) -> Vec<BestSegment> 
             let mut best: Option<BestSegment> = None;
             for start in 0..segments.len() {
                 let mut distance = 0.0;
-                let mut pace_sum = 0.0;
-                for (count, segment) in segments[start..].iter().enumerate() {
+                let mut seconds = 0.0;
+                for segment in &segments[start..] {
                     distance += segment.distance;
-                    pace_sum += segment.avg_pace;
+                    seconds += (segment.time_end - segment.time_start).as_seconds_f64();
                     if distance < target {
                         continue;
                     }
-                    let pace = pace_sum / (count + 1) as f64;
+                    let pace = seconds / 60.0 / distance;
                     if best.as_ref().is_none_or(|b| pace < b.pace) {
                         best = Some(BestSegment {
                             distance: target,
@@ -181,8 +181,10 @@ pub fn best_segments(segments: &[Segment], targets: &[f64]) -> Vec<BestSegment> 
 mod tests {
     use super::*;
 
+    /// A segment starting `minute` minutes in and taking `pace × distance` minutes.
     fn segment(distance: f64, pace: f64, minute: i64) -> Segment {
         let start = DateTime::UNIX_EPOCH + chrono::Duration::minutes(minute);
+        let end = start + chrono::Duration::milliseconds((pace * distance * 60_000.0) as i64);
         Segment {
             latitude: 0.0,
             longitude: 0.0,
@@ -194,7 +196,7 @@ mod tests {
             distance,
             elevation_gain: 0.0,
             time_start: start,
-            time_end: start,
+            time_end: end,
         }
     }
 
@@ -212,6 +214,23 @@ mod tests {
         assert_eq!(best[0].time_start, segments[1].time_start);
         // 1 km + 1 km from the second segment: (5.0 + 5.5) / 2.
         assert_eq!((best[1].distance, best[1].pace), (2.0, 5.25));
+    }
+
+    #[test]
+    fn weighs_segments_by_distance() {
+        // 1 km at 6:00 and a 0.2 km remainder at 4:00 make 1.2 km in 6.8 minutes, not the
+        // mean of the two paces (5:00).
+        let segments = [segment(1.0, 6.0, 0), segment(0.2, 4.0, 6)];
+        let best = best_segments(&segments, &[1.2]);
+        assert!((best[0].pace - 6.8 / 1.2).abs() < 1e-9, "{}", best[0].pace);
+        // A remainder without time doesn't halve the pace (Python: (6.0 + 0.0) / 2).
+        let segments = [segment(0.998, 6.0, 0), segment(0.01, 0.0, 6)];
+        let best = best_segments(&segments, &[1.0]);
+        assert!(
+            (best[0].pace - 0.998 * 6.0 / 1.008).abs() < 1e-6,
+            "{}",
+            best[0].pace
+        );
     }
 
     #[test]

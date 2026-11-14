@@ -244,12 +244,16 @@ fn weather_point(activity_id: i64, segments: &[Segment]) -> Option<WeatherPoint>
     })
 }
 
-/// Recomputes calories and power (activity, per-type row and segments) of every activity with
-/// an archived TCX, leaving everything else as it is, so edits survive. Activities whose file
-/// is missing or no longer parses are skipped. Returns how many were updated.
+/// Runs `update` in its own transaction for every activity with an archived TCX, with the
+/// activity recomputed from it. Activities whose file is missing or no longer parses are
+/// skipped. Returns how many were updated.
 ///
 /// The database is only locked per activity, so the app stays usable while this runs.
-pub fn recompute_energy(db: &Db, imports_dir: &Path) -> AppResult<usize> {
+fn update_archived(
+    db: &Db,
+    imports_dir: &Path,
+    update: impl Fn(&Transaction, i64, &Processed) -> AppResult<()>,
+) -> AppResult<usize> {
     let (weight, activities) = {
         let conn = db.conn()?;
         let mut stmt =
@@ -266,12 +270,23 @@ pub fn recompute_energy(db: &Db, imports_dir: &Path) -> AppResult<usize> {
         else {
             continue;
         };
+        let mut conn = db.conn()?;
+        let tx = conn.transaction()?;
+        update(&tx, activity_id, &processed)?;
+        tx.commit()?;
+        updated += 1;
+    }
+    Ok(updated)
+}
+
+/// Recomputes calories and power (activity, per-type row and segments) of every activity with
+/// an archived TCX, leaving everything else as it is, so edits survive.
+pub fn recompute_energy(db: &Db, imports_dir: &Path) -> AppResult<usize> {
+    update_archived(db, imports_dir, |tx, activity_id, processed| {
         let table = processed
             .view
             .table()
             .expect("process() rejects activities without a view");
-        let mut conn = db.conn()?;
-        let tx = conn.transaction()?;
         tx.execute(
             "UPDATE activities SET calories = ?1 WHERE id = ?2",
             params![processed.metrics.calories, activity_id],
@@ -288,10 +303,32 @@ pub fn recompute_energy(db: &Db, imports_dir: &Path) -> AppResult<usize> {
                 params![segment.avg_power, activity_id.to_string(), index as i64],
             )?;
         }
-        tx.commit()?;
-        updated += 1;
-    }
-    Ok(updated)
+        Ok(())
+    })
+}
+
+/// Recomputes what pauses, standing still and the segment cuts got wrong before: calories,
+/// total steps, the segments and the best segments. Title, distance, duration and the other
+/// fields the edit page saves are left as they are.
+pub fn recompute_pauses_and_segments(db: &Db, imports_dir: &Path) -> AppResult<usize> {
+    update_archived(db, imports_dir, |tx, activity_id, processed| {
+        tx.execute(
+            "UPDATE activities SET calories = ?1 WHERE id = ?2",
+            params![processed.metrics.calories, activity_id],
+        )?;
+        if processed.view != ViewMode::Cycling {
+            let table = processed
+                .view
+                .table()
+                .expect("process() rejects activities without a view");
+            tx.execute(
+                &format!("UPDATE {table} SET total_steps = ?1 WHERE activity_id = ?2"),
+                params![processed.metrics.total_steps, activity_id],
+            )?;
+        }
+        store_segments(tx, activity_id, &processed.segments)?;
+        store_best_segments(tx, processed, activity_id)
+    })
 }
 
 /// Re-imports every activity whose archived TCX has a clock jump (see `tcx::parse`), which put
@@ -370,8 +407,9 @@ fn mark_data_fix(db: &Db, name: &str) -> AppResult<()> {
 }
 
 /// Corrects what earlier versions stored, each fix once per database: activities dated by a
-/// clock jump ([`fix_clock_jumps`]), then calories and power from the ACSM estimates
-/// ([`recompute_energy`]). Returns where to look the weather up again.
+/// clock jump ([`fix_clock_jumps`]), calories and power from the ACSM estimates
+/// ([`recompute_energy`]), then pauses and segment cuts ([`recompute_pauses_and_segments`]).
+/// Returns where to look the weather up again.
 pub fn apply_data_fixes(
     db: &Db,
     imports_dir: &Path,
@@ -385,6 +423,10 @@ pub fn apply_data_fixes(
     if !data_fix_applied(db, "energy-acsm")? {
         recompute_energy(db, imports_dir)?;
         mark_data_fix(db, "energy-acsm")?;
+    }
+    if !data_fix_applied(db, "pauses-and-segments")? {
+        recompute_pauses_and_segments(db, imports_dir)?;
+        mark_data_fix(db, "pauses-and-segments")?;
     }
     Ok(weather)
 }
