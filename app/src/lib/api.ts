@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type { ActivityDetail } from "@/bindings/ActivityDetail";
 import type { ActivityFilter } from "@/bindings/ActivityFilter";
 import type { ActivityPage } from "@/bindings/ActivityPage";
+import type { ActivityPhoto } from "@/bindings/ActivityPhoto";
 import type { ActivityQuery } from "@/bindings/ActivityQuery";
 import type { ActivitySummary } from "@/bindings/ActivitySummary";
 import type { ActivityUpdate } from "@/bindings/ActivityUpdate";
@@ -101,6 +102,8 @@ export const api = {
 
   // Media, weather, best performances
   listMedia: (activityId: number) => invoke<Media[]>("list_media", { activityId }),
+  /** The latest photos of all activities, newest activity first. */
+  recentPhotos: (limit: number) => invoke<ActivityPhoto[]>("recent_photos", { limit }),
   /** Copies the file into the media folder, or links to it when `link` is set. */
   addMedia: (activityId: number, sourcePath: string, link: boolean) =>
     invoke<Media>("add_media", { activityId, sourcePath, link }),

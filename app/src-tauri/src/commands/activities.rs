@@ -10,7 +10,7 @@ use crate::{
             self, ActivityDetail, ActivityFilter, ActivityPage, ActivityQuery, ActivitySummary,
             ActivityUpdate, DayTotal,
         },
-        media::{self, Media},
+        media::{self, ActivityPhoto, Media},
         performances::{self, BestPerformance},
         weather::{self, Weather},
     },
@@ -104,6 +104,19 @@ pub fn list_media(
     let media = media::list(&*db.conn()?, activity_id, &paths::media_dir()?)?;
     allow_linked(&app, &media);
     Ok(media)
+}
+
+/// The latest photos of all activities, for the dashboard.
+#[tauri::command(async)]
+pub fn recent_photos(
+    app: tauri::AppHandle,
+    db: State<'_, Db>,
+    limit: usize,
+) -> AppResult<Vec<ActivityPhoto>> {
+    let photos = media::recent_photos(&*db.conn()?, limit, &paths::media_dir()?)?;
+    let media: Vec<Media> = photos.iter().map(|p| p.media.clone()).collect();
+    allow_linked(&app, &media);
+    Ok(photos)
 }
 
 /// Adds a photo or video to an activity: copied into the media folder, or with `link` the

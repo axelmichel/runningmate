@@ -142,6 +142,8 @@ pub struct ActivityRow {
     pub date: Option<i64>,
     pub title: Option<String>,
     pub activity_type: Option<String>,
+    /// View the activity type belongs to (`All` for unknown types).
+    pub view_mode: ViewMode,
     /// `type_detail` if set, otherwise `activity_type`.
     pub display_type: Option<String>,
     /// Seconds.
@@ -234,11 +236,13 @@ fn sort_expression(view: ViewMode, field: SortField) -> String {
 }
 
 fn read_row(row: &Row) -> rusqlite::Result<ActivityRow> {
+    let activity_type = opt_string(row, "activity_type")?;
     Ok(ActivityRow {
         id: row.get("id")?,
         date: opt_i64(row, "date")?,
         title: opt_string(row, "title")?,
-        activity_type: opt_string(row, "activity_type")?,
+        view_mode: ViewMode::from_activity_type(activity_type.as_deref().unwrap_or_default()),
+        activity_type,
         display_type: opt_string(row, "display_type")?,
         duration: opt_i64(row, "duration")?,
         distance: opt_f64(row, "distance")?,

@@ -35,6 +35,7 @@ struct Labels {
     select_all: &'static str,
     view: &'static str,
     search: &'static str,
+    dashboard: &'static str,
     health: &'static str,
     fullscreen: &'static str,
     window: &'static str,
@@ -65,6 +66,7 @@ const EN: Labels = Labels {
     select_all: "Select All",
     view: "View",
     search: "Search",
+    dashboard: "Dashboard",
     health: "Health Data",
     fullscreen: "Enter Full Screen",
     window: "Window",
@@ -95,6 +97,7 @@ const DE: Labels = Labels {
     select_all: "Alles auswählen",
     view: "Darstellung",
     search: "Suchen",
+    dashboard: "Übersicht",
     health: "Gesundheitsdaten",
     fullscreen: "Vollbildmodus",
     window: "Fenster",
@@ -123,6 +126,7 @@ fn build<R: Runtime, M: Manager<R>>(manager: &M, language: &str) -> tauri::Resul
     // One entry for every way of getting activities in or out (see the Connectors dialog).
     let sync = item("sync", l.sync, Some("CmdOrCtrl+O"))?;
     let search = item("search", l.search, Some("CmdOrCtrl+F"))?;
+    let dashboard = item("dashboard", l.dashboard, Some("CmdOrCtrl+Shift+D"))?;
     let health = item("health", l.health, Some("CmdOrCtrl+Shift+H"))?;
     let help = item("help", l.help_item, Some("F1"))?;
 
@@ -158,6 +162,7 @@ fn build<R: Runtime, M: Manager<R>>(manager: &M, language: &str) -> tauri::Resul
         .build()?;
     let view = SubmenuBuilder::new(manager, l.view)
         .item(&search)
+        .item(&dashboard)
         .item(&health)
         .separator()
         .fullscreen_with_text(l.fullscreen)
@@ -191,7 +196,7 @@ fn handle<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
         "help" => {
             let _ = app.opener().open_url(HELP_URL, None::<&str>);
         }
-        id @ ("about" | "sync" | "search" | "health" | "settings" | "user") => {
+        id @ ("about" | "sync" | "search" | "dashboard" | "health" | "settings" | "user") => {
             let _ = app.emit(MENU_EVENT, id);
         }
         _ => {}

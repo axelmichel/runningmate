@@ -234,7 +234,9 @@ function DetailContent({
         className="min-h-0 flex-1 flex-row gap-4"
       >
         <NavTabs items={NAV_ITEMS} open={navOpen} />
-        <div className="scrollbar-visible min-h-0 min-w-0 flex-1 overflow-auto pr-1">
+        {/* Padding all round, so cards' 1px rings and focus rings aren't clipped at the edges;
+            the negative margin keeps the content aligned with the header. */}
+        <div className="scrollbar-visible -m-1 min-h-0 min-w-0 flex-1 overflow-auto p-1">
           <TabsContent value="general">
             <GeneralTab activity={activity} dataDir={dataDir} />
           </TabsContent>
