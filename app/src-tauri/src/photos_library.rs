@@ -13,6 +13,8 @@ use ts_rs::TS;
 use crate::{db::media::MediaType, error::AppResult};
 
 /// Whether RunningMate may read the Photos library.
+// Each platform only produces some of the variants (macOS never `Unsupported`, others only that).
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
@@ -26,11 +28,12 @@ pub enum PhotosAccess {
     /// Only the photos the user picked in the permission dialog are visible.
     Limited,
     /// Not macOS.
-    #[cfg_attr(target_os = "macos", allow(dead_code))]
     Unsupported,
 }
 
 /// A photo or video in the Photos library.
+// Only built on macOS; elsewhere listing the library is an error.
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 #[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
