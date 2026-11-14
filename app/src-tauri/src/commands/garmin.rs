@@ -6,7 +6,9 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::sync::Mutex;
 use ts_rs::TS;
 
-use super::import::{ImportProgress, ImportSummary, PROGRESS_EVENT, import_one};
+use rusqlite::OptionalExtension;
+
+use super::import::{DateRange, ImportProgress, ImportSummary, PROGRESS_EVENT, import_one};
 use crate::{
     db::{
         Db,
@@ -85,20 +87,27 @@ pub fn garmin_sign_out() -> AppResult<()> {
     garmin::credentials::forget()
 }
 
-/// Downloads activities started since the last sync that aren't imported yet and imports them.
-/// The sync date only advances past activities that could be downloaded, so failed downloads
-/// are retried next time.
+/// Downloads activities that aren't imported yet and imports them, newest first. Without a
+/// range it covers everything since the last sync; activities on the same day with about the
+/// same distance as an existing one are skipped before downloading and linked to it instead.
+///
+/// The sync date only advances for an open-ended sync without failed downloads, so a limited
+/// range or a failure never leaves a gap behind.
 #[tauri::command]
-pub async fn garmin_sync(app: AppHandle) -> AppResult<ImportSummary> {
+pub async fn garmin_sync(app: AppHandle, range: Option<DateRange>) -> AppResult<ImportSummary> {
+    let range = range.unwrap_or_default();
     let api = garmin::connect().await?;
     let last_sync = sync::value(garmin::LAST_SYNC_KEY)?;
-    let activities = api
-        .activities(&garmin::start_date(last_sync.as_deref()), &garmin::today())
-        .await?;
+    let start = range
+        .first_day()
+        .unwrap_or_else(|| garmin::start_date(last_sync.as_deref()));
+    let end = range.last_day().unwrap_or_else(garmin::today);
+    let mut activities = api.activities(&start, &end).await?;
+    activities.reverse();
     let download_dir = std::env::temp_dir().join("runningmate-garmin");
 
     let mut summary = ImportSummary::default();
-    let mut synced_until = last_sync.clone();
+    let mut newest_day: Option<String> = None;
     let mut download_failed = false;
     for (index, activity) in activities.iter().enumerate() {
         let file_id = garmin::file_id(activity);
@@ -107,22 +116,29 @@ pub async fn garmin_sync(app: AppHandle) -> AppResult<ImportSummary> {
             |name| format!("{name} ({})", activity.date()),
         );
 
-        let existing = {
+        // Already imported from Garmin, or the same activity from another source?
+        let known = {
             let db = app.state::<Db>();
             let conn = db.conn()?;
-            garmin::already_imported(&conn, &file_id)?
+            let by_file: Option<i64> = conn
+                .query_row(
+                    "SELECT id FROM activities WHERE file_id = ?1",
+                    [&file_id],
+                    |row| row.get(0),
+                )
+                .optional()?;
+            match by_file {
+                Some(activity_id) => Some(ImportOutcome::Duplicate { activity_id }),
+                None => match activity.distance_km() {
+                    Some(km) => importer::similar_activity(&conn, activity.date(), km)?
+                        .map(|activity_id| ImportOutcome::Similar { activity_id }),
+                    None => None,
+                },
+            }
         };
-        let outcome = if existing {
-            let db = app.state::<Db>();
-            let conn = db.conn()?;
-            let activity_id = conn.query_row(
-                "SELECT id FROM activities WHERE file_id = ?1",
-                [&file_id],
-                |row| row.get(0),
-            )?;
-            ImportOutcome::Duplicate { activity_id }
-        } else {
-            match api.download_tcx(activity.activity_id).await {
+        let outcome = match known {
+            Some(outcome) => outcome,
+            None => match api.download_tcx(activity.activity_id).await {
                 Ok(xml) => {
                     let path = garmin::write_download(&download_dir, &file_id, &xml)?;
                     let app = app.clone();
@@ -141,10 +157,11 @@ pub async fn garmin_sync(app: AppHandle) -> AppResult<ImportSummary> {
                         error: e.to_string(),
                     }
                 }
-            }
+            },
         };
-        if let ImportOutcome::Imported { activity_id } | ImportOutcome::Duplicate { activity_id } =
-            outcome
+        if let ImportOutcome::Imported { activity_id }
+        | ImportOutcome::Duplicate { activity_id }
+        | ImportOutcome::Similar { activity_id } = outcome
         {
             let db = app.state::<Db>();
             let conn = db.conn()?;
@@ -157,9 +174,11 @@ pub async fn garmin_sync(app: AppHandle) -> AppResult<ImportSummary> {
                 Direction::Import,
             )?;
         }
-        // Advance the sync date over everything handled so far, but not past a failed download.
-        if !download_failed {
-            synced_until = Some(activity.date().to_string());
+        if newest_day
+            .as_deref()
+            .is_none_or(|day| activity.date() > day)
+        {
+            newest_day = Some(activity.date().to_string());
         }
         summary.count(&outcome);
         let _ = app.emit(
@@ -172,7 +191,11 @@ pub async fn garmin_sync(app: AppHandle) -> AppResult<ImportSummary> {
             },
         );
     }
-    if let Some(day) = synced_until.filter(|day| Some(day) != last_sync.as_ref()) {
+    let open_ended = range.from.is_none() && range.to.is_none();
+    if open_ended
+        && !download_failed
+        && let Some(day) = newest_day.filter(|day| Some(day) != last_sync.as_ref())
+    {
         sync::set_value(garmin::LAST_SYNC_KEY, &day)?;
     }
     Ok(summary)

@@ -8,6 +8,7 @@ import type { ActivitySummary } from "@/bindings/ActivitySummary";
 import type { ActivityUpdate } from "@/bindings/ActivityUpdate";
 import type { BestPerformance } from "@/bindings/BestPerformance";
 import type { ConnectorLink } from "@/bindings/ConnectorLink";
+import type { DateRange } from "@/bindings/DateRange";
 import type { DayTotal } from "@/bindings/DayTotal";
 import type { Equipment } from "@/bindings/Equipment";
 import type { EquipmentKind } from "@/bindings/EquipmentKind";
@@ -66,14 +67,16 @@ export const api = {
   heartRateTrend: (id: number) => invoke<HeartRateTrend>("heart_rate_trend", { id }),
 
   // Import and folder sync (progress arrives as `import://progress` events)
-  importFiles: (paths: string[]) => invoke<ImportSummary>("import_files", { paths }),
+  /** Imports newest first; `range` limits by activity start. */
+  importFiles: (paths: string[], range?: DateRange) =>
+    invoke<ImportSummary>("import_files", { paths, range }),
   reimportActivity: (id: number) => invoke<void>("reimport_activity", { id }),
   activityRoute: (id: number) => invoke<RouteOutline | null>("activity_route", { id }),
   /** Writes the route as PNG or SVG, depending on the file extension. */
   exportRouteImage: (id: number, path: string) => invoke<void>("export_route_image", { id, path }),
   folderSyncStatus: () => invoke<FolderSyncStatus>("folder_sync_status"),
   setSyncFolder: (folder: string) => invoke<FolderSyncStatus>("set_sync_folder", { folder }),
-  syncFolder: () => invoke<ImportSummary>("sync_folder"),
+  syncFolder: (range?: DateRange) => invoke<ImportSummary>("sync_folder", { range }),
 
   // Garmin Connect
   garminStatus: () => invoke<GarminStatus>("garmin_status"),
@@ -81,7 +84,7 @@ export const api = {
     invoke<GarminSignInResult>("garmin_sign_in", { username, password }),
   garminSubmitCode: (code: string) => invoke<void>("garmin_submit_code", { code }),
   garminSignOut: () => invoke<void>("garmin_sign_out"),
-  garminSync: () => invoke<ImportSummary>("garmin_sync"),
+  garminSync: (range?: DateRange) => invoke<ImportSummary>("garmin_sync", { range }),
   garminExportCandidates: (since: number) =>
     invoke<ExportCandidate[]>("garmin_export_candidates", { since }),
   /** Uploads activities; progress arrives as `import://progress` events. */

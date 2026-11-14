@@ -11,6 +11,9 @@ import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 
+import { OPEN_RANGE, toDateRange, type RangeInput } from "./range";
+import { RangeFields } from "./range-fields";
+
 /** Error text the backend uses when the stored Garmin token no longer works. */
 const SIGN_IN_REQUIRED = "garmin-sign-in-required";
 
@@ -125,6 +128,7 @@ export function GarminPanel({ onRunningChange }: { onRunningChange: (running: bo
   const importRun = useImportRun();
   const exportRun = useImportRun();
   const [since, setSince] = useState(() => daysAgo(30));
+  const [importRange, setImportRange] = useState<RangeInput>(OPEN_RANGE);
   const status = useQuery({ queryKey: ["garmin"], queryFn: api.garminStatus });
   const sinceTimestamp = Math.floor(new Date(`${since}T00:00`).getTime() / 1000);
   const candidates = useQuery({
@@ -189,9 +193,21 @@ export function GarminPanel({ onRunningChange }: { onRunningChange: (running: bo
               : t("never"),
           })}
         </p>
+        <RangeFields
+          id="garmin-import"
+          value={importRange}
+          onChange={setImportRange}
+          disabled={running}
+          hint={t(
+            "Optional; without dates everything since the last sync. Newest activities are imported first.",
+          )}
+        />
         {started(importRun.run) && <ImportProgressView run={importRun.run} />}
         <div>
-          <Button disabled={running} onClick={() => importRun.start(api.garminSync)}>
+          <Button
+            disabled={running}
+            onClick={() => importRun.start(() => api.garminSync(toDateRange(importRange)))}
+          >
             <Download />
             {importRun.run.running ? t("Syncing…") : t("Sync now")}
           </Button>

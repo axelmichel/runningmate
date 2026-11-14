@@ -8,7 +8,6 @@ pub mod oauth1;
 use std::path::Path;
 
 use chrono::{Local, NaiveDate};
-use rusqlite::Connection;
 
 use self::client::{ActivitySummary, Api, OAuth1Token, SignIn};
 use crate::error::{AppError, AppResult};
@@ -24,14 +23,6 @@ pub fn file_id(activity: &ActivitySummary) -> String {
         activity.date(),
         activity.activity_id
     )
-}
-
-pub fn already_imported(conn: &Connection, file_id: &str) -> AppResult<bool> {
-    Ok(conn.query_row(
-        "SELECT EXISTS (SELECT 1 FROM activities WHERE file_id = ?1)",
-        [file_id],
-        |row| row.get(0),
-    )?)
 }
 
 /// First day to ask Garmin for: the last synced day again (in case more activities followed
@@ -92,7 +83,6 @@ pub fn store_token(token: &OAuth1Token) -> AppResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::{Db, activities::tests::insert_activity};
 
     #[test]
     fn names_files_like_python() {
@@ -100,19 +90,9 @@ mod tests {
             activity_id: 18_412_345_678,
             start_time_local: "2025-05-06 13:18:33".into(),
             activity_name: Some("Lunch run".into()),
+            distance: None,
         };
         assert_eq!(file_id(&activity), "garmin_activity_2025-05-06_18412345678");
-    }
-
-    #[test]
-    fn detects_imported_files() {
-        let db = Db::open_in_memory().unwrap();
-        let conn = db.conn().unwrap();
-        insert_activity(&conn, 1, "Running", 0, 5.0, "Run");
-        conn.execute("UPDATE activities SET file_id = 'garmin_activity_x_1'", [])
-            .unwrap();
-        assert!(already_imported(&conn, "garmin_activity_x_1").unwrap());
-        assert!(!already_imported(&conn, "garmin_activity_x_2").unwrap());
     }
 
     #[test]

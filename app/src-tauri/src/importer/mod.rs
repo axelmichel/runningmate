@@ -45,6 +45,12 @@ pub enum ImportOutcome {
         #[ts(type = "number")]
         activity_id: i64,
     },
+    /// An activity on the same day with about the same distance exists, e.g. the same run
+    /// recorded by another app or device.
+    Similar {
+        #[ts(type = "number")]
+        activity_id: i64,
+    },
     Failed {
         error: String,
     },
@@ -121,12 +127,52 @@ pub fn import_file(
     }
     let xml = std::fs::read_to_string(path)?;
     let processed = process(&file_id, &xml)?;
+    let day = processed
+        .metrics
+        .start
+        .with_timezone(&chrono::Local)
+        .format("%Y-%m-%d")
+        .to_string();
+    if let Some(activity_id) = similar_activity(conn, &day, processed.metrics.distance)? {
+        return Ok((ImportOutcome::Similar { activity_id }, None));
+    }
     let activity_id = store(conn, &processed, None, language)?;
     archive::write(imports_dir, &file_id, &xml)?;
     Ok((
         ImportOutcome::Imported { activity_id },
         weather_point(activity_id, &processed.segments),
     ))
+}
+
+/// Distance tolerance for [`similar_activity`]: sources measure the same route slightly
+/// differently, so ±1 % (at least 50 m) counts as the same distance.
+fn same_distance(a: f64, b: f64) -> bool {
+    (a - b).abs() <= (0.01 * a.max(b)).max(0.05)
+}
+
+/// An existing activity on the same local day ("YYYY-MM-DD") with about the same distance (km).
+pub fn similar_activity(conn: &Connection, day: &str, distance: f64) -> AppResult<Option<i64>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, distance FROM activities
+         WHERE date(date, 'unixepoch', 'localtime') = ?1 AND distance IS NOT NULL",
+    )?;
+    let candidates: Vec<(i64, f64)> = stmt
+        .query_map([day], |row| Ok((row.get(0)?, row.get(1)?)))?
+        .collect::<Result<_, _>>()?;
+    Ok(candidates
+        .into_iter()
+        .find(|(_, d)| same_distance(*d, distance))
+        .map(|(id, _)| id))
+}
+
+/// Start of a TCX file, read from its first `<Time>` without parsing the whole document.
+pub fn tcx_start(path: &Path) -> Option<chrono::DateTime<chrono::Utc>> {
+    let xml = std::fs::read_to_string(path).ok()?;
+    let start = xml.find("<Time>")? + "<Time>".len();
+    let end = start + xml[start..].find("</Time>")?;
+    chrono::DateTime::parse_from_rfc3339(xml[start..end].trim())
+        .ok()
+        .map(|t| t.to_utc())
 }
 
 /// Recomputes an activity from its archived TCX. Title, comment, type detail and the assigned

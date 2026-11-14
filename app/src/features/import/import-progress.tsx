@@ -12,12 +12,19 @@ function Entry({ entry }: { entry: Progress }) {
   return (
     <li className="flex items-start gap-2 py-1">
       {outcome.status === "imported" && <CircleCheck className="mt-0.5 size-4 text-primary" />}
-      {outcome.status === "duplicate" && <Copy className="mt-0.5 size-4 text-muted-foreground" />}
+      {(outcome.status === "duplicate" || outcome.status === "similar") && (
+        <Copy className="mt-0.5 size-4 text-muted-foreground" />
+      )}
       {outcome.status === "failed" && <CircleAlert className="mt-0.5 size-4 text-destructive" />}
       <div className="min-w-0">
         <div className="truncate">{entry.file}</div>
         {outcome.status === "duplicate" && (
           <div className="text-xs text-muted-foreground">{t("Already imported")}</div>
+        )}
+        {outcome.status === "similar" && (
+          <div className="text-xs text-muted-foreground">
+            {t("Already there (same day and distance)")}
+          </div>
         )}
         {outcome.status === "failed" && (
           <div className="text-xs break-words text-destructive">{outcome.error}</div>

@@ -3,7 +3,7 @@
 
 use std::path::{Path, PathBuf};
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 use ts_rs::TS;
 
@@ -26,6 +26,52 @@ pub struct ImportProgress {
     pub total: usize,
     pub file: String,
     pub outcome: ImportOutcome,
+}
+
+/// Optional limits for a sync, as Unix timestamps (start of the first day, end of the last).
+#[derive(Debug, Clone, Copy, Default, Deserialize, TS)]
+#[serde(rename_all = "camelCase", default)]
+#[ts(export, optional_fields)]
+pub struct DateRange {
+    #[ts(type = "number", optional)]
+    pub from: Option<i64>,
+    #[ts(type = "number", optional)]
+    pub to: Option<i64>,
+}
+
+impl DateRange {
+    pub fn contains(&self, time: i64) -> bool {
+        self.from.is_none_or(|from| time >= from) && self.to.is_none_or(|to| time <= to)
+    }
+
+    fn day(timestamp: i64) -> Option<String> {
+        chrono::DateTime::from_timestamp(timestamp, 0).map(|t| {
+            t.with_timezone(&chrono::Local)
+                .format("%Y-%m-%d")
+                .to_string()
+        })
+    }
+
+    /// Local "YYYY-MM-DD" of the first day, for APIs that take dates.
+    pub fn first_day(&self) -> Option<String> {
+        self.from.and_then(Self::day)
+    }
+
+    pub fn last_day(&self) -> Option<String> {
+        self.to.and_then(Self::day)
+    }
+}
+
+/// TCX files within the range, newest first (by their first trackpoint). Files whose start
+/// can't be read are kept, at the end, so the importer can report what's wrong with them.
+pub(crate) fn newest_first(files: Vec<PathBuf>, range: &DateRange) -> Vec<PathBuf> {
+    let mut dated: Vec<(Option<i64>, PathBuf)> = files
+        .into_iter()
+        .map(|file| (importer::tcx_start(&file).map(|t| t.timestamp()), file))
+        .filter(|(start, _)| start.is_none_or(|s| range.contains(s)))
+        .collect();
+    dated.sort_by_key(|(start, _)| std::cmp::Reverse(*start));
+    dated.into_iter().map(|(_, file)| file).collect()
 }
 
 #[derive(Debug, Clone, Default, Serialize, TS)]
@@ -78,7 +124,7 @@ impl ImportSummary {
     pub(crate) fn count(&mut self, outcome: &ImportOutcome) {
         match outcome {
             ImportOutcome::Imported { .. } => self.imported += 1,
-            ImportOutcome::Duplicate { .. } => self.duplicates += 1,
+            ImportOutcome::Duplicate { .. } | ImportOutcome::Similar { .. } => self.duplicates += 1,
             ImportOutcome::Failed { .. } => self.failed += 1,
         }
     }
@@ -113,8 +159,16 @@ async fn run_import(app: AppHandle, files: Vec<PathBuf>) -> AppResult<ImportSumm
 }
 
 #[tauri::command]
-pub async fn import_files(app: AppHandle, paths: Vec<String>) -> AppResult<ImportSummary> {
-    run_import(app, paths.into_iter().map(PathBuf::from).collect()).await
+pub async fn import_files(
+    app: AppHandle,
+    paths: Vec<String>,
+    range: Option<DateRange>,
+) -> AppResult<ImportSummary> {
+    let files = newest_first(
+        paths.into_iter().map(PathBuf::from).collect(),
+        &range.unwrap_or_default(),
+    );
+    run_import(app, files).await
 }
 
 /// Recomputes an activity from its archived TCX file.
@@ -164,18 +218,67 @@ pub fn set_sync_folder(folder: String) -> AppResult<FolderSyncStatus> {
 }
 
 /// Imports the `.tcx` files changed since the last sync straight from the sync folder (Python
-/// copied them into `imports` first) and records the sync time.
+/// copied them into `imports` first), newest first and within the optional range. The sync
+/// time is only recorded for an unrestricted sync without failures, so nothing is skipped.
 #[tauri::command]
-pub async fn sync_folder(app: AppHandle) -> AppResult<ImportSummary> {
+pub async fn sync_folder(app: AppHandle, range: Option<DateRange>) -> AppResult<ImportSummary> {
+    let range = range.unwrap_or_default();
     let started = chrono::Local::now();
-    let files = sync::status()?
-        .new_files
-        .into_iter()
-        .map(PathBuf::from)
-        .collect();
+    let files = newest_first(
+        sync::status()?
+            .new_files
+            .into_iter()
+            .map(PathBuf::from)
+            .collect(),
+        &range,
+    );
     let summary = run_import(app, files).await?;
-    if summary.failed == 0 {
+    if summary.failed == 0 && range.from.is_none() && range.to.is_none() {
         sync::mark_synced(started)?;
     }
     Ok(summary)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn tcx(dir: &Path, name: &str, time: &str) -> PathBuf {
+        let path = dir.join(name);
+        std::fs::write(
+            &path,
+            format!("<TrainingCenterDatabase><Trackpoint><Time>{time}</Time></Trackpoint></TrainingCenterDatabase>"),
+        )
+        .unwrap();
+        path
+    }
+
+    #[test]
+    fn orders_newest_first_within_range() {
+        let dir = tempfile::tempdir().unwrap();
+        let old = tcx(dir.path(), "old.tcx", "2024-01-01T08:00:00Z");
+        let new = tcx(dir.path(), "new.tcx", "2025-05-06T11:18:34Z");
+        let mid = tcx(dir.path(), "mid.tcx", "2025-02-01T10:00:00Z");
+        let broken = dir.path().join("broken.tcx");
+        std::fs::write(&broken, "nothing").unwrap();
+        let all = vec![old.clone(), broken.clone(), new.clone(), mid.clone()];
+
+        assert_eq!(
+            newest_first(all.clone(), &DateRange::default()),
+            [new.clone(), mid.clone(), old, broken.clone()]
+        );
+        let from_2025 = DateRange {
+            from: Some(1_735_689_600),
+            to: None,
+        };
+        assert_eq!(
+            newest_first(all.clone(), &from_2025),
+            [new, mid.clone(), broken.clone()]
+        );
+        let only_feb = DateRange {
+            from: Some(1_738_368_000),
+            to: Some(1_740_787_199),
+        };
+        assert_eq!(newest_first(all, &only_feb), [mid, broken]);
+    }
 }

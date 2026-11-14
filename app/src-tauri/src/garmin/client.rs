@@ -269,9 +269,16 @@ pub struct ActivitySummary {
     pub start_time_local: String,
     #[serde(default)]
     pub activity_name: Option<String>,
+    /// Metres.
+    #[serde(default)]
+    pub distance: Option<f64>,
 }
 
 impl ActivitySummary {
+    pub fn distance_km(&self) -> Option<f64> {
+        self.distance.map(|m| m / 1000.0)
+    }
+
     /// "YYYY-MM-DD" of the start.
     pub fn date(&self) -> &str {
         self.start_time_local
@@ -512,7 +519,9 @@ mod tests {
             activity_id: 1,
             start_time_local: "2025-05-06 13:18:33".into(),
             activity_name: None,
+            distance: Some(7210.0),
         };
+        assert_eq!(a.distance_km(), Some(7.21));
         assert_eq!(a.date(), "2025-05-06");
     }
 }

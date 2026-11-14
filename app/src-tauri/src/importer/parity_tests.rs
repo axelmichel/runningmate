@@ -247,3 +247,43 @@ fn import_stores_activity_and_reimport_keeps_edits() {
         .unwrap();
     assert!(outline.points.len() > 10 && outline.points.len() < 1100);
 }
+
+#[test]
+fn same_day_and_distance_counts_as_similar() {
+    use crate::db::{Db, activities::tests::insert_activity};
+
+    let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let dir = tempfile::tempdir().unwrap();
+    let source = dir.path().join("synthetic_run.tcx");
+    std::fs::copy(fixtures.join("synthetic_run.tcx"), &source).unwrap();
+    let db = Db::open_in_memory().unwrap();
+    let mut conn = db.conn().unwrap();
+
+    // The same run, recorded by another app: same day, 3.23 km instead of 3.21 km.
+    let start = tcx_start(&source).unwrap();
+    insert_activity(
+        &conn,
+        77,
+        "Running",
+        start.timestamp() + 600,
+        3.23,
+        "Other app",
+    );
+    let (outcome, weather) = import_file(&mut conn, &source, dir.path(), "en").unwrap();
+    assert_eq!(outcome, ImportOutcome::Similar { activity_id: 77 });
+    assert!(weather.is_none());
+
+    // A clearly different distance on the same day is imported.
+    conn.execute("UPDATE activities SET distance = 5.0 WHERE id = 77", [])
+        .unwrap();
+    let (outcome, _) = import_file(&mut conn, &source, dir.path(), "en").unwrap();
+    assert!(matches!(outcome, ImportOutcome::Imported { .. }));
+}
+
+#[test]
+fn tolerance_is_one_percent_or_fifty_metres() {
+    assert!(same_distance(10.0, 10.09));
+    assert!(!same_distance(10.0, 10.2));
+    assert!(same_distance(2.0, 2.05));
+    assert!(!same_distance(2.0, 2.06));
+}

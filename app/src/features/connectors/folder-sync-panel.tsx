@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { open as pickFolder } from "@tauri-apps/plugin-dialog";
 import { FolderOpen, RefreshCw } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,9 @@ import { useImportRun } from "@/features/import/use-import-run";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
+
+import { OPEN_RANGE, toDateRange, type RangeInput } from "./range";
+import { RangeFields } from "./range-fields";
 
 /** Last segment of a folder path ("…/RunGap/Documents/Export" → "Export"). */
 function folderName(path: string): string {
@@ -24,6 +27,7 @@ export function FolderSyncPanel({
 }) {
   const queryClient = useQueryClient();
   const { run, start } = useImportRun();
+  const [range, setRange] = useState<RangeInput>(OPEN_RANGE);
   const status = useQuery({ queryKey: ["folderSync"], queryFn: api.folderSyncStatus });
   const started = run.running || run.summary !== null || run.error !== null;
   const newFiles = status.data?.newFiles.length ?? 0;
@@ -78,9 +82,21 @@ export function FolderSyncPanel({
           {status.data?.folder && ` · ${t("{{count}} new file", { count: newFiles })}`}
         </span>
       </div>
+      <RangeFields
+        id="folder"
+        value={range}
+        onChange={setRange}
+        disabled={run.running}
+        hint={t(
+          "Optional. Newest activities are imported first; with dates, the sync time isn't advanced.",
+        )}
+      />
       {started && <ImportProgressView run={run} />}
       <div>
-        <Button disabled={newFiles === 0 || run.running} onClick={() => start(api.syncFolder)}>
+        <Button
+          disabled={newFiles === 0 || run.running}
+          onClick={() => start(() => api.syncFolder(toDateRange(range)))}
+        >
           <RefreshCw />
           {run.running
             ? t("Syncing…")
