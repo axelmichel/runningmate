@@ -63,3 +63,8 @@ jobs:
       - name: cargo test
         working-directory: app/src-tauri
         run: cargo test
+      # cargo test regenerates the ts-rs bindings; they must match what is committed
+      - name: TypeScript bindings up to date
+        run: |
+          git status --porcelain -- src/bindings
+          test -z "$(git status --porcelain -- src/bindings)"
