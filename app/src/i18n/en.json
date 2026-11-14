@@ -13,8 +13,12 @@
   "{{count}} files · {{size}}_other": "{{files}} files · {{size}}",
   "{{count}} hour_one": "{{count}} hour",
   "{{count}} hour_other": "{{count}} hours",
+  "{{count}} month_one": "{{count}} month",
+  "{{count}} month_other": "{{count}} months",
   "{{count}} new file_one": "{{count}} new file",
   "{{count}} new file_other": "{{count}} new files",
   "{{count}} selected · {{distance}} km_one": "{{count}} selected · {{distance}} km",
-  "{{count}} selected · {{distance}} km_other": "{{count}} selected · {{distance}} km"
+  "{{count}} selected · {{distance}} km_other": "{{count}} selected · {{distance}} km",
+  "{{count}} with heart rate_one": "{{count}} with heart rate",
+  "{{count}} with heart rate_other": "{{count}} with heart rate"
 }

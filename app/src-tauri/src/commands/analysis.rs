@@ -2,8 +2,8 @@ use tauri::State;
 
 use crate::{
     analysis::{
-        self, HeartRateTrend, SegmentRow, fitness::FitnessDay, series::TrackPoint,
-        training_effect::TrainingEffect, zones::ZoneTime,
+        self, HeartRateTrend, SegmentRow, fitness::FitnessDay, health::HealthReport,
+        series::TrackPoint, training_effect::TrainingEffect, zones::ZoneTime,
     },
     db::Db,
     error::AppResult,
@@ -40,4 +40,10 @@ pub fn fitness_trend(db: State<'_, Db>, id: i64) -> AppResult<Vec<FitnessDay>> {
 #[tauri::command(async)]
 pub fn heart_rate_trend(db: State<'_, Db>, id: i64) -> AppResult<HeartRateTrend> {
     analysis::heart_rate_trend(&*db.conn()?, id)
+}
+
+/// Fitness and heart rate between two Unix times, for the "Health data" page.
+#[tauri::command(async)]
+pub fn health_report(db: State<'_, Db>, from: i64, to: i64) -> AppResult<HealthReport> {
+    analysis::health::report(&*db.conn()?, from, to)
 }

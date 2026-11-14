@@ -3,6 +3,7 @@
 //! `widget_heart_rate_tendency.py`) or rendered from re-parsed TCX data (charts and maps).
 
 pub mod fitness;
+pub mod health;
 pub mod series;
 pub mod training_effect;
 pub mod zones;
@@ -214,11 +215,15 @@ pub fn training_effect(conn: &Connection, id: i64) -> AppResult<TrainingEffect> 
     Ok(training_effect::training_effect(view, &current, &history))
 }
 
-/// Fitness, fatigue and form for the 90 days up to the activity. The curve starts 42 days
-/// earlier so it has settled (Python extended its window in a similar way).
+/// Fitness, fatigue and form for the 90 days up to the activity.
 pub fn fitness_trend(conn: &Connection, id: i64) -> AppResult<Vec<FitnessDay>> {
     let (_, date) = activity_basics(conn, id)?;
-    let window_start = date - HISTORY_DAYS * DAY_SECONDS;
+    fitness_between(conn, date - HISTORY_DAYS * DAY_SECONDS, date)
+}
+
+/// Fitness, fatigue and form for the training days between two Unix times. The curve starts
+/// 42 days earlier so it has settled (Python extended its window in a similar way).
+pub fn fitness_between(conn: &Connection, from: i64, to: i64) -> AppResult<Vec<FitnessDay>> {
     let mut stmt = conn.prepare(
         "SELECT date(activities.date, 'unixepoch') AS day, activities.activity_type AS type,
             AVG(seg_avg_heart_rate * seg_avg_pace / (seg_avg_speed + 1)) AS load
@@ -228,7 +233,7 @@ pub fn fitness_trend(conn: &Connection, id: i64) -> AppResult<Vec<FitnessDay>> {
          ORDER BY activities.date",
     )?;
     let rows: Vec<(String, ViewMode, Option<f64>)> = stmt
-        .query_map([window_start - 42 * DAY_SECONDS, date], |row| {
+        .query_map([from - 42 * DAY_SECONDS, to], |row| {
             let activity_type: Option<String> = row.get("type")?;
             Ok((
                 row.get("day")?,
@@ -237,7 +242,7 @@ pub fn fitness_trend(conn: &Connection, id: i64) -> AppResult<Vec<FitnessDay>> {
             ))
         })?
         .collect::<Result<_, _>>()?;
-    let first_day = DateTime::from_timestamp(window_start, 0)
+    let first_day = DateTime::from_timestamp(from, 0)
         .map(|t| t.format("%Y-%m-%d").to_string())
         .unwrap_or_default();
     Ok(fitness::fitness_curve(&fitness::daily_loads(&rows))

@@ -10,10 +10,9 @@ import {
 } from "@/components/ui/chart";
 import { api } from "@/lib/api";
 import { t } from "@/i18n";
-import { formatDate, formatDuration, formatNumber } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 
-/** Zone colours from dark to light, after `ui/widget_heart_rate_zones.py`. */
-const ZONE_COLORS = ["#35193e", "#701f57", "#ad1759", "#f37651", "#f6b48f"];
+import { ZoneBars } from "./zone-bars";
 
 const trendConfig = () =>
   ({
@@ -43,25 +42,7 @@ export function ZonesTab({ activityId }: { activityId: number }) {
               {t("Set your heart-rate zones in the user settings to see this.")}
             </p>
           )}
-          {zones?.map((zone) => (
-            <div key={zone.zone} className="grid grid-cols-[9rem_1fr_6rem] items-center gap-3">
-              <span>
-                {t("Zone {{zone}}", { zone: zone.zone })}{" "}
-                <span className="text-muted-foreground">
-                  ({zone.minBpm}–{zone.maxBpm})
-                </span>
-              </span>
-              <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${zone.percent}%`, backgroundColor: ZONE_COLORS[zone.zone - 1] }}
-                />
-              </div>
-              <span className="text-right tabular-nums">
-                {formatNumber(zone.percent)} % · {formatDuration(zone.seconds).replace(/^0:/, "")}
-              </span>
-            </div>
-          ))}
+          {zones && <ZoneBars zones={zones} />}
         </CardContent>
       </Card>
       <Card size="sm">
