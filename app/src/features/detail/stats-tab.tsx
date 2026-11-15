@@ -1,6 +1,7 @@
 import { Area, AreaChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import type { TrackPoint } from "@/bindings/TrackPoint";
+import type { ViewMode } from "@/bindings/ViewMode";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -19,6 +20,7 @@ const chartConfig = () =>
     elevation: { label: t("Elevation (m)"), color: "var(--chart-2)" },
     heartRate: { label: t("Heart rate (bpm)"), color: "var(--chart-3)" },
     pace: { label: t("Pace (/km)"), color: "var(--chart-4)" },
+    cadence: { label: t("Steps per minute"), color: "var(--chart-5)" },
   }) satisfies ChartConfig;
 
 const distanceAxis = (
@@ -43,8 +45,11 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
   );
 }
 
-/** Elevation, heart rate and pace over distance (the Python statistics page). */
-export function StatsTab({ activityId }: { activityId: number }) {
+/**
+ * Elevation, heart rate, pace and (for runs) steps per minute over distance (the Python
+ * statistics page).
+ */
+export function StatsTab({ activityId, view }: { activityId: number; view: ViewMode }) {
   const { data: points, isPending } = useSeries(activityId);
   const config = chartConfig();
   if (isPending) return <Skeleton className="h-96 w-full" />;
@@ -57,6 +62,7 @@ export function StatsTab({ activityId }: { activityId: number }) {
   }
   const hasHeartRate = points.some((p) => p.heartRate != null);
   const hasPace = points.some((p) => p.pace != null);
+  const hasCadence = view === "Running" && points.some((p) => p.cadence != null);
   const tooltip = (
     <ChartTooltip
       content={
@@ -148,6 +154,32 @@ export function StatsTab({ activityId }: { activityId: number }) {
                 dataKey="pace"
                 type="monotone"
                 stroke="var(--color-pace)"
+                dot={false}
+                connectNulls
+                isAnimationActive={false}
+              />
+            </LineChart>
+          </ChartContainer>
+        </ChartCard>
+      )}
+      {hasCadence && (
+        <ChartCard title={t("Steps per minute")}>
+          <ChartContainer config={config} className="aspect-auto h-48 w-full">
+            <LineChart data={points}>
+              <CartesianGrid vertical={false} />
+              {distanceAxis}
+              <YAxis
+                width={40}
+                tickLine={false}
+                axisLine={false}
+                domain={["dataMin - 5", "dataMax + 5"]}
+                tickFormatter={(v: number) => formatNumber(v)}
+              />
+              {tooltip}
+              <Line
+                dataKey="cadence"
+                type="monotone"
+                stroke="var(--color-cadence)"
                 dot={false}
                 connectNulls
                 isAnimationActive={false}

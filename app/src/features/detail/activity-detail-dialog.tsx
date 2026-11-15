@@ -254,7 +254,7 @@ function DetailContent({
             <MapTab activityId={activity.id} view={activity.viewMode} />
           </TabsContent>
           <TabsContent value="statistics">
-            <StatsTab activityId={activity.id} />
+            <StatsTab activityId={activity.id} view={activity.viewMode} />
           </TabsContent>
           <TabsContent value="effect">
             <EffectTab activityId={activity.id} />
