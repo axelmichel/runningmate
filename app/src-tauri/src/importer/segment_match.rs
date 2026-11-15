@@ -160,12 +160,15 @@ pub fn cut(track: &Track, start_km: f64, end_km: f64) -> Option<SegmentShape> {
         (p(|p| p.latitude), p(|p| p.longitude), p(|p| p.elevation))
     };
     let mut raw = vec![point_at(from)];
-    for i in (from.floor() as usize + 1)..=(to.ceil() as usize).min(n - 1) {
-        if (i as f64) < to {
-            let p = &track.points[i];
-            raw.push((p.latitude, p.longitude, p.elevation));
-        }
-    }
+    raw.extend(
+        track
+            .points
+            .iter()
+            .enumerate()
+            .skip(from.floor() as usize + 1)
+            .take_while(|(i, _)| (*i as f64) < to)
+            .map(|(_, p)| (p.latitude, p.longitude, p.elevation)),
+    );
     raw.push(point_at(to));
 
     let origin = Projection::new(raw[0].0, raw[0].1);
