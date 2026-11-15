@@ -240,14 +240,31 @@ function GoalFormView({ goal, onDone }: { goal: Goal | null; onDone: () => void 
             onChange={(event) => set({ start: event.target.value })}
           />
         </Field>
-        <Field id="goal-end" label={t("End (optional)")} error={show("end")}>
-          <Input
-            id="goal-end"
-            type="date"
-            value={form.end}
-            aria-invalid={Boolean(show("end"))}
-            onChange={(event) => set({ end: event.target.value })}
-          />
+        <Field id="goal-end" label={t("End")} error={form.endless ? undefined : show("end")}>
+          {/* A date field can't be emptied once set, so "no end" is a choice of its own. */}
+          <div className="flex items-center gap-3">
+            <div className="flex shrink-0 items-center gap-2">
+              <Checkbox
+                id="goal-endless"
+                checked={form.endless}
+                onCheckedChange={(checked) =>
+                  set({ endless: checked === true, end: form.end || form.start })
+                }
+              />
+              <Label htmlFor="goal-endless" className="font-normal">
+                {t("No end date")}
+              </Label>
+            </div>
+            {!form.endless && (
+              <Input
+                id="goal-end"
+                type="date"
+                value={form.end}
+                aria-invalid={Boolean(show("end"))}
+                onChange={(event) => set({ end: event.target.value })}
+              />
+            )}
+          </div>
         </Field>
         <div className="sm:col-span-2">
           <Field id="goal-name" label={t("Name")}>

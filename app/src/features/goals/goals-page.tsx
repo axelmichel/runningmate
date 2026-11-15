@@ -111,20 +111,23 @@ function GoalCard({
     : t("Since {{date}}", { date: formatDate(Date.parse(`${goal.start}T00:00`) / 1000) });
 
   return (
-    <Card className={cn("grid gap-4 p-4", goal.archived && "opacity-70")} style={style}>
+    <Card
+      className={cn("grid grid-cols-[minmax(0,1fr)] gap-4 p-4", goal.archived && "opacity-70")}
+      style={style}
+    >
       <div className="flex items-start gap-3">
         <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-(--goal-color)">
           <Icon className="size-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate font-semibold">{goal.name}</span>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="min-w-0 truncate font-semibold">{goal.name}</span>
             <Badge variant={status === "achieved" ? "default" : "secondary"}>
               {t(STATUS_LABELS[status])}
             </Badge>
             {goal.archived && <Badge variant="outline">{t("Archived")}</Badge>}
           </div>
-          <div className="truncate text-xs text-muted-foreground">
+          <div className="line-clamp-2 text-xs text-muted-foreground">
             {describeGoal(spec)} · {range}
           </div>
         </div>
@@ -278,7 +281,7 @@ export function GoalsPage({ dataDir }: { dataDir?: string }) {
             {t("No goals yet. Set one for a distance, a time or a number of activities.")}
           </div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(24rem,1fr))] gap-4">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(24rem,100%),1fr))] gap-4">
             {shown.map((progress) => (
               <GoalCard
                 key={progress.goal.id}

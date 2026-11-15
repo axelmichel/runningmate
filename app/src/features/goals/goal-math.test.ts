@@ -41,7 +41,15 @@ describe("goal form", () => {
     expect(validateGoal(form({}))).toEqual({});
     expect(Object.keys(validateGoal(form({ target: "0" })))).toEqual(["target"]);
     expect(Object.keys(validateGoal(form({ period: "days", days: "0" })))).toEqual(["days"]);
-    expect(Object.keys(validateGoal(form({ end: "2025-11-02" })))).toEqual(["end"]);
+    expect(Object.keys(validateGoal(form({ endless: false, end: "2025-11-02" })))).toEqual(["end"]);
+    // A month from its first to its last day; a year typed with two digits is not a date yet.
+    expect(validateGoal(form({ start: "2025-11-01", endless: false, end: "2025-11-30" }))).toEqual(
+      {},
+    );
+    expect(Object.keys(validateGoal(form({ endless: false, end: "0025-11-30" })))).toEqual(["end"]);
+    expect(Object.keys(validateGoal(form({ endless: false, end: "" })))).toEqual(["end"]);
+    // Without an end date the end field doesn't count.
+    expect(validateGoal(form({ endless: true, end: "2025-11-02" }))).toEqual({});
     expect(Object.keys(validateGoal(form({ start: "" })))).toEqual(["start"]);
     expect(Object.keys(validateGoal(form({ perActivity: true, maxDuration: "fast" })))).toEqual([
       "maxDuration",
@@ -75,6 +83,7 @@ describe("goal form", () => {
         perActivity: true,
         maxDuration: "0:50:00",
         period: "open",
+        endless: false,
         end: "2025-12-31",
       }),
     );
@@ -88,6 +97,7 @@ describe("goal form", () => {
       repeat: false,
     });
     expect(fast.end).toBe("2025-12-31");
+    expect(goalInput(form({ period: "open", end: "2025-12-31" })).end).toBeNull();
     // A number of activities is always a total.
     expect(
       goalInput(form({ metric: "count", target: "3", perActivity: true })).spec.perActivity,

@@ -378,14 +378,14 @@ function PlanView({
 
   return (
     <div className="grid gap-4">
-      <Card className="grid gap-4 p-4">
+      <Card className="grid grid-cols-[minmax(0,1fr)] gap-4 p-4">
         <div className="flex items-start gap-3">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-primary">
             <CalendarCheck className="size-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="truncate font-semibold">{plan.name}</span>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="min-w-0 truncate font-semibold">{plan.name}</span>
               <Badge variant={summary.status === "active" ? "default" : "secondary"}>
                 {t(STATUS_LABELS[summary.status])}
               </Badge>
@@ -397,7 +397,7 @@ function PlanView({
                 </Badge>
               )}
             </div>
-            <div className="truncate text-xs text-muted-foreground">
+            <div className="line-clamp-2 text-xs text-muted-foreground">
               {targetLabel(plan)} · {formatDate(unixDay(plan.start))} –{" "}
               {formatDate(unixDay(plan.end))} · {t("{{weeks}} weeks", { weeks: plan.weeks })}
             </div>

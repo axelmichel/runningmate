@@ -472,6 +472,35 @@ fn fit(structure: Structure, pace: Option<f64>, max_km: f64) -> Structure {
     }
 }
 
+/// Lengthens the long run to half a km more than any other session of the week, when a small
+/// week leaves it shorter than a tempo run (warm-up and cool-down don't shrink with the week),
+/// and takes the difference off the easy runs.
+fn make_long_the_longest(sessions: &mut [SessionDraft]) {
+    let Some(long) = sessions.iter().position(|s| s.kind == SessionKind::Long) else {
+        return;
+    };
+    let others = sessions
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| *i != long)
+        .map(|(_, s)| s.distance)
+        .fold(0.0, f64::max);
+    let missing = others + 0.5 - sessions[long].distance;
+    if missing <= 0.0 {
+        return;
+    }
+    sessions[long].distance += missing;
+    let mut left = missing;
+    for session in sessions
+        .iter_mut()
+        .filter(|s| matches!(s.kind, SessionKind::Easy | SessionKind::Recovery))
+    {
+        let take = (session.distance - MIN_EASY_KM).clamp(0.0, left);
+        session.distance -= take;
+        left -= take;
+    }
+}
+
 fn round_half(km: f64) -> f64 {
     (km * 2.0).round() / 2.0
 }
@@ -688,6 +717,10 @@ pub fn generate(
                 .find(|d| weekday(*d) == input.long_day)
         {
             week_sessions.push(draft(date, SessionKind::Long, long_km, easy, None));
+            make_long_the_longest(&mut week_sessions);
+            if let Some(long) = week_sessions.iter().find(|s| s.kind == SessionKind::Long) {
+                longest = longest.max(long.distance);
+            }
         }
         week_sessions.sort_by(|a, b| a.date.cmp(&b.date));
         sessions.extend(week_sessions);
@@ -882,6 +915,47 @@ mod tests {
                     session.distance <= long.distance,
                     "week {week}: {of_week:?}"
                 );
+            }
+        }
+    }
+
+    #[test]
+    fn the_long_run_is_the_longest_session_of_every_week() {
+        let shape = |target| PlanInput {
+            target,
+            distance: None,
+            ..race(0.0, 8, &[1, 3, 6])
+        };
+        let mut inputs = vec![shape(TrainingTarget::Shape), shape(TrainingTarget::Fitness)];
+        for km in [5.0, 10.0, 21.0975, 42.195] {
+            for days in [
+                &[1, 3, 6][..],
+                &[0, 2, 4, 6],
+                &[0, 1, 2, 3, 4, 5, 6],
+                &[3, 6],
+            ] {
+                inputs.push(race(km, 12, days));
+            }
+        }
+        for input in &inputs {
+            for weekly_km in [0.0, 7.0, 12.0, 20.0, 35.0, 60.0] {
+                let baseline = baseline(weekly_km, weekly_km / 3.0, Some(40.0));
+                let preview = generate(&baseline, input, None).unwrap();
+                for week in 0..input.weeks {
+                    let of_week: Vec<&SessionDraft> =
+                        preview.sessions.iter().filter(|s| s.week == week).collect();
+                    let Some(long) = of_week.iter().find(|s| s.kind == SessionKind::Long) else {
+                        continue;
+                    };
+                    for session in of_week.iter().filter(|s| s.kind != SessionKind::Long) {
+                        assert!(
+                            session.distance < long.distance,
+                            "{:?} {:?} {weekly_km} km, week {week}: {of_week:?}",
+                            input.target,
+                            input.days,
+                        );
+                    }
+                }
             }
         }
     }

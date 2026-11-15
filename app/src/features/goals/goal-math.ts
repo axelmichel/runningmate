@@ -46,6 +46,8 @@ export type GoalForm = {
   repeat: boolean;
   /** "YYYY-MM-DD". */
   start: string;
+  /** Runs for good; `end` is kept but not used. */
+  endless: boolean;
   end: string;
 };
 
@@ -61,6 +63,7 @@ export function emptyGoalForm(today = new Date()): GoalForm {
     days: "30",
     repeat: true,
     start: localDay(today),
+    endless: true,
     end: "",
   };
 }
@@ -78,12 +81,14 @@ export function goalForm(goal: Goal): GoalForm {
     days: String(spec.days ?? 30),
     repeat: spec.repeat,
     start: goal.start,
+    endless: goal.end === null,
     end: goal.end ?? "",
   };
 }
 
 const number = (value: string) => (value.trim() === "" ? Number.NaN : Number(value));
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
+/** "YYYY-MM-DD" with a four-digit year; a date field gives "0026-…" for a year typed as 26. */
+const isDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= "1900";
 
 /** Whether the form allows one activity to reach the goal, and a time limit for it. */
 export const allowsPerActivity = (form: GoalForm) => form.metric !== "count";
@@ -100,9 +105,12 @@ export function validateGoal(form: GoalForm): Errors<GoalForm> {
   const days = number(form.days);
   if (form.period === "days" && !(Number.isInteger(days) && days >= 1 && days <= MAX_DAYS))
     errors.days = tk("Enter 1 to 3650 days");
-  if (!DATE.test(form.start)) errors.start = tk("Pick a start date");
-  if (form.end && (!DATE.test(form.end) || form.end < form.start))
-    errors.end = tk("The end can't be before the start");
+  if (!isDate(form.start)) errors.start = tk("Pick a start date");
+  if (!form.endless) {
+    if (!isDate(form.end)) errors.end = tk("Pick an end date");
+    else if (isDate(form.start) && form.end < form.start)
+      errors.end = tk("The end can't be before the start");
+  }
   return errors;
 }
 
@@ -129,7 +137,7 @@ export function goalInput(form: GoalForm): GoalInput {
     view: form.view,
     spec,
     start: form.start,
-    end: form.end || null,
+    end: form.endless ? null : form.end,
   };
 }
 

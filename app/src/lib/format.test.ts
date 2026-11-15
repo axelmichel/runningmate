@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDuration, formatHours, formatMinSec, formatPace, parseDuration } from "./format";
+import {
+  formatDuration,
+  formatHours,
+  formatMinSec,
+  formatPace,
+  fullYear,
+  parseDuration,
+} from "./format";
 
 describe("format", () => {
   it("formats durations", () => {
@@ -31,5 +38,12 @@ describe("format", () => {
     expect(formatMinSec("08:60")).toBe("9:00");
     expect(formatMinSec("00:00")).toBe("0:00");
     expect(formatMinSec(null)).toBe("–");
+  });
+
+  it("reads a two-digit year in a date field as 20YY", () => {
+    expect(fullYear("0026-11-30")).toBe("2026-11-30");
+    expect(fullYear("2026-11-30")).toBeNull();
+    expect(fullYear("0202-11-30")).toBeNull();
+    expect(fullYear("")).toBeNull();
   });
 });
