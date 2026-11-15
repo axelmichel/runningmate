@@ -87,3 +87,12 @@ export function formatDate(timestamp: number | null | undefined): string {
 export function formatTime(timestamp: number | null | undefined): string {
   return timestamp == null ? "–" : timeFormat.format(new Date(timestamp * 1000));
 }
+
+/**
+ * A date field's "YYYY-MM-DD" with a two-digit year typed as 20YY: WebKit takes "30.11.26" as
+ * the year 26. `null` when there is nothing to change.
+ */
+export function fullYear(value: string): string | null {
+  const match = value.match(/^00(\d{2})(-\d{2}-\d{2})$/);
+  return match ? `20${match[1]}${match[2]}` : null;
+}
