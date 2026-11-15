@@ -50,7 +50,10 @@ export function AboutDialog({
             <span className="text-xs text-white/60">{t("MIT licence")} © 2025</span>
           </div>
         </div>
-        <img src="/about-map.jpg" alt="" className="h-full max-h-[26rem] object-cover" />
+        {/* Out of the flow, so the text sets the height and the picture fills all of it. */}
+        <div className="relative w-[330px]">
+          <img src="/about-map.jpg" alt="" className="absolute inset-0 size-full object-cover" />
+        </div>
       </DialogContent>
     </Dialog>
   );

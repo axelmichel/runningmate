@@ -8,7 +8,27 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <!-- Shown until React renders the app, so the window starts in brand colour, not white. -->
+    <div id="root">
+      <div
+        style="
+          position: fixed;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 1rem;
+          background: #701f57;
+          color: #fff;
+          font-family: system-ui, sans-serif;
+        "
+      >
+        <img src="/logo.svg" alt="" style="width: 8rem" />
+        <div style="font-size: 2rem; font-weight: 600">RunningMate</div>
+        <div style="opacity: 0.8">V %VITE_APP_VERSION%</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

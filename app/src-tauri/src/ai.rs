@@ -66,7 +66,7 @@ pub async fn list_models(url: &str) -> AppResult<Vec<String>> {
     Ok(names)
 }
 
-fn language_name(code: &str) -> &'static str {
+pub fn language_name(code: &str) -> &'static str {
     match code {
         "de" => "German",
         "fr" => "French",
@@ -122,9 +122,14 @@ pub async fn summarize(
     facts: &ComparisonFacts,
     language: &str,
 ) -> AppResult<String> {
+    chat(url, model, &chat_request(model, facts, language)?).await
+}
+
+/// Sends a `POST /api/chat` request body and returns the answer.
+pub async fn chat(url: &str, model: &str, body: &Value) -> AppResult<String> {
     let response: ChatResponse = client()?
         .post(endpoint(url, "chat"))
-        .json(&chat_request(model, facts, language)?)
+        .json(body)
         .send()
         .await
         .and_then(|r| r.error_for_status())

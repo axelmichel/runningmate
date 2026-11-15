@@ -39,6 +39,7 @@ struct Labels {
     health: &'static str,
     segments: &'static str,
     goals: &'static str,
+    training: &'static str,
     fullscreen: &'static str,
     window: &'static str,
     minimize: &'static str,
@@ -72,6 +73,7 @@ const EN: Labels = Labels {
     health: "Health Data",
     segments: "Segments",
     goals: "Goals",
+    training: "Training",
     fullscreen: "Enter Full Screen",
     window: "Window",
     minimize: "Minimize",
@@ -105,6 +107,7 @@ const DE: Labels = Labels {
     health: "Gesundheitsdaten",
     segments: "Segmente",
     goals: "Ziele",
+    training: "Training",
     fullscreen: "Vollbildmodus",
     window: "Fenster",
     minimize: "Im Dock ablegen",
@@ -136,6 +139,7 @@ fn build<R: Runtime, M: Manager<R>>(manager: &M, language: &str) -> tauri::Resul
     let health = item("health", l.health, Some("CmdOrCtrl+Shift+H"))?;
     let segments = item("segments", l.segments, Some("CmdOrCtrl+Shift+G"))?;
     let goals = item("goals", l.goals, Some("CmdOrCtrl+Shift+O"))?;
+    let training = item("training", l.training, Some("CmdOrCtrl+Shift+T"))?;
     let help = item("help", l.help_item, Some("F1"))?;
 
     let app_menu = SubmenuBuilder::new(manager, "RunningMate")
@@ -174,6 +178,7 @@ fn build<R: Runtime, M: Manager<R>>(manager: &M, language: &str) -> tauri::Resul
         .item(&health)
         .item(&segments)
         .item(&goals)
+        .item(&training)
         .separator()
         .fullscreen_with_text(l.fullscreen)
         .build()?;
@@ -207,7 +212,7 @@ fn handle<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
             let _ = app.opener().open_url(HELP_URL, None::<&str>);
         }
         id @ ("about" | "sync" | "search" | "dashboard" | "health" | "segments" | "goals"
-        | "settings" | "user") => {
+        | "training" | "settings" | "user") => {
             let _ = app.emit(MENU_EVENT, id);
         }
         _ => {}

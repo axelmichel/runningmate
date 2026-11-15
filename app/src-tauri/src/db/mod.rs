@@ -9,6 +9,7 @@ pub mod media;
 pub mod migrations;
 pub mod performances;
 pub mod route_segments;
+pub mod training;
 pub mod users;
 pub mod value;
 pub mod weather;
@@ -115,7 +116,7 @@ mod tests {
         let db = Db::open_in_memory().unwrap();
         let conn = db.conn().unwrap();
 
-        assert_eq!(current_version(&conn).unwrap(), 61);
+        assert_eq!(current_version(&conn).unwrap(), 62);
         assert_eq!(
             columns(&conn, "activities"),
             [
@@ -169,6 +170,28 @@ mod tests {
                 "created"
             ]
         );
+        assert_eq!(
+            columns(&conn, "training_sessions"),
+            [
+                "id",
+                "plan_id",
+                "date",
+                "week",
+                "phase",
+                "kind",
+                "distance",
+                "pace_fast",
+                "pace_slow",
+                "structure",
+                "note",
+                "edited",
+                "skipped",
+                "activity_id",
+                "unlinked"
+            ]
+        );
+        assert!(columns(&conn, "training_plans").contains(&"baseline".to_string()));
+        assert!(columns(&conn, "training_notes").contains(&"session_id".to_string()));
     }
 
     #[test]

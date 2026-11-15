@@ -377,7 +377,7 @@ fn load_activities(conn: &Connection) -> AppResult<Vec<Activity>> {
 }
 
 /// Unix timestamp of 00:00 on `day` in `tz`.
-fn midnight<Tz: TimeZone>(tz: &Tz, day: NaiveDate) -> i64 {
+pub(crate) fn midnight<Tz: TimeZone>(tz: &Tz, day: NaiveDate) -> i64 {
     let time = day.and_hms_opt(0, 0, 0).unwrap_or_default();
     tz.from_local_datetime(&time)
         .earliest()
@@ -498,7 +498,7 @@ fn evaluate<Tz: TimeZone>(
     Ok(Evaluation { windows, hits })
 }
 
-fn today_in<Tz: TimeZone>(tz: &Tz, now: i64) -> NaiveDate {
+pub(crate) fn today_in<Tz: TimeZone>(tz: &Tz, now: i64) -> NaiveDate {
     DateTime::from_timestamp(now, 0)
         .unwrap_or_default()
         .with_timezone(tz)

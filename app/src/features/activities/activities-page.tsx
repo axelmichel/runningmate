@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ActivityDetailDialog } from "@/features/detail/activity-detail-dialog";
 import { invalidateGoals } from "@/features/goals/goal-math";
+import { invalidateTraining } from "@/features/training/training-math";
 import { invalidateSegments } from "@/features/segments/segment-math";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
@@ -111,6 +112,7 @@ export function ActivitiesPage({
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       invalidateSegments(queryClient);
       invalidateGoals(queryClient);
+      invalidateTraining(queryClient);
     },
     onError: (error) =>
       toast.error(t("Could not delete the activity: {{error}}", { error: String(error) })),
@@ -125,6 +127,7 @@ export function ActivitiesPage({
       queryClient.invalidateQueries({ queryKey: ["bestPerformances", id] });
       invalidateSegments(queryClient);
       invalidateGoals(queryClient);
+      invalidateTraining(queryClient);
     },
     onError: (error) => toast.error(t("Could not re-import: {{error}}", { error: String(error) })),
   });

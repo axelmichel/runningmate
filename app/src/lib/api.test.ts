@@ -46,5 +46,36 @@ describe("api", () => {
 
     await api.activityGoalHits(9);
     expect(invoke).toHaveBeenLastCalledWith("activity_goal_hits", { activityId: 9 });
+
+    await api.createTrainingPlan(
+      {
+        name: "10k",
+        target: "race",
+        distance: 10,
+        targetTime: null,
+        start: "2026-11-16",
+        weeks: 8,
+        days: [1, 3, 6],
+        longDay: 6,
+      },
+      true,
+    );
+    expect(invoke).toHaveBeenLastCalledWith("create_training_plan", {
+      input: expect.objectContaining({ longDay: 6 }),
+      createGoal: true,
+    });
+
+    await api.linkTrainingSession(5, null, true);
+    expect(invoke).toHaveBeenLastCalledWith("link_training_session", {
+      id: 5,
+      activityId: null,
+      unlinked: true,
+    });
+
+    await api.trainingSessionsBetween("2026-11-16", "2026-11-29");
+    expect(invoke).toHaveBeenLastCalledWith("training_sessions_between", {
+      from: "2026-11-16",
+      to: "2026-11-29",
+    });
   });
 });
