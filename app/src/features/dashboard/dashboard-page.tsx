@@ -5,6 +5,8 @@ import { useCallback, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ActivityDetailDialog } from "@/features/detail/activity-detail-dialog";
 import { GoalChips } from "@/features/goals/goal-chips";
+import { TrainingWeek } from "@/features/training/training-week";
+import { useTrainingSessions } from "@/features/training/use-training";
 import { FORM_SCALE, changeOf, formPercent, segmentOf, shareOf } from "@/features/health/scales";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
@@ -13,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 import { ActivityCalendar } from "./activity-calendar";
 import { ActivityFeed } from "./activity-feed";
-import { calendarWeeks, dashboardMoment, periodStart } from "./dashboard";
+import { calendarWeeks, dashboardMoment, localDay, periodStart } from "./dashboard";
 import { PeriodNav } from "./period-nav";
 import { SideStats } from "./side-stats";
 import { VolumeChart } from "./volume-chart";
@@ -90,12 +92,14 @@ function Overview({
   live,
   onOpen,
   onHealth,
+  onTraining,
 }: {
   moment: Date;
   /** Whether `moment` is now, rather than a day picked further back. */
   live: boolean;
   onOpen: (id: number) => void;
   onHealth: () => void;
+  onTraining: () => void;
 }) {
   const from = periodStart(moment);
   const to = Math.floor(moment.getTime() / 1000);
@@ -107,7 +111,12 @@ function Overview({
     queryKey: ["health", from, to],
     queryFn: () => api.healthReport(from, to),
   });
-  const calendarFrom = Math.floor(calendarWeeks(moment)[0][0].getTime() / 1000);
+  const weeks = calendarWeeks(moment);
+  const calendarFrom = Math.floor(weeks[0][0].getTime() / 1000);
+  const { data: sessions } = useTrainingSessions(
+    localDay(weeks[0][0]),
+    localDay(weeks.at(-1)!.at(-1)!),
+  );
   const { data: calendar } = useQuery({
     queryKey: ["activities", "calendar", calendarFrom, to],
     queryFn: () =>
@@ -175,7 +184,13 @@ function Overview({
           <CardTitle className="text-sm">{t("Training calendar")}</CardTitle>
         </CardHeader>
         <CardContent className="flex-1">
-          <ActivityCalendar rows={calendar?.rows ?? []} onOpen={onOpen} today={moment} />
+          <ActivityCalendar
+            rows={calendar?.rows ?? []}
+            sessions={sessions}
+            onOpen={onOpen}
+            onSession={onTraining}
+            today={moment}
+          />
         </CardContent>
       </Card>
     </div>
@@ -190,10 +205,12 @@ export function DashboardPage({
   dataDir,
   onHealth,
   onGoals,
+  onTraining,
 }: {
   dataDir?: string;
   onHealth: () => void;
   onGoals: () => void;
+  onTraining: () => void;
 }) {
   const [detailId, setDetailId] = useState<number | null>(null);
   const [today] = useState(() => new Date());
@@ -224,7 +241,14 @@ export function DashboardPage({
           <RecentPhotos onOpen={setDetailId} />
           <PeriodNav day={day} today={today} onChange={setDay} />
           <GoalChips onGoals={onGoals} at={at} />
-          <Overview moment={moment} live={day === null} onOpen={setDetailId} onHealth={onHealth} />
+          <TrainingWeek moment={moment} onTraining={onTraining} />
+          <Overview
+            moment={moment}
+            live={day === null}
+            onOpen={setDetailId}
+            onHealth={onHealth}
+            onTraining={onTraining}
+          />
           <VolumeChart today={moment} />
           <ActivityFeed onOpen={setDetailId} onLoaded={onLoaded} until={at} />
         </div>

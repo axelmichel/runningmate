@@ -9,6 +9,7 @@ import type { ActivitySegmentEffort } from "@/bindings/ActivitySegmentEffort";
 import type { ActivitySummary } from "@/bindings/ActivitySummary";
 import type { ActivityUpdate } from "@/bindings/ActivityUpdate";
 import type { AiSummary } from "@/bindings/AiSummary";
+import type { Baseline } from "@/bindings/Baseline";
 import type { BestPerformance } from "@/bindings/BestPerformance";
 import type { ConnectorLink } from "@/bindings/ConnectorLink";
 import type { DateRange } from "@/bindings/DateRange";
@@ -28,16 +29,26 @@ import type { HealthReport } from "@/bindings/HealthReport";
 import type { HeartRateTrend } from "@/bindings/HeartRateTrend";
 import type { ImportSummary } from "@/bindings/ImportSummary";
 import type { LibraryAsset } from "@/bindings/LibraryAsset";
+import type { MatchedRun } from "@/bindings/MatchedRun";
 import type { Media } from "@/bindings/Media";
 import type { PhotosAccess } from "@/bindings/PhotosAccess";
+import type { PlanDetail } from "@/bindings/PlanDetail";
+import type { PlanInput } from "@/bindings/PlanInput";
+import type { PlanSession } from "@/bindings/PlanSession";
+import type { PlanSummary } from "@/bindings/PlanSummary";
+import type { Preview } from "@/bindings/Preview";
 import type { RouteOutline } from "@/bindings/RouteOutline";
 import type { RouteSegment } from "@/bindings/RouteSegment";
 import type { SegmentDetail } from "@/bindings/SegmentDetail";
 import type { SegmentRow } from "@/bindings/SegmentRow";
+import type { SessionInput } from "@/bindings/SessionInput";
 import type { StorageInfo } from "@/bindings/StorageInfo";
 import type { SystemSettings } from "@/bindings/SystemSettings";
 import type { TrackPoint } from "@/bindings/TrackPoint";
 import type { TrainingEffect } from "@/bindings/TrainingEffect";
+import type { TrainingPlan } from "@/bindings/TrainingPlan";
+import type { TrainingNote } from "@/bindings/TrainingNote";
+import type { TrainingSession } from "@/bindings/TrainingSession";
 import type { User } from "@/bindings/User";
 import type { UserInput } from "@/bindings/UserInput";
 import type { ViewMode } from "@/bindings/ViewMode";
@@ -153,6 +164,38 @@ export const api = {
   deleteGoal: (id: number) => invoke<void>("delete_goal", { id }),
   activityGoalHits: (activityId: number) => invoke<GoalHit[]>("activity_goal_hits", { activityId }),
 
+  // Training plans (which run did which session is computed on read)
+  trainingBaseline: () => invoke<Baseline>("training_baseline"),
+  previewTrainingPlan: (input: PlanInput) => invoke<Preview>("preview_training_plan", { input }),
+  createTrainingPlan: (input: PlanInput, createGoal: boolean) =>
+    invoke<TrainingPlan>("create_training_plan", { input, createGoal }),
+  trainingPlans: (includeArchived: boolean) =>
+    invoke<PlanSummary[]>("training_plans", { includeArchived }),
+  trainingPlan: (id: number) => invoke<PlanDetail>("training_plan", { id }),
+  renameTrainingPlan: (id: number, name: string) =>
+    invoke<TrainingPlan>("rename_training_plan", { id, name }),
+  /** Rebuilds the sessions from today on that weren't changed by hand. */
+  adaptTrainingPlan: (id: number) => invoke<PlanDetail>("adapt_training_plan", { id }),
+  archiveTrainingPlan: (id: number, archived: boolean) =>
+    invoke<TrainingPlan>("archive_training_plan", { id, archived }),
+  deleteTrainingPlan: (id: number) => invoke<void>("delete_training_plan", { id }),
+  updateTrainingSession: (id: number, input: SessionInput) =>
+    invoke<TrainingSession>("update_training_session", { id, input }),
+  addTrainingSession: (planId: number, input: SessionInput) =>
+    invoke<TrainingSession>("add_training_session", { planId, input }),
+  deleteTrainingSession: (id: number) => invoke<void>("delete_training_session", { id }),
+  skipTrainingSession: (id: number, skipped: boolean) =>
+    invoke<TrainingSession>("skip_training_session", { id, skipped }),
+  /** Links a run by hand; `null` goes back to automatic matching unless `unlinked`. */
+  linkTrainingSession: (id: number, activityId: number | null, unlinked: boolean) =>
+    invoke<TrainingSession>("link_training_session", { id, activityId, unlinked }),
+  trainingLinkCandidates: (id: number) => invoke<MatchedRun[]>("training_link_candidates", { id }),
+  /** Sessions from `from` to `to` ("YYYY-MM-DD", both included) of the plans in use. */
+  trainingSessionsBetween: (from: string, to: string) =>
+    invoke<PlanSession[]>("training_sessions_between", { from, to }),
+  activityTrainingSession: (activityId: number) =>
+    invoke<PlanSession | null>("activity_training_session", { activityId }),
+
   // User, heart-rate zones, shoes and bikes
   getUser: () => invoke<User | null>("get_user"),
   saveUser: (input: UserInput) => invoke<User>("save_user", { input }),
@@ -172,6 +215,11 @@ export const api = {
   aiModels: (url: string) => invoke<string[]>("ai_models", { url }),
   getAiSummary: (id: number) => invoke<AiSummary | null>("get_ai_summary", { id }),
   generateAiSummary: (id: number) => invoke<AiSummary>("generate_ai_summary", { id }),
+  /** The note on a plan week (0-based) or, with `sessionId`, on a session and its run. */
+  getTrainingNote: (planId: number, week: number | null, sessionId: number | null) =>
+    invoke<TrainingNote | null>("get_training_note", { planId, week, sessionId }),
+  generateTrainingNote: (planId: number, week: number | null, sessionId: number | null) =>
+    invoke<TrainingNote>("generate_training_note", { planId, week, sessionId }),
 
   // System settings
   getSettings: () => invoke<SystemSettings>("get_settings"),

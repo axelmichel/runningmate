@@ -10,6 +10,7 @@ import { VIEW_MODES } from "@/features/activities/view-mode";
 import { useSeries } from "@/features/detail/use-series";
 import { GoalStar } from "@/features/goals/goal-star";
 import { TrophyBadge } from "@/features/segments/trophy";
+import { SessionBadge } from "@/features/training/session-badge";
 import { useInView } from "@/hooks/use-in-view";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
@@ -137,6 +138,7 @@ function Entry({ row, onOpen }: { row: ActivityRow; onOpen: (id: number) => void
             </div>
           </div>
           <GoalStar activityId={row.id} enabled={visible} />
+          <SessionBadge activityId={row.id} enabled={visible} />
           <TrophyBadge activityId={row.id} enabled={visible} />
         </div>
         {comment && <p className="line-clamp-4 text-sm whitespace-pre-line">{comment}</p>}

@@ -10,4 +10,5 @@ pub mod goals;
 pub mod import;
 pub mod segments;
 pub mod settings;
+pub mod training;
 pub mod users;

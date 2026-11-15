@@ -576,4 +576,53 @@ SET elevation_gain = (
             "ALTER TABLE goals ADD COLUMN created INTEGER",
         ],
     ),
+    // Training plans with their sessions, and AI notes on them.
+    (
+        62,
+        &[
+            r#"CREATE TABLE IF NOT EXISTS training_plans (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    target TEXT NOT NULL,
+    distance REAL,
+    target_time INTEGER,
+    start_date TEXT NOT NULL,
+    weeks INTEGER NOT NULL,
+    days TEXT NOT NULL,
+    long_day INTEGER NOT NULL,
+    baseline TEXT NOT NULL,
+    goal_id INTEGER,
+    archived BOOLEAN NOT NULL DEFAULT 0,
+    created INTEGER NOT NULL
+)"#,
+            r#"CREATE TABLE IF NOT EXISTS training_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_id INTEGER NOT NULL REFERENCES training_plans (id) ON DELETE CASCADE,
+    date TEXT NOT NULL,
+    week INTEGER NOT NULL,
+    phase TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    distance REAL NOT NULL,
+    pace_fast REAL,
+    pace_slow REAL,
+    structure TEXT,
+    note TEXT NOT NULL DEFAULT '',
+    edited BOOLEAN NOT NULL DEFAULT 0,
+    skipped BOOLEAN NOT NULL DEFAULT 0,
+    activity_id INTEGER,
+    unlinked BOOLEAN NOT NULL DEFAULT 0
+)"#,
+            "CREATE INDEX IF NOT EXISTS training_sessions_plan ON training_sessions (plan_id, date)",
+            r#"CREATE TABLE IF NOT EXISTS training_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_id INTEGER NOT NULL,
+    week INTEGER,
+    session_id INTEGER,
+    model TEXT NOT NULL,
+    text TEXT NOT NULL,
+    created INTEGER NOT NULL
+)"#,
+            "CREATE INDEX IF NOT EXISTS training_notes_plan ON training_notes (plan_id)",
+        ],
+    ),
 ];

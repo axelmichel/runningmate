@@ -35,7 +35,7 @@ pub struct BestPerformance {
 /// SQL condition keeping paces a person can manage: not faster than the per-point pace limit of
 /// the activity type (`importer::track::pace_limits`). A file whose clock jumps back produces
 /// segments with negative or tiny times, and a ride recorded as a run produces world records.
-fn plausible() -> String {
+pub(crate) fn plausible() -> String {
     let limits = [ViewMode::Running, ViewMode::Cycling, ViewMode::Walking]
         .map(|view| format!("WHEN '{view:?}' THEN {:?}", pace_limits(view).0))
         .join(" ");

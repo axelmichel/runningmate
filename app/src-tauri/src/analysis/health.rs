@@ -159,7 +159,7 @@ fn segment_heart_rates(conn: &Connection, from: i64, to: i64) -> AppResult<Vec<(
 }
 
 /// Per-run VO2max values of the period's runs of at least [`cardio::MIN_RUN_KM`].
-fn run_vo2max(conn: &Connection, from: i64, to: i64) -> AppResult<Vec<f64>> {
+pub(crate) fn run_vo2max(conn: &Connection, from: i64, to: i64) -> AppResult<Vec<f64>> {
     let mut stmt = conn.prepare(
         "SELECT activities.distance AS km, activities.duration AS seconds, runs.pause AS pause
          FROM runs JOIN activities ON activities.id = runs.activity_id

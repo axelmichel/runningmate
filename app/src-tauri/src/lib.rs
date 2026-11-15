@@ -15,6 +15,7 @@ mod photos_picker;
 mod settings;
 mod storage;
 mod sync;
+mod training;
 
 use std::fs;
 
@@ -115,9 +116,28 @@ pub fn run() {
             commands::goals::archive_goal,
             commands::goals::delete_goal,
             commands::goals::activity_goal_hits,
+            commands::training::training_baseline,
+            commands::training::preview_training_plan,
+            commands::training::create_training_plan,
+            commands::training::training_plans,
+            commands::training::training_plan,
+            commands::training::rename_training_plan,
+            commands::training::adapt_training_plan,
+            commands::training::archive_training_plan,
+            commands::training::delete_training_plan,
+            commands::training::update_training_session,
+            commands::training::add_training_session,
+            commands::training::delete_training_session,
+            commands::training::skip_training_session,
+            commands::training::link_training_session,
+            commands::training::training_link_candidates,
+            commands::training::training_sessions_between,
+            commands::training::activity_training_session,
             commands::ai::ai_models,
             commands::ai::get_ai_summary,
             commands::ai::generate_ai_summary,
+            commands::ai::get_training_note,
+            commands::ai::generate_training_note,
             commands::settings::get_settings,
             commands::settings::save_settings,
             commands::settings::storage_info,

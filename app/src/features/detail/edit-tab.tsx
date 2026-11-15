@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { invalidateGoals } from "@/features/goals/goal-math";
+import { invalidateTraining } from "@/features/training/training-math";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { formatNumber, parseDuration } from "@/lib/format";
@@ -127,6 +128,7 @@ export function EditTab({ activity, onSaved }: { activity: ActivityDetail; onSav
       queryClient.setQueryData(["activity", activity.id], updated);
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       invalidateGoals(queryClient);
+      invalidateTraining(queryClient);
       toast.success(t("Activity saved"));
       onSaved();
     },

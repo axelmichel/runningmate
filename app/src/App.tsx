@@ -18,13 +18,14 @@ import { invalidateSegments } from "@/features/segments/segment-math";
 import { SegmentsPage } from "@/features/segments/segments-page";
 import { SystemSettingsDialog } from "@/features/settings/system-settings-dialog";
 import { UserSettingsDialog } from "@/features/settings/user-settings-dialog";
+import { TrainingPage } from "@/features/training/training-page";
 import { useTheme, type Theme } from "@/hooks/use-theme";
 import { setLanguage, t } from "@/i18n";
 import { api } from "@/lib/api";
 
 const DETAILS_STORAGE_KEY = "runningmate-details-panel";
 
-type Page = "dashboard" | "activities" | "health" | "segments" | "goals";
+type Page = "dashboard" | "activities" | "health" | "segments" | "goals" | "training";
 
 function App() {
   const queryClient = useQueryClient();
@@ -73,6 +74,7 @@ function App() {
       if (payload === "health") setPage("health");
       if (payload === "segments") setPage("segments");
       if (payload === "goals") setPage("goals");
+      if (payload === "training") setPage("training");
       if (payload === "settings") setSettingsOpen(true);
       if (payload === "user") setUserSettingsOpen(true);
     });
@@ -110,7 +112,9 @@ function App() {
           ? t("Segments")
           : page === "goals"
             ? t("Goals")
-            : t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
+            : page === "training"
+              ? t("Training")
+              : t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
 
   return (
     <SidebarProvider>
@@ -142,6 +146,7 @@ function App() {
             dataDir={info?.dataDir}
             onHealth={() => setPage("health")}
             onGoals={() => setPage("goals")}
+            onTraining={() => setPage("training")}
           />
         ) : page === "health" ? (
           <HealthPage />
@@ -149,6 +154,8 @@ function App() {
           <SegmentsPage dataDir={info?.dataDir} />
         ) : page === "goals" ? (
           <GoalsPage dataDir={info?.dataDir} />
+        ) : page === "training" ? (
+          <TrainingPage dataDir={info?.dataDir} />
         ) : (
           <ActivitiesPage
             view={viewMode}
