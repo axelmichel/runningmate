@@ -8,13 +8,42 @@ import {
   chartBars,
   chartStarts,
   circleSize,
+  dashboardMoment,
   localDay,
+  parseLocalDay,
   perWeek,
+  pickDay,
+  stepDay,
   tileSpan,
   yearStart,
 } from "./dashboard";
 
 describe("dashboard", () => {
+  it("steps through time four weeks at a time, never past today", () => {
+    const today = new Date(2026, 10, 15, 9, 0);
+    const back = stepDay(null, -1, today);
+    expect(back && localDay(back)).toBe("2026-10-18");
+    const further = stepDay(back, -1, today);
+    expect(further && localDay(further)).toBe("2026-09-20");
+    expect(stepDay(further, 1, today)).toEqual(back);
+    expect(stepDay(back, 1, today)).toBeNull();
+    // Picking a day less than four weeks back and stepping forward lands on today.
+    expect(stepDay(new Date(2026, 10, 1), 1, today)).toBeNull();
+    expect(pickDay(new Date(2026, 11, 24), today)).toBeNull();
+  });
+
+  it("looks back from the end of a picked day, or from now", () => {
+    const now = new Date(2026, 10, 15, 9, 30);
+    expect(dashboardMoment(null, now)).toBe(now);
+    expect(dashboardMoment(new Date(2026, 9, 18), now)).toEqual(new Date(2026, 9, 18, 23, 59, 59));
+  });
+
+  it("reads picked days", () => {
+    expect(parseLocalDay("2026-10-18")).toEqual(new Date(2026, 9, 18));
+    expect(parseLocalDay("2026-02-30")).toBeNull();
+    expect(parseLocalDay("")).toBeNull();
+  });
+
   it("shows the current and the three previous weeks, Monday first", () => {
     // Saturday, 14 November 2026.
     const weeks = calendarWeeks(new Date(2026, 10, 14, 18, 30));

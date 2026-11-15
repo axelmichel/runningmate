@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ActivityDetailDialog } from "@/features/detail/activity-detail-dialog";
+import { GoalChips } from "@/features/goals/goal-chips";
 import { FORM_SCALE, changeOf, formPercent, segmentOf, shareOf } from "@/features/health/scales";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
@@ -12,7 +13,8 @@ import { cn } from "@/lib/utils";
 
 import { ActivityCalendar } from "./activity-calendar";
 import { ActivityFeed } from "./activity-feed";
-import { calendarWeeks, periodStart } from "./dashboard";
+import { calendarWeeks, dashboardMoment, periodStart } from "./dashboard";
+import { PeriodNav } from "./period-nav";
 import { SideStats } from "./side-stats";
 import { VolumeChart } from "./volume-chart";
 
@@ -82,22 +84,32 @@ function Box({
   );
 }
 
-/** Activities, fitness and form of the last four weeks, and the training calendar. */
-function Overview({ onOpen, onHealth }: { onOpen: (id: number) => void; onHealth: () => void }) {
-  const [now] = useState(() => new Date());
-  const from = periodStart(now);
-  const to = Math.floor(now.getTime() / 1000);
+/** Activities, fitness and form of the four weeks up to `moment`, and the training calendar. */
+function Overview({
+  moment,
+  live,
+  onOpen,
+  onHealth,
+}: {
+  moment: Date;
+  /** Whether `moment` is now, rather than a day picked further back. */
+  live: boolean;
+  onOpen: (id: number) => void;
+  onHealth: () => void;
+}) {
+  const from = periodStart(moment);
+  const to = Math.floor(moment.getTime() / 1000);
   const { data: summary } = useQuery({
-    queryKey: ["activities", "summary", "All", "dashboard", from],
-    queryFn: () => api.activitySummary("All", { minDate: from }),
+    queryKey: ["activities", "summary", "All", "dashboard", from, to],
+    queryFn: () => api.activitySummary("All", { minDate: from, maxDate: to }),
   });
   const { data: report } = useQuery({
     queryKey: ["health", from, to],
     queryFn: () => api.healthReport(from, to),
   });
-  const calendarFrom = Math.floor(calendarWeeks(now)[0][0].getTime() / 1000);
+  const calendarFrom = Math.floor(calendarWeeks(moment)[0][0].getTime() / 1000);
   const { data: calendar } = useQuery({
-    queryKey: ["activities", "calendar", calendarFrom],
+    queryKey: ["activities", "calendar", calendarFrom, to],
     queryFn: () =>
       api.listActivities({
         viewMode: "All",
@@ -105,7 +117,7 @@ function Overview({ onOpen, onHealth }: { onOpen: (id: number) => void; onHealth
         limit: 500,
         sortField: "date",
         sortDirection: "asc",
-        filter: { minDate: calendarFrom },
+        filter: { minDate: calendarFrom, maxDate: to },
       }),
   });
 
@@ -125,7 +137,7 @@ function Overview({ onOpen, onHealth }: { onOpen: (id: number) => void; onHealth
       {/* The three numbers stacked beside the calendar. */}
       <div className="grid gap-3">
         <Box
-          label={t("Activities in the last 4 weeks")}
+          label={live ? t("Activities in the last 4 weeks") : t("Activities in these 4 weeks")}
           value={formatNumber(summary?.count)}
           hint={
             summary
@@ -163,7 +175,7 @@ function Overview({ onOpen, onHealth }: { onOpen: (id: number) => void; onHealth
           <CardTitle className="text-sm">{t("Training calendar")}</CardTitle>
         </CardHeader>
         <CardContent className="flex-1">
-          <ActivityCalendar rows={calendar?.rows ?? []} onOpen={onOpen} today={now} />
+          <ActivityCalendar rows={calendar?.rows ?? []} onOpen={onOpen} today={moment} />
         </CardContent>
       </Card>
     </div>
@@ -171,12 +183,24 @@ function Overview({ onOpen, onHealth }: { onOpen: (id: number) => void; onHealth
 }
 
 /**
- * The start page, after Strava's dashboard: latest photos, the last four weeks at a glance, the
- * activity feed, and the profile statistics on the side.
+ * The start page, after Strava's dashboard: latest photos, goals, the last four weeks at a glance,
+ * the activity feed, and the profile statistics on the side.
  */
-export function DashboardPage({ dataDir, onHealth }: { dataDir?: string; onHealth: () => void }) {
+export function DashboardPage({
+  dataDir,
+  onHealth,
+  onGoals,
+}: {
+  dataDir?: string;
+  onHealth: () => void;
+  onGoals: () => void;
+}) {
   const [detailId, setDetailId] = useState<number | null>(null);
   const [today] = useState(() => new Date());
+  // The last day shown, picked with the arrows or the date field; `null` follows today.
+  const [day, setDay] = useState<Date | null>(null);
+  const moment = dashboardMoment(day, today);
+  const at = day ? Math.floor(moment.getTime() / 1000) : undefined;
   const [feedIds, setFeedIds] = useState<number[]>([]);
   const onLoaded = useCallback((ids: number[]) => setFeedIds(ids), []);
   // Previous/next in the detail window walk through the feed as far as it is loaded.
@@ -198,9 +222,11 @@ export function DashboardPage({ dataDir, onHealth }: { dataDir?: string; onHealt
       >
         <div className="grid min-w-0 flex-1 content-start gap-4">
           <RecentPhotos onOpen={setDetailId} />
-          <Overview onOpen={setDetailId} onHealth={onHealth} />
-          <VolumeChart today={today} />
-          <ActivityFeed onOpen={setDetailId} onLoaded={onLoaded} />
+          <PeriodNav day={day} today={today} onChange={setDay} />
+          <GoalChips onGoals={onGoals} at={at} />
+          <Overview moment={moment} live={day === null} onOpen={setDetailId} onHealth={onHealth} />
+          <VolumeChart today={moment} />
+          <ActivityFeed onOpen={setDetailId} onLoaded={onLoaded} until={at} />
         </div>
         <aside className="w-80 shrink-0">
           {/* Stays in view while the feed scrolls, and scrolls itself when taller than the

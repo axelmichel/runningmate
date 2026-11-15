@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
+import { SPORT_COLORS, VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
 import { RouteMap } from "@/features/dashboard/route-map";
 import { ActivityDetailDialog } from "@/features/detail/activity-detail-dialog";
 import { t } from "@/i18n";
@@ -18,13 +18,6 @@ import { cn } from "@/lib/utils";
 import { SegmentDetailDialog } from "./segment-detail-dialog";
 import { SegmentHighlights } from "./segment-highlights";
 import { formatGrade, formatSegmentDistance } from "./segment-math";
-
-const SPORT_COLORS: Record<ViewMode, string> = {
-  All: "var(--primary)",
-  Running: "var(--sport-running)",
-  Cycling: "var(--sport-cycling)",
-  Walking: "var(--sport-walking)",
-};
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (

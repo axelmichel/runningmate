@@ -13,3 +13,11 @@ export const VIEW_MODES: { mode: ViewMode; label: string; icon: LucideIcon }[] =
   { mode: "Cycling", label: tk("Rides"), icon: Bike },
   { mode: "Walking", label: tk("Walks"), icon: PersonWalking },
 ];
+
+/** One colour per sport, as in the charts; `All` uses the primary colour. */
+export const SPORT_COLORS: Record<ViewMode, string> = {
+  All: "var(--primary)",
+  Running: "var(--sport-running)",
+  Cycling: "var(--sport-cycling)",
+  Walking: "var(--sport-walking)",
+};

@@ -568,4 +568,12 @@ SET elevation_gain = (
             "CREATE INDEX IF NOT EXISTS segment_efforts_activity ON segment_efforts (activity_id)",
         ],
     ),
+    // Goals set by the user: when they were made and whether they are put away.
+    (
+        61,
+        &[
+            "ALTER TABLE goals ADD COLUMN archived BOOLEAN NOT NULL DEFAULT 0",
+            "ALTER TABLE goals ADD COLUMN created INTEGER",
+        ],
+    ),
 ];

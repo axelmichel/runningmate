@@ -1,4 +1,4 @@
-import { Gauge, HeartPulse, RefreshCw, Route, Search, Settings, User } from "lucide-react";
+import { Gauge, HeartPulse, RefreshCw, Route, Search, Settings, Target, User } from "lucide-react";
 
 import {
   Sidebar,
@@ -15,11 +15,11 @@ import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
 import { t } from "@/i18n";
 
 type AppSidebarProps = {
-  page: "dashboard" | "activities" | "health" | "segments";
+  page: "dashboard" | "activities" | "health" | "segments" | "goals";
   /** The activity view, marked while the activities page is shown. */
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
-  onPageChange: (page: "dashboard" | "health" | "segments") => void;
+  onPageChange: (page: "dashboard" | "health" | "segments" | "goals") => void;
   searchOpen: boolean;
   onSearchToggle: () => void;
   onSync: () => void;
@@ -104,6 +104,16 @@ export function AppSidebar({
                 >
                   <Route />
                   <span>{t("Segments")}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={page === "goals"}
+                  tooltip={`${t("Goals")} (⇧⌘O)`}
+                  onClick={() => onPageChange("goals")}
+                >
+                  <Target />
+                  <span>{t("Goals")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

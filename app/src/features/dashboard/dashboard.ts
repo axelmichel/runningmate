@@ -16,6 +16,38 @@ export function periodStart(now = new Date()): number {
   return Math.floor(now.getTime() / 1000) - WEEKS * 7 * DAY_SECONDS;
 }
 
+/** "YYYY-MM-DD" → that day at 00:00 local time, `null` if invalid. */
+export function parseLocalDay(value: string): Date | null {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const day = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return localDay(day) === value ? day : null;
+}
+
+/**
+ * The day the dashboard looks back from, `WEEKS` weeks further back (-1) or forward (1). `null`
+ * means today, which the dashboard follows live; later days aren't offered.
+ */
+export function stepDay(day: Date | null, direction: -1 | 1, today: Date): Date | null {
+  const from = day ?? today;
+  const next = new Date(
+    from.getFullYear(),
+    from.getMonth(),
+    from.getDate() + direction * WEEKS * 7,
+  );
+  return pickDay(next, today);
+}
+
+/** A picked day, or `null` for today and later. */
+export function pickDay(day: Date, today: Date): Date | null {
+  return localDay(day) >= localDay(today) ? null : day;
+}
+
+/** The moment the dashboard shows: the end of a picked day, or now. */
+export function dashboardMoment(day: Date | null, now: Date): Date {
+  return day ? new Date(day.getFullYear(), day.getMonth(), day.getDate(), 23, 59, 59) : now;
+}
+
 /** Unix start of the current calendar year, local time. */
 export function yearStart(now = new Date()): number {
   return Math.floor(new Date(now.getFullYear(), 0, 1).getTime() / 1000);

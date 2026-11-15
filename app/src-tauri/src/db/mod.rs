@@ -4,6 +4,7 @@
 pub mod activities;
 pub mod ai_summaries;
 pub mod connectors;
+pub mod goals;
 pub mod media;
 pub mod migrations;
 pub mod performances;
@@ -114,7 +115,7 @@ mod tests {
         let db = Db::open_in_memory().unwrap();
         let conn = db.conn().unwrap();
 
-        assert_eq!(current_version(&conn).unwrap(), 60);
+        assert_eq!(current_version(&conn).unwrap(), 61);
         assert_eq!(
             columns(&conn, "activities"),
             [
@@ -158,7 +159,15 @@ mod tests {
         assert!(columns(&conn, "cycling").contains(&"bike_id".to_string()));
         assert_eq!(
             columns(&conn, "goals"),
-            ["id", "name", "goal_type", "activity_types", "parameters"]
+            [
+                "id",
+                "name",
+                "goal_type",
+                "activity_types",
+                "parameters",
+                "archived",
+                "created"
+            ]
         );
     }
 

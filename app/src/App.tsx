@@ -12,6 +12,7 @@ import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
 import { lastConnector, type Connector } from "@/features/connectors/connector";
 import { ConnectorsDialog } from "@/features/connectors/connectors-dialog";
 import { DashboardPage } from "@/features/dashboard/dashboard-page";
+import { GoalsPage } from "@/features/goals/goals-page";
 import { HealthPage } from "@/features/health/health-page";
 import { invalidateSegments } from "@/features/segments/segment-math";
 import { SegmentsPage } from "@/features/segments/segments-page";
@@ -23,7 +24,7 @@ import { api } from "@/lib/api";
 
 const DETAILS_STORAGE_KEY = "runningmate-details-panel";
 
-type Page = "dashboard" | "activities" | "health" | "segments";
+type Page = "dashboard" | "activities" | "health" | "segments" | "goals";
 
 function App() {
   const queryClient = useQueryClient();
@@ -71,6 +72,7 @@ function App() {
       if (payload === "dashboard") setPage("dashboard");
       if (payload === "health") setPage("health");
       if (payload === "segments") setPage("segments");
+      if (payload === "goals") setPage("goals");
       if (payload === "settings") setSettingsOpen(true);
       if (payload === "user") setUserSettingsOpen(true);
     });
@@ -106,7 +108,9 @@ function App() {
         ? t("Health data")
         : page === "segments"
           ? t("Segments")
-          : t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
+          : page === "goals"
+            ? t("Goals")
+            : t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
 
   return (
     <SidebarProvider>
@@ -134,11 +138,17 @@ function App() {
       />
       <SidebarInset className="h-svh min-w-0 overflow-hidden pt-(--titlebar-height)">
         {page === "dashboard" ? (
-          <DashboardPage dataDir={info?.dataDir} onHealth={() => setPage("health")} />
+          <DashboardPage
+            dataDir={info?.dataDir}
+            onHealth={() => setPage("health")}
+            onGoals={() => setPage("goals")}
+          />
         ) : page === "health" ? (
           <HealthPage />
         ) : page === "segments" ? (
           <SegmentsPage dataDir={info?.dataDir} />
+        ) : page === "goals" ? (
+          <GoalsPage dataDir={info?.dataDir} />
         ) : (
           <ActivitiesPage
             view={viewMode}
