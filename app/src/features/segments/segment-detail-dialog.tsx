@@ -212,12 +212,13 @@ function Content({
           <TabsTrigger value="progress">{t("Progress")}</TabsTrigger>
         </TabsList>
         {/* The top stays in place and the ranking scrolls below it; the whole page only
-            scrolls when the window is too low for both. */}
+            scrolls when the window is too low for both, and never sideways. The padding
+            leaves room for the highlight rows' hover background (-mx-2). */}
         <TabsContent
           value="overview"
-          className="scrollbar-visible -m-1 flex min-h-0 flex-col gap-4 overflow-auto p-1"
+          className="scrollbar-visible -mx-2 -my-1 flex min-h-0 flex-col gap-4 overflow-x-hidden overflow-y-auto px-2 py-1"
         >
-          <div className="grid shrink-0 gap-4 md:grid-cols-[3fr_2fr]">
+          <div className="grid shrink-0 gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
             <div className="h-72">
               <SegmentMap points={segment.points} />
             </div>
@@ -241,7 +242,7 @@ function Content({
             />
           </div>
         </TabsContent>
-        <TabsContent value="progress" className="min-h-0 overflow-auto">
+        <TabsContent value="progress" className="min-h-0 overflow-x-hidden overflow-y-auto">
           <SegmentProgressChart
             efforts={leaderboard}
             view={segment.view}
