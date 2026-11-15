@@ -12,6 +12,7 @@ use crate::{
         },
         media::{self, ActivityPhoto, Media},
         performances::{self, BestPerformance},
+        tracks::{self, RouteHeatmap},
         weather::{self, Weather},
     },
     error::{AppError, AppResult},
@@ -52,6 +53,21 @@ pub fn activity_heatmap(
         (None, None) => chrono::Local::now().timestamp(),
     };
     activities::daily_durations(&*db.conn()?, view_mode, &filter, end - HEATMAP_SPAN, end)
+}
+
+/// GPS tracks for the route heat map; tracks not stored yet are built from the archives once.
+#[tauri::command(async)]
+pub fn route_heatmap(
+    db: State<'_, Db>,
+    view_mode: ViewMode,
+    filter: Option<ActivityFilter>,
+) -> AppResult<RouteHeatmap> {
+    tracks::load(
+        &db,
+        &paths::imports_dir()?,
+        view_mode,
+        &filter.unwrap_or_default(),
+    )
 }
 
 #[tauri::command(async)]

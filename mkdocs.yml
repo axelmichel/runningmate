@@ -13,6 +13,7 @@ nav:
       - Segments: ui/segments.md
       - Goals: ui/goals.md
       - Training: ui/training.md
+      - Heat Map: ui/heat-map.md
       - User Settings: ui/user-settings.md
   - Metrics :
       - Heart Rate Zones: metrics/heart-rate-zones.md

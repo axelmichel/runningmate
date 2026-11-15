@@ -19,8 +19,9 @@ function Fact({ label, value }: { label: string; value: string | null }) {
 /** Overview, media, comment and the per-type metrics (`widget_run_details.py` and friends). */
 export function GeneralTab({ activity, dataDir }: { activity: ActivityDetail; dataDir?: string }) {
   const steps = activity.viewMode !== "Cycling";
+  // Each column as tall as its content: the cards keep their own height.
   return (
-    <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">
+    <div className="grid items-start gap-6 lg:grid-cols-[20rem_1fr]">
       <ActivityPanel activityId={activity.id} dataDir={dataDir} />
       <div className="grid content-start gap-6">
         <AiSummaryCard activityId={activity.id} />

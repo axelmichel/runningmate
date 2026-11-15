@@ -55,6 +55,7 @@ pub fn run() {
             commands::activities::list_activities,
             commands::activities::activity_summary,
             commands::activities::activity_heatmap,
+            commands::activities::route_heatmap,
             commands::activities::get_activity,
             commands::activities::update_activity,
             commands::activities::set_activity_equipment,

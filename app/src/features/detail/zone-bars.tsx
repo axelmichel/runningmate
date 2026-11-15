@@ -2,8 +2,7 @@ import type { ZoneTime } from "@/bindings/ZoneTime";
 import { t } from "@/i18n";
 import { formatDuration, formatNumber } from "@/lib/format";
 
-/** Zone colours from dark to light, after `ui/widget_heart_rate_zones.py`. */
-const ZONE_COLORS = ["#35193e", "#701f57", "#ad1759", "#f37651", "#f6b48f"];
+import { ZONE_COLORS } from "./zone-gradient";
 
 /**
  * One bar per heart-rate zone with its share and time. All rows share one grid, so the label

@@ -16,4 +16,8 @@ elevation: number, heartRate: number | null,
 /**
  * min/km, `None` where implausible for the activity type.
  */
-pace: number | null, };
+pace: number | null, 
+/**
+ * Steps per minute (both feet), `None` without cadence or when standing still.
+ */
+cadence: number | null, };

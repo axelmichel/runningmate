@@ -30,21 +30,26 @@ const chartConfig = () =>
     elevation: { label: t("Elevation (m)"), color: "var(--chart-2)" },
     heartRate: { label: t("Heart rate (bpm)"), color: "var(--chart-3)" },
     speed: { label: t("Speed (km/h)"), color: "var(--chart-4)" },
+    cadence: { label: t("Steps per minute"), color: "var(--chart-5)" },
   }) satisfies ChartConfig;
 
 /** Charts sharing this id show their tooltip at the same point. */
 const SYNC_ID = "track";
 
 /**
- * Elevation, heart rate and speed over distance, below the map. Hovering reports the point's
- * index (`null` on leaving); `markKm` draws a line at a chosen distance.
+ * Elevation, heart rate, speed and (for runs) steps per minute over distance, below the map.
+ * Hovering reports the point's index (`null` on leaving); `markKm` draws a line at a chosen
+ * distance.
  */
 export const TrackCharts = memo(function TrackCharts({
   points,
+  showCadence,
   markKm,
   onHover,
 }: {
   points: TrackPoint[];
+  /** Shows the steps chart when the track has cadence. */
+  showCadence: boolean;
   markKm: number | null;
   onHover: (index: number | null) => void;
 }) {
@@ -55,6 +60,7 @@ export const TrackCharts = memo(function TrackCharts({
   );
   const hasHeartRate = points.some((p) => p.heartRate != null);
   const hasSpeed = data.some((p) => p.speed != null);
+  const hasCadence = showCadence && points.some((p) => p.cadence != null);
   const onMouseMove: CategoricalChartFunc = (state) => {
     const index = Number(state.activeTooltipIndex);
     onHover(Number.isInteger(index) && index >= 0 && index < data.length ? index : null);
@@ -161,6 +167,32 @@ export const TrackCharts = memo(function TrackCharts({
               dataKey="speed"
               type="monotone"
               stroke="var(--color-speed)"
+              dot={false}
+              strokeWidth={1.5}
+              connectNulls
+              isAnimationActive={false}
+            />
+          </LineChart>
+        </ChartContainer>
+      )}
+      {hasCadence && (
+        <ChartContainer config={config} className={chart}>
+          <LineChart {...common}>
+            <CartesianGrid vertical={false} />
+            {axis}
+            <YAxis
+              width={44}
+              tickLine={false}
+              axisLine={false}
+              domain={["dataMin - 5", "dataMax + 5"]}
+              tickFormatter={(v: number) => formatNumber(v)}
+            />
+            {tooltip}
+            {mark}
+            <Line
+              dataKey="cadence"
+              type="monotone"
+              stroke="var(--color-cadence)"
               dot={false}
               strokeWidth={1.5}
               connectNulls

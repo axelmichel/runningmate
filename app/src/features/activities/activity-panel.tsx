@@ -21,7 +21,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GoalStar } from "@/features/goals/goal-star";
+import { useGoalHits } from "@/features/goals/use-goals";
+import { trophyCount } from "@/features/segments/segment-math";
 import { TrophyBadge } from "@/features/segments/trophy";
+import { useSegmentEfforts } from "@/features/segments/use-segment-efforts";
 import { SessionBadge } from "@/features/training/session-badge";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
@@ -156,11 +159,7 @@ function Overview({
             {formatDateTime(activity.date)} ·{" "}
             {t(activity.typeDetail || activity.activityType || "")}
           </span>
-          <span className="flex items-center gap-1">
-            <GoalStar activityId={activity.id} />
-            <SessionBadge activityId={activity.id} />
-            <TrophyBadge activityId={activity.id} />
-          </span>
+          <SessionBadge activityId={activity.id} />
         </div>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -178,6 +177,34 @@ function Overview({
           />
         </div>
         <Links activityId={activity.id} />
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Goals reached and segment top-3 places, in a box of their own; nothing when neither. */
+function AchievementsCard({ activityId }: { activityId: number }) {
+  const { data: hits = [] } = useGoalHits(activityId);
+  const { data: efforts = [] } = useSegmentEfforts(activityId);
+  const trophies = trophyCount(efforts);
+  if (hits.length === 0 && trophies === 0) return null;
+  return (
+    <Card size="sm">
+      <CardContent className="grid gap-2 text-sm">
+        {hits.length > 0 && (
+          <div className="flex items-center gap-2">
+            <GoalStar activityId={activityId} />
+            <span className="min-w-0 truncate" title={hits.map((hit) => hit.name).join(", ")}>
+              {hits.map((hit) => hit.name).join(", ")}
+            </span>
+          </div>
+        )}
+        {trophies > 0 && (
+          <div className="flex items-center gap-2">
+            <TrophyBadge activityId={activityId} />
+            <span>{t("Top 3 on {{count}} segments", { count: trophies })}</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -350,8 +377,9 @@ export function ActivityPanel({
     return <Skeleton className="h-80 w-full" />;
   }
   return (
-    <div className="grid gap-3">
+    <div className="grid content-start gap-3">
       <Overview activity={activity} dataDir={dataDir} onOpenDetails={onOpenDetails} />
+      <AchievementsCard activityId={activity.id} />
       {onOpenDetails && <NotesCard activity={activity} onOpenDetails={onOpenDetails} />}
       <WeatherCard activityId={activity.id} />
       <BestPerformances activityId={activity.id} />

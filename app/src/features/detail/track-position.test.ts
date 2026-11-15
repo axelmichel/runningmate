@@ -25,6 +25,7 @@ const points = [0, 0.4, 1, 1.6, 2.05].map((distance): TrackPoint => ({
   elevation: 0,
   heartRate: null,
   pace: null,
+  cadence: null,
 }));
 
 describe("track position", () => {

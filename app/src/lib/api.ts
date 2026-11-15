@@ -37,6 +37,7 @@ import type { PlanInput } from "@/bindings/PlanInput";
 import type { PlanSession } from "@/bindings/PlanSession";
 import type { PlanSummary } from "@/bindings/PlanSummary";
 import type { Preview } from "@/bindings/Preview";
+import type { RouteHeatmap } from "@/bindings/RouteHeatmap";
 import type { RouteOutline } from "@/bindings/RouteOutline";
 import type { RouteSegment } from "@/bindings/RouteSegment";
 import type { SegmentDetail } from "@/bindings/SegmentDetail";
@@ -71,6 +72,8 @@ export const api = {
     invoke<ActivitySummary>("activity_summary", { viewMode, filter }),
   activityHeatmap: (viewMode: ViewMode, filter?: ActivityFilter) =>
     invoke<DayTotal[]>("activity_heatmap", { viewMode, filter }),
+  routeHeatmap: (viewMode: ViewMode, filter?: ActivityFilter) =>
+    invoke<RouteHeatmap>("route_heatmap", { viewMode, filter }),
   getActivity: (id: number) => invoke<ActivityDetail>("get_activity", { id }),
   updateActivity: (update: ActivityUpdate) => invoke<ActivityDetail>("update_activity", { update }),
   setActivityEquipment: (activityId: number, equipmentId: number | null) =>

@@ -14,6 +14,7 @@ import { ConnectorsDialog } from "@/features/connectors/connectors-dialog";
 import { DashboardPage } from "@/features/dashboard/dashboard-page";
 import { GoalsPage } from "@/features/goals/goals-page";
 import { HealthPage } from "@/features/health/health-page";
+import { RouteHeatmapPage } from "@/features/route-heatmap/route-heatmap-page";
 import { invalidateSegments } from "@/features/segments/segment-math";
 import { SegmentsPage } from "@/features/segments/segments-page";
 import { SystemSettingsDialog } from "@/features/settings/system-settings-dialog";
@@ -25,7 +26,7 @@ import { api } from "@/lib/api";
 
 const DETAILS_STORAGE_KEY = "runningmate-details-panel";
 
-type Page = "dashboard" | "activities" | "health" | "segments" | "goals" | "training";
+type Page = "dashboard" | "activities" | "health" | "segments" | "goals" | "training" | "heatmap";
 
 function App() {
   const queryClient = useQueryClient();
@@ -75,6 +76,7 @@ function App() {
       if (payload === "segments") setPage("segments");
       if (payload === "goals") setPage("goals");
       if (payload === "training") setPage("training");
+      if (payload === "heatmap") setPage("heatmap");
       if (payload === "settings") setSettingsOpen(true);
       if (payload === "user") setUserSettingsOpen(true);
     });
@@ -114,7 +116,9 @@ function App() {
             ? t("Goals")
             : page === "training"
               ? t("Training")
-              : t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
+              : page === "heatmap"
+                ? t("Heat map")
+                : t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
 
   return (
     <SidebarProvider>
@@ -156,6 +160,8 @@ function App() {
           <GoalsPage dataDir={info?.dataDir} />
         ) : page === "training" ? (
           <TrainingPage dataDir={info?.dataDir} />
+        ) : page === "heatmap" ? (
+          <RouteHeatmapPage />
         ) : (
           <ActivitiesPage
             view={viewMode}

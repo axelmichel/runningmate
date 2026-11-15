@@ -139,7 +139,7 @@ export function EditTab({ activity, onSaved }: { activity: ActivityDetail; onSav
     setForm({ ...form, [key]: event.target.value });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_16rem]">
+    <div className="grid items-start gap-6 lg:grid-cols-[1fr_16rem]">
       <div className="grid content-start gap-8">
         <form
           className="grid content-start gap-4"

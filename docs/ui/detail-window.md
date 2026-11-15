@@ -18,7 +18,7 @@ For each split, you'll see the duration, pace, speed, heart rate, and power (if 
 ![Detail Window; Maps](../images/screens/detail_02.png)
 The map section shows the track of the activity. By using the buttons on the top right, you can switch between different map types (e.g., heart rate or pace).
 **Splits** shows or hides a list of the splits beside the map, with time and speed; click one to put a position dot where it ends
-(the map moves there if needed, and the charts mark it). **Charts** shows elevation, heart rate and speed over the distance below the map (hidden at first, the choice is kept);
+(the map moves there if needed, and the charts mark it). **Charts** shows elevation, heart rate, speed and, for runs with cadence data, steps per minute over the distance below the map (hidden at first, the choice is kept);
 moving the mouse over them moves the position dot along the track.
 
 ## Segments
@@ -35,6 +35,8 @@ The app then looks for passes over the new segment in all your activities of the
 ## Trainings Effect
 ![Detail Window; Maps](../images/screens/detail_04.png)
 The training effect section shows the aerobic and anaerobic training effect of the activity, if available. You can edit the calculation by clicking on the corresponding bar. 
+For runs and rides with heart-rate data, **Heart rate by zone** shows the heart rate over the time of the activity, the line
+coloured by your heart-rate zones (set in the user settings) over light bands for each zone.
 If available, you'll also find a trend chart showing fitness, fatigue and form over the period of 90 days (relative to the activity date).
 
 ## Heart Rate Zones
