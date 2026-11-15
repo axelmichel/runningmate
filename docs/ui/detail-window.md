@@ -35,6 +35,8 @@ The app then looks for passes over the new segment in all your activities of the
 ## Trainings Effect
 ![Detail Window; Maps](../images/screens/detail_04.png)
 The training effect section shows the aerobic and anaerobic training effect of the activity, if available. You can edit the calculation by clicking on the corresponding bar. 
+For runs and rides with heart-rate data, **Heart rate by zone** shows the heart rate over the time of the activity, the line
+coloured by your heart-rate zones (set in the user settings) over light bands for each zone.
 If available, you'll also find a trend chart showing fitness, fatigue and form over the period of 90 days (relative to the activity date).
 
 ## Heart Rate Zones

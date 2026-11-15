@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
+import type { ViewMode } from "@/bindings/ViewMode";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -16,6 +17,7 @@ import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { effectDescription, formatRecovery } from "./training-effect";
+import { ZoneChart } from "./zone-chart";
 
 const fitnessConfig = () =>
   ({
@@ -49,7 +51,8 @@ function EffectMeter({ score }: { score: number }) {
   );
 }
 
-export function EffectTab({ activityId }: { activityId: number }) {
+/** Training effect, heart rate by zone (runs and rides) and the fitness trend. */
+export function EffectTab({ activityId, view }: { activityId: number; view: ViewMode }) {
   const { data: effect } = useQuery({
     queryKey: ["trainingEffect", activityId],
     queryFn: () => api.activityTrainingEffect(activityId),
@@ -80,6 +83,7 @@ export function EffectTab({ activityId }: { activityId: number }) {
           )}
         </CardContent>
       </Card>
+      {(view === "Running" || view === "Cycling") && <ZoneChart activityId={activityId} />}
       <Card size="sm">
         <CardHeader>
           <CardTitle className="text-sm">{t("Fitness trend (90 days)")}</CardTitle>
