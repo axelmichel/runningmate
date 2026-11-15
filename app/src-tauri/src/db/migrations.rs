@@ -625,4 +625,13 @@ SET elevation_gain = (
             "CREATE INDEX IF NOT EXISTS training_notes_plan ON training_notes (plan_id)",
         ],
     ),
+    // Simplified GPS tracks for the route heat map, built once per activity.
+    (
+        63,
+        &[r#"CREATE TABLE IF NOT EXISTS activity_tracks (
+    activity_id INTEGER PRIMARY KEY,
+    version INTEGER NOT NULL,
+    polyline TEXT NOT NULL
+)"#],
+    ),
 ];

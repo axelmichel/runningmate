@@ -22,6 +22,7 @@ The documentation can be found [here](https://axelmichel.github.io/runningmate).
 - Search and filter activities; a heatmap of training time over the last year.
 - Route, pace and heart-rate maps, elevation/heart-rate/pace charts, per-km segments and best
   segments.
+- A heat map of all GPS tracks on one map, by sport and period.
 - Heart-rate zones, training effect, fitness/fatigue trend.
 - Photos and videos per activity, picked straight from the Photos library on macOS, dropped onto
   the app or linked from disk.

@@ -19,7 +19,7 @@ use ts_rs::TS;
 use self::{metrics::ActivityMetrics, segments::Segment, track::Track};
 use crate::{
     activity_type::ViewMode,
-    db::{Db, activities, ai_summaries, performances, route_segments, users},
+    db::{Db, activities, ai_summaries, performances, route_segments, tracks, users},
     error::{AppError, AppResult},
 };
 
@@ -524,6 +524,7 @@ pub(crate) fn store(
     store_segments(&tx, activity_id, &p.segments)?;
     store_best_segments(&tx, p, activity_id)?;
     route_segments::store_efforts(&tx, activity_id, &p.track)?;
+    tracks::store(&tx, activity_id, &tracks::encode_track(&p.track.points))?;
     tx.commit()?;
     Ok(activity_id)
 }

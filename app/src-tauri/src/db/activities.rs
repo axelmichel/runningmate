@@ -40,7 +40,7 @@ pub struct ActivityFilter {
 
 impl ActivityFilter {
     /// Appends `AND …` conditions for the set fields to `sql` and their values to `params`.
-    fn apply(&self, sql: &mut String, params: &mut Vec<Value>) {
+    pub(crate) fn apply(&self, sql: &mut String, params: &mut Vec<Value>) {
         if let Some(text) = self.search_text.as_deref().map(str::trim)
             && !text.is_empty()
         {
@@ -720,6 +720,7 @@ pub fn delete(conn: &mut Connection, id: i64) -> AppResult<()> {
         "connector_links",
         "ai_summaries",
         "segment_efforts",
+        "activity_tracks",
     ] {
         tx.execute(&format!("DELETE FROM {table} WHERE activity_id = ?1"), [id])?;
     }

@@ -17,7 +17,7 @@ pub struct RouteOutline {
 }
 
 /// Ramer–Douglas–Peucker simplification of a polyline.
-fn simplify(points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> {
+pub(crate) fn simplify(points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> {
     if points.len() < 3 {
         return points.to_vec();
     }

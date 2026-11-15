@@ -9,6 +9,7 @@ pub mod media;
 pub mod migrations;
 pub mod performances;
 pub mod route_segments;
+pub mod tracks;
 pub mod training;
 pub mod users;
 pub mod value;
@@ -116,7 +117,7 @@ mod tests {
         let db = Db::open_in_memory().unwrap();
         let conn = db.conn().unwrap();
 
-        assert_eq!(current_version(&conn).unwrap(), 62);
+        assert_eq!(current_version(&conn).unwrap(), 63);
         assert_eq!(
             columns(&conn, "activities"),
             [
