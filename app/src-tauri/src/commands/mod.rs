@@ -7,5 +7,6 @@ pub mod analysis;
 pub mod app;
 pub mod garmin;
 pub mod import;
+pub mod segments;
 pub mod settings;
 pub mod users;

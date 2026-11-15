@@ -7,6 +7,7 @@ import type { ViewMode } from "@/bindings/ViewMode";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ActivityDetailDialog } from "@/features/detail/activity-detail-dialog";
+import { invalidateSegments } from "@/features/segments/segment-math";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -107,6 +108,7 @@ export function ActivitiesPage({
         return next;
       });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
+      invalidateSegments(queryClient);
     },
     onError: (error) =>
       toast.error(t("Could not delete the activity: {{error}}", { error: String(error) })),
@@ -119,6 +121,7 @@ export function ActivitiesPage({
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       queryClient.invalidateQueries({ queryKey: ["activity", id] });
       queryClient.invalidateQueries({ queryKey: ["bestPerformances", id] });
+      invalidateSegments(queryClient);
     },
     onError: (error) => toast.error(t("Could not re-import: {{error}}", { error: String(error) })),
   });

@@ -13,6 +13,8 @@ import { lastConnector, type Connector } from "@/features/connectors/connector";
 import { ConnectorsDialog } from "@/features/connectors/connectors-dialog";
 import { DashboardPage } from "@/features/dashboard/dashboard-page";
 import { HealthPage } from "@/features/health/health-page";
+import { invalidateSegments } from "@/features/segments/segment-math";
+import { SegmentsPage } from "@/features/segments/segments-page";
 import { SystemSettingsDialog } from "@/features/settings/system-settings-dialog";
 import { UserSettingsDialog } from "@/features/settings/user-settings-dialog";
 import { useTheme, type Theme } from "@/hooks/use-theme";
@@ -21,7 +23,7 @@ import { api } from "@/lib/api";
 
 const DETAILS_STORAGE_KEY = "runningmate-details-panel";
 
-type Page = "dashboard" | "activities" | "health";
+type Page = "dashboard" | "activities" | "health" | "segments";
 
 function App() {
   const queryClient = useQueryClient();
@@ -68,6 +70,7 @@ function App() {
       }
       if (payload === "dashboard") setPage("dashboard");
       if (payload === "health") setPage("health");
+      if (payload === "segments") setPage("segments");
       if (payload === "settings") setSettingsOpen(true);
       if (payload === "user") setUserSettingsOpen(true);
     });
@@ -87,13 +90,23 @@ function App() {
     };
   }, [queryClient]);
 
+  // Passes over a new segment are found in the background.
+  useEffect(() => {
+    const unlisten = listen<number>("segments://updated", () => invalidateSegments(queryClient));
+    return () => {
+      unlisten.then((stop) => stop());
+    };
+  }, [queryClient]);
+
   const activities = page === "activities";
   const title =
     page === "dashboard"
       ? t("Dashboard")
       : page === "health"
         ? t("Health data")
-        : t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
+        : page === "segments"
+          ? t("Segments")
+          : t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
 
   return (
     <SidebarProvider>
@@ -124,6 +137,8 @@ function App() {
           <DashboardPage dataDir={info?.dataDir} onHealth={() => setPage("health")} />
         ) : page === "health" ? (
           <HealthPage />
+        ) : page === "segments" ? (
+          <SegmentsPage dataDir={info?.dataDir} />
         ) : (
           <ActivitiesPage
             view={viewMode}

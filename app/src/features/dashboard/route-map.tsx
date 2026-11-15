@@ -28,7 +28,7 @@ function FitRoute({ bounds }: { bounds: LatLngBoundsExpression }) {
  * A still map of the route for the feed: no panning, zooming or controls. Isolated, so
  * Leaflet's pane z-indices (400 and up) stay inside it instead of covering dialogs.
  */
-export function RouteMap({ points }: { points: TrackPoint[] }) {
+export function RouteMap({ points }: { points: Pick<TrackPoint, "latitude" | "longitude">[] }) {
   const dark = document.documentElement.classList.contains("dark");
   const route = useMemo(() => {
     const line = points.map((p): LatLngTuple => [p.latitude, p.longitude]);

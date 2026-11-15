@@ -5,6 +5,7 @@ pub mod archive;
 pub mod metrics;
 pub mod outline;
 pub mod route_image;
+pub mod segment_match;
 pub mod segments;
 pub mod tcx;
 pub mod track;
@@ -18,7 +19,7 @@ use ts_rs::TS;
 use self::{metrics::ActivityMetrics, segments::Segment, track::Track};
 use crate::{
     activity_type::ViewMode,
-    db::{Db, activities, ai_summaries, performances, users},
+    db::{Db, activities, ai_summaries, performances, route_segments, users},
     error::{AppError, AppResult},
 };
 
@@ -63,6 +64,7 @@ pub struct Processed {
     pub view: ViewMode,
     pub metrics: ActivityMetrics,
     pub segments: Vec<Segment>,
+    pub track: Track,
 }
 
 /// Body weight (kg) from the profile, for the calorie and power estimates.
@@ -95,6 +97,7 @@ pub fn process(file_id: &str, xml: &str, weight: f64) -> AppResult<Processed> {
         view,
         metrics: metrics::compute(&track),
         segments: segments::split(&track),
+        track,
     })
 }
 
@@ -279,6 +282,36 @@ fn update_archived(
     Ok(updated)
 }
 
+/// Finds the passes over a new route segment in every archived activity that comes near it.
+/// Like [`update_archived`], the database is only locked per activity. Returns how many
+/// activities pass over it.
+pub fn match_segment(db: &Db, imports_dir: &Path, segment_id: i64) -> AppResult<usize> {
+    let (view, shape, weight, candidates) = {
+        let conn = db.conn()?;
+        let (view, shape) = route_segments::shape(&conn, segment_id)?;
+        let candidates = route_segments::candidate_activities(&conn, segment_id)?;
+        (view, shape, body_weight(&conn)?, candidates)
+    };
+    let mut matched = 0;
+    for (activity_id, file_id) in candidates {
+        let path = archive::archive_path(imports_dir, &file_id);
+        let Ok(activity) = archive::read(&path).and_then(|xml| tcx::parse(&xml)) else {
+            continue;
+        };
+        if activity.points.len() < 2 {
+            continue;
+        }
+        let efforts =
+            segment_match::find_efforts(&shape, &Track::new(activity.points, view, weight));
+        let mut conn = db.conn()?;
+        let tx = conn.transaction()?;
+        route_segments::store_segment_efforts(&tx, segment_id, activity_id, &efforts)?;
+        tx.commit()?;
+        matched += usize::from(!efforts.is_empty());
+    }
+    Ok(matched)
+}
+
 /// Recomputes calories and power (activity, per-type row and segments) of every activity with
 /// an archived TCX, leaving everything else as it is, so edits survive.
 pub fn recompute_energy(db: &Db, imports_dir: &Path) -> AppResult<usize> {
@@ -438,8 +471,9 @@ pub fn apply_data_fixes(
     Ok(weather)
 }
 
-/// Writes the activity, its per-type row, segments and best segments in one transaction.
-fn store(
+/// Writes the activity, its per-type row, segments, best segments and passes over route
+/// segments in one transaction.
+pub(crate) fn store(
     conn: &mut Connection,
     p: &Processed,
     existing: Option<i64>,
@@ -489,6 +523,7 @@ fn store(
     store_type_row(&tx, p, activity_id)?;
     store_segments(&tx, activity_id, &p.segments)?;
     store_best_segments(&tx, p, activity_id)?;
+    route_segments::store_efforts(&tx, activity_id, &p.track)?;
     tx.commit()?;
     Ok(activity_id)
 }

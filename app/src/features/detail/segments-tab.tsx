@@ -13,7 +13,7 @@ import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { formatDuration, formatNumber, formatPace } from "@/lib/format";
 
-/** Per-km (per 5 km for rides) segments, the `activity_details` rows. */
+/** Per-km (per 5 km for rides) splits, the `activity_details` rows. */
 export function SegmentsTab({ activityId, view }: { activityId: number; view: ViewMode }) {
   const { data: segments = [] } = useQuery({
     queryKey: ["segments", activityId],
@@ -59,7 +59,7 @@ export function SegmentsTab({ activityId, view }: { activityId: number; view: Vi
           {segments.length === 0 && (
             <TableRow>
               <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
-                {t("No segments for this activity.")}
+                {t("No splits for this activity.")}
               </TableCell>
             </TableRow>
           )}

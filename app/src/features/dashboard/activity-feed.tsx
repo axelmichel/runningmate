@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VIEW_MODES } from "@/features/activities/view-mode";
 import { useSeries } from "@/features/detail/use-series";
+import { TrophyBadge } from "@/features/segments/trophy";
 import { useInView } from "@/hooks/use-in-view";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
@@ -128,12 +129,13 @@ function Entry({ row, onOpen }: { row: ActivityRow; onOpen: (id: number) => void
           <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Icon className="size-5" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="truncate text-base font-semibold">{row.title || t("Activity")}</div>
             <div className="text-xs text-muted-foreground">
               {formatDateTime(row.date)} · {t(row.displayType || row.activityType || "")}
             </div>
           </div>
+          <TrophyBadge activityId={row.id} enabled={visible} />
         </div>
         {comment && <p className="line-clamp-4 text-sm whitespace-pre-line">{comment}</p>}
         <div className="flex flex-wrap gap-x-8 gap-y-2">

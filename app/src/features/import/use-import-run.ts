@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import type { ImportProgress } from "@/bindings/ImportProgress";
 import type { ImportSummary } from "@/bindings/ImportSummary";
 import type { ReadingProgress } from "@/bindings/ReadingProgress";
+import { invalidateSegments } from "@/features/segments/segment-math";
 import { api } from "@/lib/api";
 
 export type ImportRun = {
@@ -50,6 +51,7 @@ export function useImportRun() {
         stopReading();
         stopProgress();
         queryClient.invalidateQueries({ queryKey: ["activities"] });
+        invalidateSegments(queryClient);
       }
     },
     [queryClient],
