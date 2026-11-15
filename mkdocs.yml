@@ -11,6 +11,7 @@ nav:
       - Main Screen: ui/main-window.md
       - Detail View: ui/detail-window.md
       - Segments: ui/segments.md
+      - Goals: ui/goals.md
       - User Settings: ui/user-settings.md
   - Metrics :
       - Heart Rate Zones: metrics/heart-rate-zones.md

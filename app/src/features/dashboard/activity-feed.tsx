@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VIEW_MODES } from "@/features/activities/view-mode";
 import { useSeries } from "@/features/detail/use-series";
+import { GoalStar } from "@/features/goals/goal-star";
 import { TrophyBadge } from "@/features/segments/trophy";
 import { useInView } from "@/hooks/use-in-view";
 import { t } from "@/i18n";
@@ -135,6 +136,7 @@ function Entry({ row, onOpen }: { row: ActivityRow; onOpen: (id: number) => void
               {formatDateTime(row.date)} · {t(row.displayType || row.activityType || "")}
             </div>
           </div>
+          <GoalStar activityId={row.id} enabled={visible} />
           <TrophyBadge activityId={row.id} enabled={visible} />
         </div>
         {comment && <p className="line-clamp-4 text-sm whitespace-pre-line">{comment}</p>}
@@ -158,13 +160,16 @@ function Entry({ row, onOpen }: { row: ActivityRow; onOpen: (id: number) => void
 export function ActivityFeed({
   onOpen,
   onLoaded,
+  until,
 }: {
   onOpen: (id: number) => void;
   /** Ids of the entries loaded so far, in order (for previous/next in the detail window). */
   onLoaded: (ids: number[]) => void;
+  /** Unix timestamp of the latest start shown; unset for the newest. */
+  until?: number;
 }) {
   const feed = useInfiniteQuery({
-    queryKey: ["activities", "feed"],
+    queryKey: ["activities", "feed", until],
     queryFn: async ({ pageParam }) => {
       const page = await api.listActivities({
         viewMode: "All",
@@ -172,7 +177,7 @@ export function ActivityFeed({
         limit: PAGE_SIZE,
         sortField: "date",
         sortDirection: "desc",
-        filter: {},
+        filter: until === undefined ? {} : { maxDate: until },
       });
       return { ...page, offset: pageParam };
     },

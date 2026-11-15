@@ -20,6 +20,10 @@ import type { FitnessDay } from "@/bindings/FitnessDay";
 import type { FolderSyncStatus } from "@/bindings/FolderSyncStatus";
 import type { GarminSignInResult } from "@/bindings/GarminSignInResult";
 import type { GarminStatus } from "@/bindings/GarminStatus";
+import type { Goal } from "@/bindings/Goal";
+import type { GoalHit } from "@/bindings/GoalHit";
+import type { GoalInput } from "@/bindings/GoalInput";
+import type { GoalProgress } from "@/bindings/GoalProgress";
 import type { HealthReport } from "@/bindings/HealthReport";
 import type { HeartRateTrend } from "@/bindings/HeartRateTrend";
 import type { ImportSummary } from "@/bindings/ImportSummary";
@@ -138,6 +142,16 @@ export const api = {
   deleteSegment: (id: number) => invoke<void>("delete_segment", { id }),
   activitySegmentEfforts: (activityId: number) =>
     invoke<ActivitySegmentEffort[]>("activity_segment_efforts", { activityId }),
+
+  // Goals (progress and the activities that hit them are computed on read)
+  /** Progress now, or at `at` (Unix timestamp). */
+  goalProgress: (includeArchived: boolean, at?: number) =>
+    invoke<GoalProgress[]>("goal_progress", { includeArchived, at: at ?? null }),
+  createGoal: (input: GoalInput) => invoke<Goal>("create_goal", { input }),
+  updateGoal: (id: number, input: GoalInput) => invoke<Goal>("update_goal", { id, input }),
+  archiveGoal: (id: number, archived: boolean) => invoke<Goal>("archive_goal", { id, archived }),
+  deleteGoal: (id: number) => invoke<void>("delete_goal", { id }),
+  activityGoalHits: (activityId: number) => invoke<GoalHit[]>("activity_goal_hits", { activityId }),
 
   // User, heart-rate zones, shoes and bikes
   getUser: () => invoke<User | null>("get_user"),

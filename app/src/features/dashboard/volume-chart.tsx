@@ -89,8 +89,9 @@ export function VolumeChart({ today }: { today: Date }) {
     });
   // Twelve months reach further back than twelve weeks, so one query serves both.
   const from = Math.floor(chartStarts("month", today)[0].getTime() / 1000);
+  const to = Math.floor(today.getTime() / 1000);
   const { data } = useQuery({
-    queryKey: ["activities", "volume", from],
+    queryKey: ["activities", "volume", from, to],
     queryFn: () =>
       api.listActivities({
         viewMode: "All",
@@ -98,7 +99,7 @@ export function VolumeChart({ today }: { today: Date }) {
         limit: 5000,
         sortField: "date",
         sortDirection: "asc",
-        filter: { minDate: from },
+        filter: { minDate: from, maxDate: to },
       }),
   });
   const metric = METRICS.find((m) => m.value === choice.metric)!;

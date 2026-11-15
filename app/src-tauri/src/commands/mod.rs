@@ -6,6 +6,7 @@ pub mod ai;
 pub mod analysis;
 pub mod app;
 pub mod garmin;
+pub mod goals;
 pub mod import;
 pub mod segments;
 pub mod settings;

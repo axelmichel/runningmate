@@ -127,11 +127,11 @@ pub struct ActivitySegmentEffort {
     pub tries: i64,
 }
 
-fn view_name(view: ViewMode) -> String {
+pub(crate) fn view_name(view: ViewMode) -> String {
     format!("{view:?}")
 }
 
-fn parse_view(name: &str) -> ViewMode {
+pub(crate) fn parse_view(name: &str) -> ViewMode {
     match name {
         "Running" => ViewMode::Running,
         "Cycling" => ViewMode::Cycling,

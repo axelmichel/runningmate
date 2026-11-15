@@ -40,5 +40,11 @@ describe("api", () => {
 
     await api.generateAiSummary(7);
     expect(invoke).toHaveBeenLastCalledWith("generate_ai_summary", { id: 7 });
+
+    await api.archiveGoal(3, true);
+    expect(invoke).toHaveBeenLastCalledWith("archive_goal", { id: 3, archived: true });
+
+    await api.activityGoalHits(9);
+    expect(invoke).toHaveBeenLastCalledWith("activity_goal_hits", { activityId: 9 });
   });
 });

@@ -20,6 +20,7 @@ import type { ActivityDetail } from "@/bindings/ActivityDetail";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { GoalStar } from "@/features/goals/goal-star";
 import { TrophyBadge } from "@/features/segments/trophy";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
@@ -154,7 +155,10 @@ function Overview({
             {formatDateTime(activity.date)} ·{" "}
             {t(activity.typeDetail || activity.activityType || "")}
           </span>
-          <TrophyBadge activityId={activity.id} />
+          <span className="flex items-center gap-1">
+            <GoalStar activityId={activity.id} />
+            <TrophyBadge activityId={activity.id} />
+          </span>
         </div>
       </CardHeader>
       <CardContent className="grid gap-4">
