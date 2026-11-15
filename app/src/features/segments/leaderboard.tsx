@@ -55,7 +55,7 @@ export function Leaderboard({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border">
-        <Table containerClassName="scrollbar-visible min-h-0 flex-1 overflow-auto">
+        <Table containerClassName="scrollbar-visible min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
           <TableHeader className="sticky top-0 z-10 bg-background">
             <TableRow>
               <TableHead className="w-16">{t("Rank")}</TableHead>
@@ -86,7 +86,8 @@ export function Leaderboard({
                   </span>
                 </TableCell>
                 <TableCell className="whitespace-nowrap">{formatDate(e.date)}</TableCell>
-                <TableCell className="max-w-64 truncate">
+                {/* Takes the width the other columns leave and cuts long titles; cells ignore max-w. */}
+                <TableCell className="w-full max-w-0 truncate" title={e.activityTitle ?? undefined}>
                   {e.activityTitle || t("Activity")}
                 </TableCell>
                 <TableCell className={cell}>{formatDuration(e.elapsed)}</TableCell>
