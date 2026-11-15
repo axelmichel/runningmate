@@ -169,6 +169,14 @@
   }
 }
 
+/* Direction of travel along the track (features/detail/route-segments-tab.tsx). */
+.leaflet-marker-icon.direction-arrow {
+  pointer-events: none;
+}
+.direction-arrow svg {
+  display: block;
+}
+
 /* Kilometre numbers drawn inside the map markers (features/detail/map-tab.tsx). */
 .leaflet-tooltip.km-label {
   border: 0;

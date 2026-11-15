@@ -1,4 +1,4 @@
-import { Gauge, HeartPulse, RefreshCw, Search, Settings, User } from "lucide-react";
+import { Gauge, HeartPulse, RefreshCw, Route, Search, Settings, User } from "lucide-react";
 
 import {
   Sidebar,
@@ -15,11 +15,11 @@ import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
 import { t } from "@/i18n";
 
 type AppSidebarProps = {
-  page: "dashboard" | "activities" | "health";
+  page: "dashboard" | "activities" | "health" | "segments";
   /** The activity view, marked while the activities page is shown. */
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
-  onPageChange: (page: "dashboard" | "health") => void;
+  onPageChange: (page: "dashboard" | "health" | "segments") => void;
   searchOpen: boolean;
   onSearchToggle: () => void;
   onSync: () => void;
@@ -94,6 +94,16 @@ export function AppSidebar({
                 >
                   <HeartPulse />
                   <span>{t("Health data")}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={page === "segments"}
+                  tooltip={`${t("Segments")} (⇧⌘G)`}
+                  onClick={() => onPageChange("segments")}
+                >
+                  <Route />
+                  <span>{t("Segments")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

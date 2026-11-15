@@ -1,7 +1,8 @@
 import "leaflet/dist/leaflet.css";
 
 import type { LatLngBoundsExpression, LatLngTuple } from "leaflet";
-import { MapPin } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ChartLine, MapPin, PanelRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { CircleMarker, MapContainer, Polyline, Tooltip, useMap } from "react-leaflet";
 
@@ -10,10 +11,15 @@ import type { ViewMode } from "@/bindings/ViewMode";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@/i18n";
+import { api } from "@/lib/api";
 import { formatNumber, formatPace } from "@/lib/format";
 
 import { HEART_RATE_RAMP, PACE_RAMP, rampColor, robustRange } from "./color-scale";
 import { Basemap, MapCredit } from "./basemap";
+import { SplitsPanel } from "./splits-panel";
+import { TrackCharts } from "./track-charts";
+import { kilometreMarkers } from "./track-markers";
+import { createHoverStore, indexAtKm, useHovered, type HoverStore } from "./track-position";
 import { useSeries } from "./use-series";
 
 type Mode = "track" | "pace" | "heartRate";
@@ -30,6 +36,45 @@ function FitToContainer() {
 }
 
 const MARKERS_STORAGE_KEY = "runningmate-map-distance-markers";
+const SPLITS_STORAGE_KEY = "runningmate-map-splits";
+/** Charts below the map; hidden until shown once. */
+const CHARTS_STORAGE_KEY = "runningmate-map-charts";
+
+/**
+ * Where the charts are hovered, or else the end of the picked split. Pans the map there when a
+ * split is picked and it is out of view.
+ */
+function PositionDot({
+  points,
+  store,
+  pickedKm,
+}: {
+  points: TrackPoint[];
+  store: HoverStore;
+  pickedKm: number | null;
+}) {
+  const map = useMap();
+  const hovered = useHovered(store);
+  const picked = pickedKm === null ? null : indexAtKm(points, pickedKm);
+  useEffect(() => {
+    if (picked === null) return;
+    const p = points[picked];
+    if (!map.getBounds().contains([p.latitude, p.longitude])) {
+      map.panTo([p.latitude, p.longitude]);
+    }
+  }, [map, points, picked]);
+  const index = hovered ?? picked;
+  if (index === null) return null;
+  const p = points[index];
+  return (
+    <CircleMarker
+      center={[p.latitude, p.longitude]}
+      radius={7}
+      interactive={false}
+      pathOptions={{ color: "#fff", weight: 3, fillColor: "#2f80ed", fillOpacity: 1 }}
+    />
+  );
+}
 
 /** Number of colour steps; consecutive points in the same step share one polyline. */
 const COLOR_STEPS = 12;
@@ -59,19 +104,6 @@ function colouredRuns(points: TrackPoint[], mode: Exclude<Mode, "track">): Run[]
     }
   });
   return runs;
-}
-
-/** Positions where each full kilometre (5 km for rides) is reached. */
-function kilometreMarkers(points: TrackPoint[], every: number) {
-  const markers: { km: number; position: LatLngTuple }[] = [];
-  let next = every;
-  for (const p of points) {
-    if (p.distance >= next) {
-      markers.push({ km: next, position: [p.latitude, p.longitude] });
-      next += every;
-    }
-  }
-  return markers;
 }
 
 function Legend({ mode, points }: { mode: Exclude<Mode, "track">; points: TrackPoint[] }) {
@@ -105,6 +137,28 @@ export function MapTab({ activityId, view }: { activityId: number; view: ViewMod
       localStorage.setItem(MARKERS_STORAGE_KEY, shown ? "hidden" : "shown");
       return !shown;
     });
+  const [showSplits, setShowSplits] = useState(
+    () => localStorage.getItem(SPLITS_STORAGE_KEY) !== "hidden",
+  );
+  const toggleSplits = () =>
+    setShowSplits((shown) => {
+      localStorage.setItem(SPLITS_STORAGE_KEY, shown ? "hidden" : "shown");
+      return !shown;
+    });
+  const [showCharts, setShowCharts] = useState(
+    () => localStorage.getItem(CHARTS_STORAGE_KEY) === "shown",
+  );
+  const toggleCharts = () =>
+    setShowCharts((shown) => {
+      localStorage.setItem(CHARTS_STORAGE_KEY, shown ? "hidden" : "shown");
+      return !shown;
+    });
+  const { data: splits = [] } = useQuery({
+    queryKey: ["segments", activityId],
+    queryFn: () => api.activitySegments(activityId),
+  });
+  const [picked, setPicked] = useState<{ index: number; km: number } | null>(null);
+  const [hover] = useState(createHoverStore);
   const dark = document.documentElement.classList.contains("dark");
 
   const derived = useMemo(() => {
@@ -168,60 +222,101 @@ export function MapTab({ activityId, view }: { activityId: number; view: ViewMod
           {view === "Cycling" ? t("5 km markers") : t("Km markers")}
         </Button>
         {mode !== "track" && <Legend mode={mode} points={points} />}
-      </div>
-      <div className="relative isolate min-h-0 flex-1 overflow-hidden rounded-lg border">
-        <MapContainer
-          bounds={derived.bounds}
-          boundsOptions={{ padding: [24, 24] }}
-          className="h-full w-full"
-          attributionControl={false}
+        <Button
+          size="sm"
+          variant={showSplits ? "secondary" : "ghost"}
+          className="ml-auto"
+          aria-pressed={showSplits}
+          title={showSplits ? t("Hide splits") : t("Show splits")}
+          onClick={toggleSplits}
         >
-          <Basemap dark={dark} />
-          <FitToContainer />
-          {mode === "track" && (
-            <Polyline
-              positions={derived.line}
-              pathOptions={{ color: "#f37651", weight: 4, opacity: 0.9 }}
-            />
-          )}
-          {mode !== "track" &&
-            derived[mode].map((run, i) => (
-              <Polyline
-                key={i}
-                positions={run.positions}
-                pathOptions={{ color: run.color, weight: 5, opacity: 0.9 }}
-              />
-            ))}
-          {showMarkers &&
-            derived.markers.map((m) => (
-              <CircleMarker
-                key={m.km}
-                center={m.position}
-                radius={9}
-                pathOptions={{ color: "#fff", weight: 1.5, fillColor: "#35193e", fillOpacity: 0.9 }}
-              >
-                <Tooltip permanent direction="center" className="km-label">
-                  {m.km}
-                </Tooltip>
-              </CircleMarker>
-            ))}
-          <CircleMarker
-            center={start}
-            radius={8}
-            pathOptions={{ color: "#fff", weight: 2, fillColor: "#f6b48f", fillOpacity: 1 }}
-          >
-            <Tooltip>{t("Start")}</Tooltip>
-          </CircleMarker>
-          <CircleMarker
-            center={end}
-            radius={8}
-            pathOptions={{ color: "#fff", weight: 2, fillColor: "#e13342", fillOpacity: 1 }}
-          >
-            <Tooltip>{t("Finish")}</Tooltip>
-          </CircleMarker>
-        </MapContainer>
-        <MapCredit />
+          <PanelRight />
+          {t("Splits")}
+        </Button>
+        <Button
+          size="sm"
+          variant={showCharts ? "secondary" : "ghost"}
+          aria-pressed={showCharts}
+          title={showCharts ? t("Hide charts") : t("Show charts")}
+          onClick={toggleCharts}
+        >
+          <ChartLine />
+          {t("Charts")}
+        </Button>
       </div>
+      <div className="flex min-h-72 flex-1 gap-3">
+        <div className="relative isolate min-w-0 flex-1 overflow-hidden rounded-lg border">
+          <MapContainer
+            bounds={derived.bounds}
+            boundsOptions={{ padding: [24, 24] }}
+            className="h-full w-full"
+            attributionControl={false}
+          >
+            <Basemap dark={dark} />
+            <FitToContainer />
+            {mode === "track" && (
+              <Polyline
+                positions={derived.line}
+                pathOptions={{ color: "#f37651", weight: 4, opacity: 0.9 }}
+              />
+            )}
+            {mode !== "track" &&
+              derived[mode].map((run, i) => (
+                <Polyline
+                  key={i}
+                  positions={run.positions}
+                  pathOptions={{ color: run.color, weight: 5, opacity: 0.9 }}
+                />
+              ))}
+            {showMarkers &&
+              derived.markers.map((m) => (
+                <CircleMarker
+                  key={m.km}
+                  center={m.position}
+                  radius={9}
+                  pathOptions={{
+                    color: "#fff",
+                    weight: 1.5,
+                    fillColor: "#35193e",
+                    fillOpacity: 0.9,
+                  }}
+                >
+                  <Tooltip permanent direction="center" className="km-label">
+                    {m.km}
+                  </Tooltip>
+                </CircleMarker>
+              ))}
+            <CircleMarker
+              center={start}
+              radius={8}
+              pathOptions={{ color: "#fff", weight: 2, fillColor: "#f6b48f", fillOpacity: 1 }}
+            >
+              <Tooltip>{t("Start")}</Tooltip>
+            </CircleMarker>
+            <CircleMarker
+              center={end}
+              radius={8}
+              pathOptions={{ color: "#fff", weight: 2, fillColor: "#e13342", fillOpacity: 1 }}
+            >
+              <Tooltip>{t("Finish")}</Tooltip>
+            </CircleMarker>
+            <PositionDot points={points} store={hover} pickedKm={picked?.km ?? null} />
+          </MapContainer>
+          <MapCredit />
+        </div>
+        {showSplits && (
+          <SplitsPanel
+            rows={splits}
+            selected={picked?.index ?? null}
+            onSelect={(index, km) => setPicked(index === null ? null : { index, km })}
+          />
+        )}
+      </div>
+      {showCharts && (
+        <div className="shrink-0">
+          <TrackCharts points={points} markKm={picked?.km ?? null} onHover={hover.set} />
+        </div>
+      )}
     </div>
   );
 }

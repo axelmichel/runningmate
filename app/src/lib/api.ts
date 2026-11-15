@@ -5,6 +5,7 @@ import type { ActivityFilter } from "@/bindings/ActivityFilter";
 import type { ActivityPage } from "@/bindings/ActivityPage";
 import type { ActivityPhoto } from "@/bindings/ActivityPhoto";
 import type { ActivityQuery } from "@/bindings/ActivityQuery";
+import type { ActivitySegmentEffort } from "@/bindings/ActivitySegmentEffort";
 import type { ActivitySummary } from "@/bindings/ActivitySummary";
 import type { ActivityUpdate } from "@/bindings/ActivityUpdate";
 import type { AiSummary } from "@/bindings/AiSummary";
@@ -26,6 +27,8 @@ import type { LibraryAsset } from "@/bindings/LibraryAsset";
 import type { Media } from "@/bindings/Media";
 import type { PhotosAccess } from "@/bindings/PhotosAccess";
 import type { RouteOutline } from "@/bindings/RouteOutline";
+import type { RouteSegment } from "@/bindings/RouteSegment";
+import type { SegmentDetail } from "@/bindings/SegmentDetail";
 import type { SegmentRow } from "@/bindings/SegmentRow";
 import type { StorageInfo } from "@/bindings/StorageInfo";
 import type { SystemSettings } from "@/bindings/SystemSettings";
@@ -122,6 +125,19 @@ export const api = {
     invoke<BestPerformance[]>("activity_best_performances", { activityId }),
   topBestPerformances: (viewMode: ViewMode) =>
     invoke<BestPerformance[]>("top_best_performances", { viewMode }),
+
+  // Route segments (matching a new segment emits `segments://updated` when done)
+  /** Stores the stretch between two distances (km) of the activity as a segment. */
+  createSegment: (activityId: number, startKm: number, endKm: number, title: string) =>
+    invoke<SegmentDetail>("create_segment", { activityId, startKm, endKm, title }),
+  listSegments: (view: ViewMode, search?: string) =>
+    invoke<RouteSegment[]>("list_segments", { view, search }),
+  getSegment: (id: number) => invoke<SegmentDetail>("get_segment", { id }),
+  renameSegment: (id: number, title: string) =>
+    invoke<SegmentDetail>("rename_segment", { id, title }),
+  deleteSegment: (id: number) => invoke<void>("delete_segment", { id }),
+  activitySegmentEfforts: (activityId: number) =>
+    invoke<ActivitySegmentEffort[]>("activity_segment_efforts", { activityId }),
 
   // User, heart-rate zones, shoes and bikes
   getUser: () => invoke<User | null>("get_user"),

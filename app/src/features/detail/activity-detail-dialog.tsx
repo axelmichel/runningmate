@@ -12,6 +12,7 @@ import {
   Minimize2,
   PanelLeft,
   Pencil,
+  Route,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -37,16 +38,19 @@ import { EditTab } from "./edit-tab";
 import { EffectTab } from "./effect-tab";
 import { GeneralTab } from "./general-tab";
 import { MapTab } from "./map-tab";
+import { RouteSegmentsTab } from "./route-segments-tab";
 import { SegmentsTab } from "./segments-tab";
 import { StatsTab } from "./stats-tab";
 import { ZonesTab } from "./zones-tab";
 
-type Tab = "general" | "segments" | "map" | "statistics" | "effect" | "zones" | "edit";
+type Tab =
+  "general" | "segments" | "routeSegments" | "map" | "statistics" | "effect" | "zones" | "edit";
 
 const NAV_ITEMS: (NavItem & { value: Tab })[] = [
   { value: "general", label: tk("General"), icon: LayoutDashboard },
-  { value: "segments", label: tk("Segments"), icon: ListOrdered },
+  { value: "segments", label: tk("Splits"), icon: ListOrdered },
   { value: "map", label: tk("Map"), icon: MapIcon },
+  { value: "routeSegments", label: tk("Segments"), icon: Route },
   { value: "statistics", label: tk("Statistics"), icon: ChartLine },
   { value: "effect", label: tk("Effect"), icon: Gauge },
   { value: "zones", label: tk("Heart rate zones"), icon: HeartPulse },
@@ -242,6 +246,9 @@ function DetailContent({
           </TabsContent>
           <TabsContent value="segments" className="h-full">
             <SegmentsTab activityId={activity.id} view={activity.viewMode} />
+          </TabsContent>
+          <TabsContent value="routeSegments" className="h-full">
+            <RouteSegmentsTab activityId={activity.id} view={activity.viewMode} />
           </TabsContent>
           <TabsContent value="map" className="h-full">
             <MapTab activityId={activity.id} view={activity.viewMode} />

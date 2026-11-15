@@ -535,4 +535,37 @@ SET elevation_gain = (
     applied INTEGER NOT NULL
 )"#],
     ),
+    // Route segments marked on a map, and every pass over them found in the activities.
+    (
+        60,
+        &[
+            r#"CREATE TABLE IF NOT EXISTS route_segments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    view TEXT NOT NULL,
+    source_activity_id INTEGER,
+    created INTEGER NOT NULL,
+    distance REAL NOT NULL,
+    elevation_gain REAL NOT NULL,
+    elevation_loss REAL NOT NULL,
+    avg_grade REAL NOT NULL,
+    max_grade REAL NOT NULL,
+    min_elevation REAL NOT NULL,
+    max_elevation REAL NOT NULL,
+    points TEXT NOT NULL
+)"#,
+            r#"CREATE TABLE IF NOT EXISTS segment_efforts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    segment_id INTEGER NOT NULL,
+    activity_id INTEGER NOT NULL,
+    start_km REAL NOT NULL,
+    end_km REAL NOT NULL,
+    elapsed REAL NOT NULL,
+    avg_heart_rate REAL,
+    date INTEGER NOT NULL
+)"#,
+            "CREATE INDEX IF NOT EXISTS segment_efforts_segment ON segment_efforts (segment_id, elapsed)",
+            "CREATE INDEX IF NOT EXISTS segment_efforts_activity ON segment_efforts (activity_id)",
+        ],
+    ),
 ];

@@ -510,3 +510,41 @@ fn clock_jumps_are_fixed_in_stored_activities_not_edited() {
     assert_eq!(weather.len(), 1);
     assert_eq!(date(), stored - 14 * 24 * 3600);
 }
+
+#[test]
+fn new_route_segment_is_matched_in_archived_activities() {
+    use crate::db::{Db, route_segments};
+
+    let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let dir = tempfile::tempdir().unwrap();
+    let source = dir.path().join("synthetic_run.tcx");
+    std::fs::copy(fixtures.join("synthetic_run.tcx"), &source).unwrap();
+    let imports = dir.path().join("imports");
+    let db = Db::open_in_memory().unwrap();
+    let (outcome, _) = import_file(&mut db.conn().unwrap(), &source, &imports, "en").unwrap();
+    let ImportOutcome::Imported { activity_id } = outcome else {
+        panic!("expected an import, got {outcome:?}");
+    };
+    let track = crate::analysis::load_track(&db.conn().unwrap(), activity_id, &imports)
+        .unwrap()
+        .unwrap();
+    let total = track.distance_km[track.len() - 1];
+    let shape = segment_match::cut(&track, total * 0.3, total * 0.7).unwrap();
+    let segment = route_segments::create(
+        &db.conn().unwrap(),
+        "Middle",
+        track.view,
+        activity_id,
+        &shape,
+        0,
+    )
+    .unwrap();
+
+    assert_eq!(match_segment(&db, &imports, segment).unwrap(), 1);
+    // Matching again replaces the passes instead of adding to them.
+    assert_eq!(match_segment(&db, &imports, segment).unwrap(), 1);
+    let detail = route_segments::get(&db.conn().unwrap(), segment).unwrap();
+    assert_eq!(detail.leaderboard.len(), 1);
+    assert_eq!(detail.leaderboard[0].activity_id, activity_id);
+    assert_eq!(detail.leaderboard[0].rank, 1);
+}

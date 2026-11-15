@@ -20,6 +20,7 @@ import type { ActivityDetail } from "@/bindings/ActivityDetail";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TrophyBadge } from "@/features/segments/trophy";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import {
@@ -148,8 +149,12 @@ function Overview({
             </Button>
           </CardAction>
         )}
-        <div className="text-xs text-muted-foreground">
-          {formatDateTime(activity.date)} · {t(activity.typeDetail || activity.activityType || "")}
+        <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span>
+            {formatDateTime(activity.date)} ·{" "}
+            {t(activity.typeDetail || activity.activityType || "")}
+          </span>
+          <TrophyBadge activityId={activity.id} />
         </div>
       </CardHeader>
       <CardContent className="grid gap-4">
