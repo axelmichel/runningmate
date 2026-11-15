@@ -314,7 +314,12 @@ export function MapTab({ activityId, view }: { activityId: number; view: ViewMod
       </div>
       {showCharts && (
         <div className="shrink-0">
-          <TrackCharts points={points} markKm={picked?.km ?? null} onHover={hover.set} />
+          <TrackCharts
+            points={points}
+            showCadence={view === "Running"}
+            markKm={picked?.km ?? null}
+            onHover={hover.set}
+          />
         </div>
       )}
     </div>

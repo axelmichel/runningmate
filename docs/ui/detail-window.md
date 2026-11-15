@@ -18,7 +18,7 @@ For each split, you'll see the duration, pace, speed, heart rate, and power (if 
 ![Detail Window; Maps](../images/screens/detail_02.png)
 The map section shows the track of the activity. By using the buttons on the top right, you can switch between different map types (e.g., heart rate or pace).
 **Splits** shows or hides a list of the splits beside the map, with time and speed; click one to put a position dot where it ends
-(the map moves there if needed, and the charts mark it). **Charts** shows elevation, heart rate and speed over the distance below the map (hidden at first, the choice is kept);
+(the map moves there if needed, and the charts mark it). **Charts** shows elevation, heart rate, speed and, for runs with cadence data, steps per minute over the distance below the map (hidden at first, the choice is kept);
 moving the mouse over them moves the position dot along the track.
 
 ## Segments
