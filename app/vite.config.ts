@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import process from "node:process";
 import tailwindcss from "@tailwindcss/vite";
@@ -5,6 +6,11 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 const host = process.env.TAURI_DEV_HOST;
+
+// The version in tauri.conf.json, for the start screen in index.html (`%VITE_APP_VERSION%`).
+process.env.VITE_APP_VERSION = JSON.parse(
+  readFileSync(new URL("./src-tauri/tauri.conf.json", import.meta.url), "utf8"),
+).version;
 
 // https://vite.dev/config/
 export default defineConfig(() => ({
