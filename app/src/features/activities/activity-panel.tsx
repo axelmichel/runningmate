@@ -377,7 +377,7 @@ export function ActivityPanel({
     return <Skeleton className="h-80 w-full" />;
   }
   return (
-    <div className="grid gap-3">
+    <div className="grid content-start gap-3">
       <Overview activity={activity} dataDir={dataDir} onOpenDetails={onOpenDetails} />
       <AchievementsCard activityId={activity.id} />
       {onOpenDetails && <NotesCard activity={activity} onOpenDetails={onOpenDetails} />}
