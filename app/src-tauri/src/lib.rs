@@ -13,6 +13,7 @@ mod paths;
 mod photos_library;
 mod photos_picker;
 mod settings;
+mod share;
 mod storage;
 mod sync;
 mod training;
@@ -56,6 +57,10 @@ pub fn run() {
             commands::activities::activity_summary,
             commands::activities::activity_heatmap,
             commands::activities::route_heatmap,
+            commands::share::map_tile,
+            commands::share::read_image,
+            commands::share::save_share_image,
+            commands::share::share_image,
             commands::activities::get_activity,
             commands::activities::update_activity,
             commands::activities::set_activity_equipment,
