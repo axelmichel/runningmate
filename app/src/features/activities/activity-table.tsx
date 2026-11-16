@@ -27,7 +27,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,16 +43,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { t } from "@/i18n";
-import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { columnsFor } from "./columns";
 
 export type Sort = { field: SortField; direction: SortDirection };
 
-/** Width of the checkbox column in px. */
-const CHECKBOX_WIDTH = 40;
-/** Data columns pinned next to the checkbox while the table scrolls sideways. */
+/** Data columns pinned on the left while the table scrolls sideways. */
 const PINNED_COLUMNS = 2;
 
 /** Opaque backgrounds for pinned cells, matching the row's hover and selected states. */
@@ -63,10 +59,10 @@ const PINNED_HEAD = "sticky z-[2] bg-background";
 
 type Pin = { left: number; width: number; last: boolean };
 
-/** Left offsets of the checkbox and pinned data columns. */
+/** Left offsets of the pinned data columns. */
 function pinsFor(widths: (number | undefined)[]): (Pin | undefined)[] {
-  const pins: (Pin | undefined)[] = [{ left: 0, width: CHECKBOX_WIDTH, last: false }];
-  let left = CHECKBOX_WIDTH;
+  const pins: (Pin | undefined)[] = [];
+  let left = 0;
   widths.forEach((width, index) => {
     if (index >= PINNED_COLUMNS || width === undefined) {
       pins.push(undefined);
@@ -93,9 +89,6 @@ type ActivityTableProps = {
   /** Activity shown in the side panel. */
   activeId: number | null;
   onActivate: (id: number) => void;
-  /** Rows ticked for the distance total. */
-  selection: ReadonlySet<number>;
-  onSelectionChange: (selection: Set<number>) => void;
   onDelete: (row: ActivityRow) => void;
   /** Recompute from the archived TCX file. */
   onReimport: (row: ActivityRow) => void;
@@ -113,8 +106,6 @@ export function ActivityTable({
   onSortChange,
   activeId,
   onActivate,
-  selection,
-  onSelectionChange,
   onDelete,
   onReimport,
   onOpenDetails,
@@ -122,42 +113,13 @@ export function ActivityTable({
 }: ActivityTableProps) {
   const [pendingDelete, setPendingDelete] = useState<ActivityRow | null>(null);
   const columns = columnsFor(view);
-  // Index 0 is the checkbox column, then one entry per data column.
+  // One entry per data column.
   const pins = pinsFor(columns.map((column) => column.width));
   const pinClass = (pin: Pin | undefined, base: string) =>
     pin && cn(base, pin.last && "shadow-[inset_-1px_0_0_var(--color-border)]");
   const rows = page?.rows ?? [];
   const total = page?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
-  const selectedDistance = rows
-    .filter((row) => selection.has(row.id))
-    .reduce((sum, row) => sum + (row.distance ?? 0), 0);
-
-  const toggle = (id: number, checked: boolean) => {
-    const next = new Set(selection);
-    if (checked) next.add(id);
-    else next.delete(id);
-    onSelectionChange(next);
-  };
-
-  // The header checkbox covers the rows on the current page only.
-  const selectedOnPage = rows.filter((row) => selection.has(row.id)).length;
-  const pageState =
-    selectedOnPage === 0
-      ? false
-      : selectedOnPage === rows.length
-        ? true
-        : ("indeterminate" as const);
-  const pageLabel =
-    pageState === true ? t("Deselect all on this page") : t("Select all on this page");
-  const togglePage = () => {
-    const next = new Set(selection);
-    for (const row of rows) {
-      if (pageState === true) next.delete(row.id);
-      else next.add(row.id);
-    }
-    onSelectionChange(next);
-  };
 
   const toggleSort = (field: SortField) =>
     onSortChange(
@@ -174,22 +136,13 @@ export function ActivityTable({
         <Table containerClassName="scrollbar-visible min-h-0 flex-1 overflow-auto">
           <TableHeader className="sticky top-0 z-10 bg-background">
             <TableRow>
-              <TableHead className={pinClass(pins[0], PINNED_HEAD)} style={pinStyle(pins[0])}>
-                <Checkbox
-                  aria-label={pageLabel}
-                  title={pageLabel}
-                  disabled={rows.length === 0}
-                  checked={pageState}
-                  onCheckedChange={togglePage}
-                />
-              </TableHead>
               {columns.map((column, index) => (
                 <TableHead
                   key={column.sortField}
-                  style={pinStyle(pins[index + 1])}
+                  style={pinStyle(pins[index])}
                   className={cn(
                     column.align === "right" && "text-right",
-                    pinClass(pins[index + 1], PINNED_HEAD),
+                    pinClass(pins[index], PINNED_HEAD),
                   )}
                   aria-sort={
                     sort.field === column.sortField
@@ -229,24 +182,13 @@ export function ActivityTable({
                 onClick={() => onActivate(row.id)}
                 onDoubleClick={() => onOpenDetails(row)}
               >
-                <TableCell
-                  className={pinClass(pins[0], PINNED_CELL)}
-                  style={pinStyle(pins[0])}
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <Checkbox
-                    aria-label={t("Include in distance total")}
-                    checked={selection.has(row.id)}
-                    onCheckedChange={(checked) => toggle(row.id, checked === true)}
-                  />
-                </TableCell>
                 {columns.map((column, index) => (
                   <TableCell
                     key={column.sortField}
-                    style={pinStyle(pins[index + 1])}
+                    style={pinStyle(pins[index])}
                     className={cn(
                       column.align === "right" && "text-right tabular-nums",
-                      pinClass(pins[index + 1], PINNED_CELL),
+                      pinClass(pins[index], PINNED_CELL),
                     )}
                   >
                     {column.render(row)}
@@ -293,7 +235,7 @@ export function ActivityTable({
             {page && rows.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length + 2}
+                  colSpan={columns.length + 1}
                   className="py-10 text-center text-muted-foreground"
                 >
                   {t("No activities match.")}
@@ -304,14 +246,7 @@ export function ActivityTable({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between gap-4 pt-3 text-sm text-muted-foreground">
-        <span>
-          {selection.size > 0 &&
-            t("{{count}} selected · {{distance}} km", {
-              count: selection.size,
-              distance: formatNumber(selectedDistance, 2),
-            })}
-        </span>
+      <div className="flex items-center justify-end gap-4 pt-3 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <span className="tabular-nums">
             {t("Page {{page}} / {{pages}} · {{from}}–{{to}} of {{total}}", {

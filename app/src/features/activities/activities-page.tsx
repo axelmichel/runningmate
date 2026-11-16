@@ -45,7 +45,6 @@ export function ActivitiesPage({
   const [sort, setSort] = useState<Sort>(DEFAULT_SORT);
   const [pageIndex, setPageIndex] = useState(0);
   const [activeId, setActiveId] = useState<number | null>(null);
-  const [selection, setSelection] = useState<Set<number>>(new Set());
   const [detailId, setDetailId] = useState<number | null>(null);
 
   // Switching view keeps the filter but starts over on page one, as the Python app did.
@@ -54,14 +53,12 @@ export function ActivitiesPage({
     setShownView(view);
     setPageIndex(0);
     setActiveId(null);
-    setSelection(new Set());
     setSort(DEFAULT_SORT);
   }
 
   const changeFilter = useCallback((next: ActivityFilter) => {
     setFilter(next);
     setPageIndex(0);
-    setSelection(new Set());
   }, []);
 
   const page = useQuery({
@@ -104,11 +101,6 @@ export function ActivitiesPage({
     onSuccess: (_, id) => {
       toast.success(t("Activity deleted"));
       if (activeId === id) setActiveId(null);
-      setSelection((current) => {
-        const next = new Set(current);
-        next.delete(id);
-        return next;
-      });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       invalidateSegments(queryClient);
       invalidateGoals(queryClient);
@@ -221,8 +213,6 @@ export function ActivitiesPage({
           }}
           activeId={panelId ?? null}
           onActivate={setActiveId}
-          selection={selection}
-          onSelectionChange={setSelection}
           onDelete={(row) => remove.mutate(row.id)}
           onReimport={(row) => reimport.mutate(row.id)}
           onOpenDetails={(row) => showActivity(row.id)}
