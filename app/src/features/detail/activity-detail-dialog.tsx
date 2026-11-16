@@ -13,6 +13,7 @@ import {
   PanelLeft,
   Pencil,
   Route,
+  Share2,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -42,9 +43,18 @@ import { RouteSegmentsTab } from "./route-segments-tab";
 import { SegmentsTab } from "./segments-tab";
 import { StatsTab } from "./stats-tab";
 import { ZonesTab } from "./zones-tab";
+import { ShareTab } from "@/features/share/share-tab";
 
 type Tab =
-  "general" | "segments" | "routeSegments" | "map" | "statistics" | "effect" | "zones" | "edit";
+  | "general"
+  | "segments"
+  | "routeSegments"
+  | "map"
+  | "statistics"
+  | "effect"
+  | "zones"
+  | "share"
+  | "edit";
 
 const NAV_ITEMS: (NavItem & { value: Tab })[] = [
   { value: "general", label: tk("General"), icon: LayoutDashboard },
@@ -54,6 +64,7 @@ const NAV_ITEMS: (NavItem & { value: Tab })[] = [
   { value: "statistics", label: tk("Statistics"), icon: ChartLine },
   { value: "effect", label: tk("Effect"), icon: Gauge },
   { value: "zones", label: tk("Heart rate zones"), icon: HeartPulse },
+  { value: "share", label: tk("Social share"), icon: Share2 },
   { value: "edit", label: tk("Edit"), icon: Pencil },
 ];
 
@@ -261,6 +272,9 @@ function DetailContent({
           </TabsContent>
           <TabsContent value="zones">
             <ZonesTab activityId={activity.id} />
+          </TabsContent>
+          <TabsContent value="share" className="h-full">
+            <ShareTab activity={activity} />
           </TabsContent>
           <TabsContent value="edit">
             <EditTab activity={activity} onSaved={() => onTabChange("general")} />

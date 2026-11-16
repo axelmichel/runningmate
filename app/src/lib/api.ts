@@ -79,6 +79,15 @@ export const api = {
   setActivityEquipment: (activityId: number, equipmentId: number | null) =>
     invoke<ActivityDetail>("set_activity_equipment", { activityId, equipmentId }),
   deleteActivity: (id: number) => invoke<void>("delete_activity", { id }),
+  // Social share editor
+  /** One Esri gray-canvas tile (base or labels) as image bytes. */
+  mapTile: (dark: boolean, labels: boolean, z: number, x: number, y: number) =>
+    invoke<ArrayBuffer>("map_tile", { dark, labels, z, x, y }),
+  readImage: (path: string) => invoke<ArrayBuffer>("read_image", { path }),
+  saveShareImage: (path: string, png: string) => invoke<void>("save_share_image", { path, png }),
+  /** Opens the macOS share menu next to `anchor` (the button's x, y, width, height). */
+  shareImage: (name: string, png: string, anchor: [number, number, number, number]) =>
+    invoke<void>("share_image", { name, png, anchor }),
   activityTypeDetails: (viewMode: ViewMode) =>
     invoke<string[]>("activity_type_details", { viewMode }),
 

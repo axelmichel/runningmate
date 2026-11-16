@@ -39,6 +39,23 @@ For runs and rides with heart-rate data, **Heart rate by zone** shows the heart 
 coloured by your heart-rate zones (set in the user settings) over light bands for each zone.
 If available, you'll also find a trend chart showing fitness, fatigue and form over the period of 90 days (relative to the activity date).
 
+## Social Share
+Builds an image of the activity for social media. Pick a size: presets for an Instagram post (1:1) or portrait (4:5),
+a story (9:16), an X post (16:9) and a Facebook post, or any size of your own. Then pick a background: a gradient, a
+single colour, one of the activity's photos (or any image file), a light or dark map, or transparent. Photos and the
+map can be darkened so the text stays readable. Choose which facts to show (title, date, distance, duration, pace or
+speed, elevation, heart rate, calories) and the colours and sizes of the route and the text.
+Each fact is its own element: the route, the title, the date and every figure can be placed anywhere. Click an
+element to select it, Shift-click to add more; drag to move the selection, or nudge it with the arrow keys (Shift for
+bigger steps). On a map, the map moves with the route, so it stays on its streets. The bar above the preview lines up
+the selection: one element (or group) on the image's left edge, centre or right edge, top, middle or bottom; several
+on each other. **Equal space** spreads three or more evenly between the outer two, or one or two evenly across the
+image. **Group** keeps elements together: clicking one selects the whole group, and it moves, lines up and spreads as
+one. Turn on **Grid** to see a grid over the preview (not in the image): dragged elements put their nearest edge or
+centre on its lines; hold Option (⌥) while dragging to place them freely. **Save image…** writes a PNG; **Share…** opens the macOS share menu (Messages, Mail, AirDrop, Photos and any
+app that offers itself there). To post on Instagram, save the image and upload it from your phone or the website.
+The editor remembers your last settings for the next activity.
+
 ## Heart Rate Zones
 ![Detail Window: Heart Rate Zones](../images/screens/detail_03.png)
 The heart rate zone section shows the distribution of your heart rate during the activity. 
