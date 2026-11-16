@@ -18,14 +18,19 @@ export function RankTrophy({ rank, className }: { rank: number; className?: stri
   );
 }
 
-/** Trophy with the number of segments where the activity is among the fastest three. */
+/**
+ * Trophy with the number of segments where the activity is among the fastest three; `labelled`
+ * shows it as "2 × Top 3".
+ */
 export function TrophyBadge({
   activityId,
   enabled = true,
+  labelled = false,
   className,
 }: {
   activityId: number;
   enabled?: boolean;
+  labelled?: boolean;
   className?: string;
 }) {
   const { data: efforts = [] } = useSegmentEfforts(activityId, enabled);
@@ -42,7 +47,7 @@ export function TrophyBadge({
       )}
     >
       <Trophy className="size-3.5" />
-      {count}
+      {labelled ? t("{{count}} × Top 3", { count }) : count}
     </span>
   );
 }

@@ -23,6 +23,8 @@
   "{{count}} file added_other": "{{count}} files added",
   "{{count}} files · {{size}}_one": "{{files}} file · {{size}}",
   "{{count}} files · {{size}}_other": "{{files}} files · {{size}}",
+  "{{count}} goals_one": "{{count}} goal",
+  "{{count}} goals_other": "{{count}} goals",
   "{{count}} hour_one": "{{count}} hour",
   "{{count}} hour_other": "{{count}} hours",
   "{{count}} in a row_one": "{{count}} in a row",
@@ -40,5 +42,7 @@
   "{{count}} week_one": "{{count}} week",
   "{{count}} week_other": "{{count}} weeks",
   "{{count}} with heart rate_one": "{{count}} with heart rate",
-  "{{count}} with heart rate_other": "{{count}} with heart rate"
+  "{{count}} with heart rate_other": "{{count}} with heart rate",
+  "{{count}} × Top 3_one": "{{count}} × Top 3",
+  "{{count}} × Top 3_other": "{{count}} × Top 3"
 }

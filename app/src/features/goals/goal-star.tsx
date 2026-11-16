@@ -5,14 +5,19 @@ import { cn } from "@/lib/utils";
 
 import { useGoalHits } from "./use-goals";
 
-/** Star for an activity that hit a goal, with the count when it hit several. */
+/**
+ * Star for an activity that hit a goal, with the count when it hit several; `labelled` always
+ * shows the count, as "2 goals".
+ */
 export function GoalStar({
   activityId,
   enabled = true,
+  labelled = false,
   className,
 }: {
   activityId: number;
   enabled?: boolean;
+  labelled?: boolean;
   className?: string;
 }) {
   const { data: hits = [] } = useGoalHits(activityId, enabled);
@@ -28,7 +33,7 @@ export function GoalStar({
       )}
     >
       <Star className="size-3.5 fill-current" />
-      {hits.length > 1 && hits.length}
+      {labelled ? t("{{count}} goals", { count: hits.length }) : hits.length > 1 && hits.length}
     </span>
   );
 }
