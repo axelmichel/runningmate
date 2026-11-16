@@ -151,6 +151,8 @@ pub struct ImportSummary {
     pub imported: usize,
     pub duplicates: usize,
     pub failed: usize,
+    /// Files without GPS, waiting for their route to be drawn.
+    pub needs_route: usize,
     /// Stopped early by the user.
     pub cancelled: bool,
 }
@@ -215,6 +217,7 @@ impl ImportSummary {
         match outcome {
             ImportOutcome::Imported { .. } => self.imported += 1,
             ImportOutcome::Duplicate { .. } | ImportOutcome::Similar { .. } => self.duplicates += 1,
+            ImportOutcome::NeedsRoute { .. } => self.needs_route += 1,
             ImportOutcome::Failed { .. } => self.failed += 1,
         }
     }

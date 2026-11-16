@@ -17,6 +17,7 @@ import { LAST_CONNECTOR_KEY, type Connector } from "./connector";
 import { FileImportPanel } from "./file-import-panel";
 import { FolderSyncPanel } from "./folder-sync-panel";
 import { GarminPanel } from "./garmin-panel";
+import { PendingRoutes } from "./pending-routes";
 
 type ConnectorInfo = NavItem & {
   value: Connector;
@@ -125,6 +126,7 @@ export function ConnectorsDialog({ connector, onConnectorChange }: ConnectorsDia
                   <p className="text-sm text-muted-foreground">{t(c.description)}</p>
                 </div>
                 {panels[c.value]}
+                <PendingRoutes />
               </TabsContent>
             ))}
           </div>

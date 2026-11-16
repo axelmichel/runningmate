@@ -18,6 +18,8 @@ import type { Equipment } from "@/bindings/Equipment";
 import type { EquipmentKind } from "@/bindings/EquipmentKind";
 import type { ExportCandidate } from "@/bindings/ExportCandidate";
 import type { FitnessDay } from "@/bindings/FitnessDay";
+import type { FixEdit } from "@/bindings/FixEdit";
+import type { FixSource } from "@/bindings/FixSource";
 import type { FolderSyncStatus } from "@/bindings/FolderSyncStatus";
 import type { GarminSignInResult } from "@/bindings/GarminSignInResult";
 import type { GarminStatus } from "@/bindings/GarminStatus";
@@ -27,10 +29,12 @@ import type { GoalInput } from "@/bindings/GoalInput";
 import type { GoalProgress } from "@/bindings/GoalProgress";
 import type { HealthReport } from "@/bindings/HealthReport";
 import type { HeartRateTrend } from "@/bindings/HeartRateTrend";
+import type { ImportOutcome } from "@/bindings/ImportOutcome";
 import type { ImportSummary } from "@/bindings/ImportSummary";
 import type { LibraryAsset } from "@/bindings/LibraryAsset";
 import type { MatchedRun } from "@/bindings/MatchedRun";
 import type { Media } from "@/bindings/Media";
+import type { PendingRoute } from "@/bindings/PendingRoute";
 import type { PhotosAccess } from "@/bindings/PhotosAccess";
 import type { PlanDetail } from "@/bindings/PlanDetail";
 import type { PlanInput } from "@/bindings/PlanInput";
@@ -109,6 +113,18 @@ export const api = {
     invoke<ImportSummary>("import_files", { paths, range }),
   reimportActivity: (id: number) => invoke<void>("reimport_activity", { id }),
   activityRoute: (id: number) => invoke<RouteOutline | null>("activity_route", { id }),
+  /** Samples and detected GPS problems, for the route fix editor. */
+  activityFixSource: (id: number) => invoke<FixSource>("activity_fix_source", { id }),
+  /** Replaces stretches with drawn routes and recomputes the activity. */
+  applyActivityFix: (id: number, edits: FixEdit[]) =>
+    invoke<void>("apply_activity_fix", { id, edits }),
+  revertActivityFix: (id: number) => invoke<void>("revert_activity_fix", { id }),
+  /** Imported files without GPS, waiting for their route to be drawn. */
+  pendingRoutes: () => invoke<PendingRoute[]>("pending_routes"),
+  pendingFixSource: (fileId: string) => invoke<FixSource>("pending_fix_source", { fileId }),
+  applyPendingFix: (fileId: string, edits: FixEdit[]) =>
+    invoke<ImportOutcome>("apply_pending_fix", { fileId, edits }),
+  discardPendingRoute: (fileId: string) => invoke<void>("discard_pending_route", { fileId }),
   /** Writes the route as PNG or SVG, depending on the file extension. */
   exportRouteImage: (id: number, path: string) => invoke<void>("export_route_image", { id, path }),
   folderSyncStatus: () => invoke<FolderSyncStatus>("folder_sync_status"),
