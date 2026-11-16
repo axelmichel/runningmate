@@ -43,17 +43,17 @@ const CONNECTORS: ConnectorInfo[] = [
     title: tk("Folder sync"),
     icon: FolderSync,
     description: tk(
-      "Imports new TCX files from a folder, e.g. an iCloud export of RunGap or HealthFit.",
+      "Imports new TCX and GPX files from a folder, e.g. an iCloud export of RunGap or HealthFit.",
     ),
     capabilities: [tk("Import")],
   },
   {
     value: "files",
-    label: tk("TCX files"),
-    title: tk("TCX files"),
+    label: tk("TCX / GPX files"),
+    title: tk("TCX / GPX files"),
     icon: FileUp,
     description: tk(
-      "Imports TCX files you pick. They are archived in the imports folder; the originals stay where they are.",
+      "Imports TCX and GPX files you pick. They are archived in the imports folder; the originals stay where they are.",
     ),
     capabilities: [tk("Import")],
   },

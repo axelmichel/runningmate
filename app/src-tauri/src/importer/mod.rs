@@ -2,6 +2,7 @@
 //! from `importer/file/tcx_file.py`; charts and maps are no longer pre-rendered.
 
 pub mod archive;
+pub mod gpx;
 pub mod metrics;
 pub mod outline;
 pub mod route_image;
@@ -101,17 +102,46 @@ pub fn process(file_id: &str, xml: &str, weight: f64) -> AppResult<Processed> {
     })
 }
 
-/// `file_id` for a TCX path: the file name without `.tcx`, as in Python.
+/// File extensions the importer reads.
+pub const EXTENSIONS: [&str; 2] = ["tcx", "gpx"];
+
+/// Whether `path` is a file the importer reads (by extension).
+pub fn is_activity_file(path: &Path) -> bool {
+    path.extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| EXTENSIONS.iter().any(|x| e.eq_ignore_ascii_case(x)))
+}
+
+fn is_gpx(path: &Path) -> bool {
+    path.extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("gpx"))
+}
+
+/// `file_id` for a TCX or GPX path: the file name without `.tcx` or `.gpx`, as in Python. A run
+/// exported as both counts as a duplicate.
 pub fn file_id_for(path: &Path) -> AppResult<String> {
     let name = path
         .file_name()
         .and_then(|n| n.to_str())
         .ok_or_else(|| AppError::Invalid(format!("invalid file name: {}", path.display())))?;
-    let lower = name.to_ascii_lowercase();
-    if !lower.ends_with(".tcx") {
-        return Err(AppError::Invalid(format!("not a .tcx file: {name}")));
+    if !is_activity_file(path) {
+        return Err(AppError::Invalid(format!(
+            "not a .tcx or .gpx file: {name}"
+        )));
     }
     Ok(name[..name.len() - 4].to_string())
+}
+
+/// The TCX document for an activity file: the file itself, or a GPX file converted to TCX.
+/// The second value is the original GPX, archived next to the TCX.
+fn read_as_tcx(path: &Path) -> AppResult<(String, Option<String>)> {
+    let text = std::fs::read_to_string(path)?;
+    if is_gpx(path) {
+        let tcx = tcx::write(&gpx::parse(&text)?);
+        Ok((tcx, Some(text)))
+    } else {
+        Ok((text, None))
+    }
 }
 
 fn activity_by_file_id(conn: &Connection, file_id: &str) -> AppResult<Option<i64>> {
@@ -124,7 +154,7 @@ fn activity_by_file_id(conn: &Connection, file_id: &str) -> AppResult<Option<i64
         .optional()?)
 }
 
-/// Imports one TCX file: stores the activity and archives the file in `imports_dir`. The
+/// Imports one TCX or GPX file: stores the activity and archives the file in `imports_dir`. The
 /// source file is left in place.
 pub fn import_file(
     conn: &mut Connection,
@@ -136,7 +166,7 @@ pub fn import_file(
     if let Some(activity_id) = activity_by_file_id(conn, &file_id)? {
         return Ok((ImportOutcome::Duplicate { activity_id }, None));
     }
-    let xml = std::fs::read_to_string(path)?;
+    let (xml, gpx) = read_as_tcx(path)?;
     let processed = process(&file_id, &xml, body_weight(conn)?)?;
     let day = processed
         .metrics
@@ -148,7 +178,8 @@ pub fn import_file(
         return Ok((ImportOutcome::Similar { activity_id }, None));
     }
     let activity_id = store(conn, &processed, None, language)?;
-    archive::write(imports_dir, &file_id, &xml)?;
+    let original = gpx.map(|gpx| (format!("{file_id}.gpx"), gpx));
+    archive::write_with(imports_dir, &file_id, &xml, original.as_slice())?;
     Ok((
         ImportOutcome::Imported { activity_id },
         weather_point(activity_id, &processed.segments),
@@ -176,11 +207,17 @@ pub fn similar_activity(conn: &Connection, day: &str, distance: f64) -> AppResul
         .map(|(id, _)| id))
 }
 
-/// Start of a TCX file, read from its first `<Time>` without parsing the whole document.
-pub fn tcx_start(path: &Path) -> Option<chrono::DateTime<chrono::Utc>> {
+/// Start of a TCX or GPX file, read from its first trackpoint time without parsing the whole
+/// document (a GPX `<metadata>` time may differ, so the search starts at the first `<trkpt`).
+pub fn file_start(path: &Path) -> Option<chrono::DateTime<chrono::Utc>> {
     let xml = std::fs::read_to_string(path).ok()?;
-    let start = xml.find("<Time>")? + "<Time>".len();
-    let end = start + xml[start..].find("</Time>")?;
+    let (from, open, close) = if is_gpx(path) {
+        (xml.find("<trkpt")?, "<time>", "</time>")
+    } else {
+        (0, "<Time>", "</Time>")
+    };
+    let start = from + xml[from..].find(open)? + open.len();
+    let end = start + xml[start..].find(close)?;
     chrono::DateTime::parse_from_rfc3339(xml[start..end].trim())
         .ok()
         .map(|t| t.to_utc())

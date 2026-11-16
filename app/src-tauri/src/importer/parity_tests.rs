@@ -319,7 +319,7 @@ fn same_day_and_distance_counts_as_similar() {
     let mut conn = db.conn().unwrap();
 
     // The same run, recorded by another app: same day, 3.23 km instead of 3.21 km.
-    let start = tcx_start(&source).unwrap();
+    let start = file_start(&source).unwrap();
     insert_activity(
         &conn,
         77,
@@ -547,4 +547,41 @@ fn new_route_segment_is_matched_in_archived_activities() {
     assert_eq!(detail.leaderboard.len(), 1);
     assert_eq!(detail.leaderboard[0].activity_id, activity_id);
     assert_eq!(detail.leaderboard[0].rank, 1);
+}
+
+#[test]
+fn gpx_import_matches_the_same_run_as_tcx() {
+    use crate::db::{Db, activities};
+
+    let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let dir = tempfile::tempdir().unwrap();
+    let source = dir.path().join("synthetic_run.gpx");
+    std::fs::copy(fixtures.join("synthetic_run.gpx"), &source).unwrap();
+    let imports = dir.path().join("imports");
+    let db = Db::open_in_memory().unwrap();
+    let mut conn = db.conn().unwrap();
+
+    assert_eq!(
+        file_start(&source).unwrap().to_rfc3339(),
+        "2025-03-01T07:30:01+00:00",
+        "the first trackpoint, not the metadata time"
+    );
+    let (outcome, _) = import_file(&mut conn, &source, &imports, "en").unwrap();
+    let ImportOutcome::Imported { activity_id } = outcome else {
+        panic!("expected an import, got {outcome:?}");
+    };
+    let detail = activities::get(&conn, activity_id).unwrap();
+    assert_eq!(detail.view_mode, ViewMode::Running);
+    assert_eq!(detail.distance, Some(3.21));
+    assert_eq!(detail.avg_pace.as_deref(), Some("05:44"));
+    assert_eq!(detail.total_steps, Some(2928));
+
+    // Archived as TCX, so re-import and analysis read it like any other activity.
+    let xml = archive::read(&archive::archive_path(&imports, "synthetic_run")).unwrap();
+    assert_eq!(tcx::parse(&xml).unwrap().points.len(), 1100);
+    reimport(&mut conn, activity_id, &imports, "en").unwrap();
+    assert_eq!(
+        activities::get(&conn, activity_id).unwrap().distance,
+        Some(3.21)
+    );
 }
