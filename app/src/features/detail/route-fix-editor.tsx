@@ -1,8 +1,9 @@
 import "leaflet/dist/leaflet.css";
 
+import { useQuery } from "@tanstack/react-query";
 import { divIcon, type LatLngTuple } from "leaflet";
 import { Check, MousePointerClick, Trash2, Undo2, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CircleMarker, MapContainer, Marker, Polyline, useMap, useMapEvents } from "react-leaflet";
 import { toast } from "sonner";
 
@@ -11,18 +12,26 @@ import type { FixIssue } from "@/bindings/FixIssue";
 import type { FixIssueKind } from "@/bindings/FixIssueKind";
 import type { FixSource } from "@/bindings/FixSource";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { boundsOf, FINISH_COLOR, START_COLOR } from "@/features/segments/segment-math";
 import { t, tk } from "@/i18n";
+import { api } from "@/lib/api";
 import { formatDuration, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { Basemap, MapCredit } from "./basemap";
 import {
+  cumulativeMetres,
   editedDistance,
   editPath,
+  insertVertex,
+  joinRouted,
   nearestSample,
   pathLength,
+  positionOf,
   positionsBetween,
+  stretchAround,
   toEdit,
 } from "./fix-math";
 
@@ -32,6 +41,11 @@ const SELECTION_COLOR = "#2f80ed";
 const FIXED_COLOR = "#27ae60";
 /** How far (screen pixels) from the track a click may be when picking a stretch. */
 const SNAP_PIXELS = 24;
+/** How close (screen pixels) the pointer must come to the track to grab it. */
+const GRAB_PIXELS = 14;
+/** Dragging the track redraws this far (m) either side of the grabbed point. */
+const DRAG_REACH = 250;
+const SNAP_STORAGE_KEY = "runningmate-fix-snap";
 /** Shown for an activity without any GPS until the first point is drawn. */
 const FALLBACK_CENTER: LatLngTuple = [50, 10];
 
@@ -41,7 +55,13 @@ const ISSUE_LABELS: Record<FixIssueKind, string> = {
   noGps: tk("No GPS"),
 };
 
-type Draft = { start: number; end: number | null; vertices: LatLngTuple[] };
+type Draft = {
+  start: number;
+  end: number | null;
+  vertices: LatLngTuple[];
+  /** Earlier vertices, for undo. */
+  history: LatLngTuple[][];
+};
 
 const vertexIcon = divIcon({
   className: "",
@@ -96,6 +116,85 @@ function ClickHandler({
   return null;
 }
 
+const handleIcon = divIcon({
+  className: "",
+  html: `<div style="width:16px;height:16px;border-radius:9999px;background:${SELECTION_COLOR};border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.3);cursor:grab"></div>`,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
+
+/**
+ * A handle that follows the pointer along the track; dragging it moves the track there.
+ * `onDrag` gets the grabbed sample and where it was dropped.
+ */
+function TrackHandle({
+  source,
+  onDrag,
+}: {
+  source: FixSource;
+  onDrag: (index: number, position: LatLngTuple) => void;
+}) {
+  const [hover, setHover] = useState<number | null>(null);
+  const dragging = useRef(false);
+  const map = useMapEvents({
+    mousemove: ({ containerPoint }) => {
+      if (dragging.current) return;
+      setHover(
+        nearestSample(
+          source.samples,
+          (p) => map.latLngToContainerPoint(p).distanceTo(containerPoint),
+          GRAB_PIXELS,
+        ),
+      );
+    },
+    mouseout: () => !dragging.current && setHover(null),
+  });
+  const position = hover === null ? null : positionOf(source.samples[hover]);
+  if (hover === null || !position) return null;
+  return (
+    <Marker
+      position={position}
+      icon={handleIcon}
+      draggable
+      eventHandlers={{
+        dragstart: () => {
+          dragging.current = true;
+        },
+        dragend: (event) => {
+          dragging.current = false;
+          const { lat, lng } = event.target.getLatLng();
+          setHover(null);
+          onDrag(hover, [lat, lng]);
+        },
+      }}
+    />
+  );
+}
+
+/**
+ * The route through `waypoints` along OpenStreetMap paths when `enabled`, else (and while it
+ * loads or when it fails) the straight lines between them.
+ */
+function useSnappedRoute(source: FixSource, waypoints: LatLngTuple[], enabled: boolean) {
+  const routed = useQuery({
+    queryKey: ["routeAlongPaths", source.view, waypoints],
+    queryFn: () =>
+      api.routeAlongPaths(
+        source.view,
+        waypoints.map(([lat, lon]) => [lat, lon]),
+      ),
+    enabled: enabled && waypoints.length >= 2,
+    staleTime: Infinity,
+    retry: false,
+  });
+  const snapped = enabled && routed.data ? joinRouted(waypoints, routed.data) : waypoints;
+  return {
+    path: snapped,
+    loading: enabled && routed.isFetching,
+    failed: enabled && routed.isError,
+  };
+}
+
 function seconds(source: FixSource, index: number) {
   return (source.samples[index].time - source.samples[0].time) / 1000;
 }
@@ -144,8 +243,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 /**
- * Redraws broken stretches of a track by hand: pick a detected problem or any stretch of the
- * track, click the route on the map (points can be dragged), and add it as a fix. `onSave`
+ * Redraws stretches of a track by hand: drag the track, or pick a detected problem or any
+ * stretch, then click the route on the map (points can be dragged), following OpenStreetMap
+ * paths when snapping is on, and add it as a fix. `onSave`
  * gets all fixes; the backend moves the samples onto the drawn routes and recomputes.
  */
 export function RouteFixEditor({
@@ -167,17 +267,21 @@ export function RouteFixEditor({
   // Without any GPS there is only one thing to do: draw the whole route.
   const [draft, setDraft] = useState<Draft | null>(() => {
     const whole = issues.find((issue) => issue.kind === "noGps");
-    return whole ? { start: whole.start, end: whole.end, vertices: [] } : null;
+    return whole ? { start: whole.start, end: whole.end, vertices: [], history: [] } : null;
   });
   const [picking, setPicking] = useState(false);
   const [edits, setEdits] = useState<FixEdit[]>([]);
+  const [snap, setSnap] = useState(() => localStorage.getItem(SNAP_STORAGE_KEY) !== "off");
   const dark = document.documentElement.classList.contains("dark");
 
   const track = useMemo(() => positionsBetween(samples), [samples]);
   const bounds = useMemo(() => (track.length >= 2 ? boundsOf(track) : null), [track]);
   const recorded = useMemo(() => pathLength(track), [track]);
-  const draftPath =
+  const cumulative = useMemo(() => cumulativeMetres(samples), [samples]);
+  const waypoints =
     draft?.end != null ? editPath(samples, draft.start, draft.end, draft.vertices) : [];
+  const snapped = useSnappedRoute(source, waypoints, snap);
+  const draftPath = snapped.path;
   const after = editedDistance(samples, edits);
 
   const startPicking = () => {
@@ -186,22 +290,47 @@ export function RouteFixEditor({
   };
   const pick = (index: number) => {
     if (draft === null || draft.end !== null) {
-      setDraft({ start: index, end: null, vertices: [] });
+      setDraft({ start: index, end: null, vertices: [], history: [] });
       return;
     }
     if (index === draft.start) return;
     const [start, end] = [draft.start, index].sort((a, b) => a - b);
-    setDraft({ start, end, vertices: [] });
+    setDraft({ start, end, vertices: [], history: [] });
     setPicking(false);
   };
   const selectIssue = (issue: FixIssue) => {
     setPicking(false);
-    setDraft({ start: issue.start, end: issue.end, vertices: [] });
+    setDraft({ start: issue.start, end: issue.end, vertices: [], history: [] });
   };
   const setVertices = (update: (vertices: LatLngTuple[]) => LatLngTuple[]) =>
-    setDraft((d) => (d ? { ...d, vertices: update(d.vertices) } : d));
+    setDraft((d) =>
+      d ? { ...d, vertices: update(d.vertices), history: [...d.history, d.vertices] } : d,
+    );
+  const addVertex = (point: LatLngTuple) =>
+    setDraft((d) =>
+      d?.end != null
+        ? {
+            ...d,
+            history: [...d.history, d.vertices],
+            vertices: insertVertex(
+              positionOf(samples[d.start]),
+              d.vertices,
+              positionOf(samples[d.end]),
+              point,
+            ),
+          }
+        : d,
+    );
+  const dragTrack = (index: number, position: LatLngTuple) => {
+    const [start, end] = stretchAround(samples, cumulative, index, DRAG_REACH);
+    setDraft({ start, end, vertices: [position], history: [[]] });
+  };
+  const toggleSnap = (on: boolean) => {
+    localStorage.setItem(SNAP_STORAGE_KEY, on ? "on" : "off");
+    setSnap(on);
+  };
   const addDraft = () => {
-    if (draft?.end == null || draftPath.length < 2) return;
+    if (draft?.end == null || draftPath.length < 2 || snapped.loading) return;
     setEdits([...edits, toEdit(samples, draft.start, draft.end, draftPath)]);
     setDraft(null);
   };
@@ -295,13 +424,43 @@ export function RouteFixEditor({
             draft={draft}
             picking={picking}
             onPick={pick}
-            onDraw={(position) => setVertices((vertices) => [...vertices, position])}
+            onDraw={addVertex}
           />
+          {!picking && !draft && <TrackHandle source={source} onDrag={dragTrack} />}
         </MapContainer>
         <MapCredit />
       </div>
 
       <aside className="flex w-72 shrink-0 flex-col gap-5 overflow-y-auto">
+        <Section title={t("Edit")}>
+          {track.length >= 2 && (
+            <p className="text-sm text-muted-foreground">
+              {t("Drag the track to move it, or pick a stretch to redraw.")}
+            </p>
+          )}
+          <div className="flex items-start gap-2">
+            <Checkbox
+              id="fix-snap"
+              checked={snap}
+              onCheckedChange={(checked) => toggleSnap(checked === true)}
+            />
+            <div className="grid gap-0.5">
+              <Label htmlFor="fix-snap">{t("Follow paths")}</Label>
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  "Routes along OpenStreetMap paths; sends the points you place to routing.openstreetmap.de.",
+                )}
+              </p>
+            </div>
+          </div>
+          {track.length >= 2 && (
+            <Button size="sm" variant="outline" onClick={startPicking} disabled={picking}>
+              <MousePointerClick />
+              {t("Pick a stretch on the map")}
+            </Button>
+          )}
+        </Section>
+
         <Section title={t("Problems found")}>
           {issues.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("No GPS problems found.")}</p>
@@ -318,12 +477,6 @@ export function RouteFixEditor({
               ))}
             </div>
           )}
-          {track.length >= 2 && (
-            <Button size="sm" variant="outline" onClick={startPicking} disabled={picking}>
-              <MousePointerClick />
-              {t("Pick a stretch on the map")}
-            </Button>
-          )}
         </Section>
 
         {(picking || draft) && (
@@ -335,6 +488,14 @@ export function RouteFixEditor({
                   : t("Click where the stretch starts.")
                 : t("Click the route on the map; drag points to move them.")}
             </p>
+            {snapped.loading && (
+              <p className="text-xs text-muted-foreground">{t("Following paths…")}</p>
+            )}
+            {snapped.failed && (
+              <p className="text-xs text-destructive">
+                {t("Could not follow paths here; straight lines are used.")}
+              </p>
+            )}
             {draft?.end != null && (
               <p className="text-sm tabular-nums">
                 {formatDuration(seconds(source, draft.start))} –{" "}
@@ -348,13 +509,23 @@ export function RouteFixEditor({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setVertices((vertices) => vertices.slice(0, -1))}
-                    disabled={draft.vertices.length === 0}
+                    onClick={() =>
+                      setDraft((d) =>
+                        d && d.history.length > 0
+                          ? { ...d, vertices: d.history.at(-1)!, history: d.history.slice(0, -1) }
+                          : d,
+                      )
+                    }
+                    disabled={draft.history.length === 0}
                   >
                     <Undo2 />
                     {t("Undo point")}
                   </Button>
-                  <Button size="sm" onClick={addDraft} disabled={draftPath.length < 2}>
+                  <Button
+                    size="sm"
+                    onClick={addDraft}
+                    disabled={draftPath.length < 2 || snapped.loading}
+                  >
                     <Check />
                     {t("Use route")}
                   </Button>

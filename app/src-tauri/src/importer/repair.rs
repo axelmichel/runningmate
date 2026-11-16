@@ -60,6 +60,8 @@ pub struct FixSource {
     pub has_original: bool,
     /// `[latitude, longitude]` to centre the map on when no sample has a position.
     pub center: Option<(f64, f64)>,
+    /// Running, walking or cycling, for routing along the right kind of paths.
+    pub view: ViewMode,
 }
 
 /// A drawn route for the samples from `from` to `to` (Unix milliseconds, both included). The
@@ -109,6 +111,7 @@ pub fn source(activity: &TcxActivity, has_original: bool) -> FixSource {
         issues: issues(activity),
         has_original,
         center: None,
+        view: ViewMode::from_activity_type(&activity.sport),
     }
 }
 

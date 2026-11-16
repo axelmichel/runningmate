@@ -5,6 +5,7 @@ use tauri::{AppHandle, State};
 
 use super::{ai, import::fetch_weather_later};
 use crate::{
+    activity_type::ViewMode,
     db::{Db, ai_summaries},
     error::AppResult,
     importer::{
@@ -12,7 +13,7 @@ use crate::{
         pending::{self, PendingRoute},
         repair::{FixEdit, FixSource},
     },
-    paths, settings,
+    osm_routing, paths, settings,
 };
 
 #[tauri::command(async)]
@@ -95,4 +96,13 @@ pub fn apply_pending_fix(
 #[tauri::command(async)]
 pub fn discard_pending_route(file_id: String) -> AppResult<()> {
     pending::discard(&paths::imports_dir()?, &file_id)
+}
+
+/// Route through `points` (`[latitude, longitude]`) along OpenStreetMap paths, for snapping.
+#[tauri::command]
+pub async fn route_along_paths(
+    view: ViewMode,
+    points: Vec<(f64, f64)>,
+) -> AppResult<Vec<(f64, f64)>> {
+    osm_routing::route(view, &points).await
 }

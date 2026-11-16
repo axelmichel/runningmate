@@ -125,6 +125,9 @@ export const api = {
   applyPendingFix: (fileId: string, edits: FixEdit[]) =>
     invoke<ImportOutcome>("apply_pending_fix", { fileId, edits }),
   discardPendingRoute: (fileId: string) => invoke<void>("discard_pending_route", { fileId }),
+  /** Route through `points` along OpenStreetMap paths (online, routing.openstreetmap.de). */
+  routeAlongPaths: (view: ViewMode, points: [number, number][]) =>
+    invoke<[number, number][]>("route_along_paths", { view, points }),
   /** Writes the route as PNG or SVG, depending on the file extension. */
   exportRouteImage: (id: number, path: string) => invoke<void>("export_route_image", { id, path }),
   folderSyncStatus: () => invoke<FolderSyncStatus>("folder_sync_status"),

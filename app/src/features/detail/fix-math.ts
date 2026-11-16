@@ -110,3 +110,71 @@ export function invalidateActivityTrack(queryClient: QueryClient, activityId: nu
   void queryClient.invalidateQueries({ queryKey: ["activities"] });
   void queryClient.invalidateQueries({ predicate: (query) => query.queryKey[1] === activityId });
 }
+
+/** Metres along the track at every sample; samples without a position keep the last value. */
+export function cumulativeMetres(samples: FixSample[]): number[] {
+  let total = 0;
+  let previous: LatLngTuple | null = null;
+  return samples.map((sample) => {
+    const position = positionOf(sample);
+    if (position) {
+      if (previous) total += metres(previous, position);
+      previous = position;
+    }
+    return total;
+  });
+}
+
+/**
+ * The stretch to redraw when the track is dragged at sample `index`: from `reach` metres before
+ * to `reach` metres after it (the first and last sample at the ends), on positioned samples.
+ */
+export function stretchAround(
+  samples: FixSample[],
+  cumulative: number[],
+  index: number,
+  reach: number,
+): [number, number] {
+  let start = index;
+  while (
+    start > 0 &&
+    (cumulative[index] - cumulative[start] < reach || !positionOf(samples[start]))
+  )
+    start--;
+  let end = index;
+  const last = samples.length - 1;
+  while (end < last && (cumulative[end] - cumulative[index] < reach || !positionOf(samples[end])))
+    end++;
+  return [start, end];
+}
+
+/**
+ * The vertices with `point` added where it lengthens the route least, between the anchors
+ * `first` and `last`. Without both anchors (drawing a route from scratch) it goes at the end.
+ */
+export function insertVertex(
+  first: LatLngTuple | null,
+  vertices: LatLngTuple[],
+  last: LatLngTuple | null,
+  point: LatLngTuple,
+): LatLngTuple[] {
+  if (!first || !last) return [...vertices, point];
+  const route = [first, ...vertices, last];
+  let best = 0;
+  let bestCost = Infinity;
+  for (let k = 0; k < route.length - 1; k++) {
+    const cost =
+      metres(route[k], point) + metres(point, route[k + 1]) - metres(route[k], route[k + 1]);
+    if (cost < bestCost) {
+      best = k;
+      bestCost = cost;
+    }
+  }
+  return [...vertices.slice(0, best), point, ...vertices.slice(best)];
+}
+
+/** The routed line, starting and ending exactly at the waypoints so it joins the track. */
+export function joinRouted(waypoints: LatLngTuple[], routed: LatLngTuple[]): LatLngTuple[] {
+  if (waypoints.length < 2 || routed.length < 2) return waypoints;
+  return [waypoints[0], ...routed, waypoints[waypoints.length - 1]];
+}

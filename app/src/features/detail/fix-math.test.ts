@@ -3,7 +3,18 @@ import { describe, expect, it } from "vitest";
 
 import type { FixSample } from "@/bindings/FixSample";
 
-import { editedDistance, editPath, metres, nearestSample, pathLength, toEdit } from "./fix-math";
+import {
+  cumulativeMetres,
+  editedDistance,
+  editPath,
+  insertVertex,
+  joinRouted,
+  metres,
+  nearestSample,
+  pathLength,
+  stretchAround,
+  toEdit,
+} from "./fix-math";
 
 /** One sample a second heading north, about 3 m apart; `gaps` have no position. */
 function samples(count: number, gaps: number[] = []): FixSample[] {
@@ -54,5 +65,45 @@ describe("fix math", () => {
     const near = (p: LatLngTuple) => metres(p, target);
     expect([2, 4]).toContain(nearestSample(track, near, 10));
     expect(nearestSample(track, near, 1)).toBeNull();
+  });
+
+  it("finds the stretch around a dragged sample", () => {
+    const track = samples(101, [30]);
+    const cumulative = cumulativeMetres(track);
+    expect(cumulative[30]).toBe(cumulative[29]);
+    // About 3 m between samples: 30 m either way is 10 samples.
+    const [start, end] = stretchAround(track, cumulative, 50, 30);
+    expect(start).toBeGreaterThanOrEqual(39);
+    expect(start).toBeLessThanOrEqual(41);
+    expect(end).toBeGreaterThanOrEqual(59);
+    expect(end).toBeLessThanOrEqual(61);
+    expect(stretchAround(track, cumulative, 2, 30)[0]).toBe(0);
+    expect(stretchAround(track, cumulative, 98, 30)[1]).toBe(100);
+    // Never ends on a sample without a position.
+    expect(stretchAround(track, cumulative, 35, 15)[0]).not.toBe(30);
+  });
+
+  it("inserts a point where it lengthens the route least", () => {
+    const a: LatLngTuple = [48, 2];
+    const b: LatLngTuple = [48.01, 2];
+    const middle: LatLngTuple = [48.005, 2.001];
+    const nearA: LatLngTuple = [48.001, 2.0005];
+    expect(insertVertex(a, [middle], b, nearA)).toEqual([nearA, middle]);
+    expect(insertVertex(null, [middle], null, nearA)).toEqual([middle, nearA]);
+  });
+
+  it("joins the routed line to the waypoints", () => {
+    const a: LatLngTuple = [48, 2];
+    const b: LatLngTuple = [48.01, 2];
+    expect(
+      joinRouted(
+        [a, b],
+        [
+          [48.0001, 2],
+          [48.0099, 2],
+        ],
+      ),
+    ).toEqual([a, [48.0001, 2], [48.0099, 2], b]);
+    expect(joinRouted([a, b], [])).toEqual([a, b]);
   });
 });
