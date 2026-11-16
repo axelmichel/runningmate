@@ -137,7 +137,7 @@ fn stage(app: &AppHandle, files: &[PathBuf], staging: &Path) -> AppResult<Vec<Pa
 pub(crate) fn newest_first(files: Vec<PathBuf>, range: &DateRange) -> Vec<PathBuf> {
     let mut dated: Vec<(Option<i64>, PathBuf)> = files
         .into_iter()
-        .map(|file| (importer::tcx_start(&file).map(|t| t.timestamp()), file))
+        .map(|file| (importer::file_start(&file).map(|t| t.timestamp()), file))
         .filter(|(start, _)| start.is_none_or(|s| range.contains(s)))
         .collect();
     dated.sort_by_key(|(start, _)| std::cmp::Reverse(*start));
@@ -151,6 +151,8 @@ pub struct ImportSummary {
     pub imported: usize,
     pub duplicates: usize,
     pub failed: usize,
+    /// Files without GPS, waiting for their route to be drawn.
+    pub needs_route: usize,
     /// Stopped early by the user.
     pub cancelled: bool,
 }
@@ -215,6 +217,7 @@ impl ImportSummary {
         match outcome {
             ImportOutcome::Imported { .. } => self.imported += 1,
             ImportOutcome::Duplicate { .. } | ImportOutcome::Similar { .. } => self.duplicates += 1,
+            ImportOutcome::NeedsRoute { .. } => self.needs_route += 1,
             ImportOutcome::Failed { .. } => self.failed += 1,
         }
     }

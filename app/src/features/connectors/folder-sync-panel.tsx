@@ -19,7 +19,7 @@ function folderName(path: string): string {
   return path.split(/[\\/]/).filter(Boolean).at(-1) ?? path;
 }
 
-/** Imports new TCX files from a watched folder (e.g. an iCloud export), as the iCloud sync did. */
+/** Imports new TCX and GPX files from a watched folder (e.g. an iCloud export), as the iCloud sync did. */
 export function FolderSyncPanel({
   onRunningChange,
 }: {

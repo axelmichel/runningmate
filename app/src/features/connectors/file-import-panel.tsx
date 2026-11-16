@@ -26,7 +26,7 @@ export function FileImportPanel({
   const choose = async () => {
     const files = await pickFiles({
       multiple: true,
-      filters: [{ name: t("TCX files"), extensions: ["tcx"] }],
+      filters: [{ name: t("TCX / GPX files"), extensions: ["tcx", "gpx"] }],
     });
     if (files && files.length > 0) await start(() => api.importFiles(files, toDateRange(range)));
   };
@@ -43,7 +43,7 @@ export function FileImportPanel({
       <div>
         <Button disabled={run.running} onClick={() => void choose()}>
           <FileUp />
-          {run.running ? t("Importing…") : t("Choose TCX files…")}
+          {run.running ? t("Importing…") : t("Choose TCX or GPX files…")}
         </Button>
       </div>
       {started && <ImportProgressView run={run} onCancel={cancel} />}

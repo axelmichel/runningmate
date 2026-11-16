@@ -1,4 +1,4 @@
-import { CircleAlert, CircleCheck, Copy } from "lucide-react";
+import { CircleAlert, CircleCheck, Copy, MapPinOff } from "lucide-react";
 
 import type { ImportProgress as Progress } from "@/bindings/ImportProgress";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ function Entry({ entry }: { entry: Progress }) {
       {(outcome.status === "duplicate" || outcome.status === "similar") && (
         <Copy className="mt-0.5 size-4 text-muted-foreground" />
       )}
+      {outcome.status === "needsRoute" && <MapPinOff className="mt-0.5 size-4 text-amber-500" />}
       {outcome.status === "failed" && <CircleAlert className="mt-0.5 size-4 text-destructive" />}
       <div className="min-w-0">
         <div className="truncate">{entry.file}</div>
@@ -25,6 +26,11 @@ function Entry({ entry }: { entry: Progress }) {
         {outcome.status === "similar" && (
           <div className="text-xs text-muted-foreground">
             {t("Already there (same day and distance)")}
+          </div>
+        )}
+        {outcome.status === "needsRoute" && (
+          <div className="text-xs text-muted-foreground">
+            {t("No GPS: draw its route under Waiting for a route")}
           </div>
         )}
         {outcome.status === "failed" && (
@@ -73,6 +79,8 @@ export function ImportProgressView({ run, onCancel }: { run: ImportRun; onCancel
               duplicates: run.summary.duplicates,
               failed: run.summary.failed,
             })}
+          {!!run.summary?.needsRoute &&
+            ` · ${t("{{count}} without GPS", { count: run.summary.needsRoute })}`}
           {run.summary?.cancelled && ` · ${t("stopped")}`}
           {run.error && <span className="text-destructive">{run.error}</span>}
         </span>

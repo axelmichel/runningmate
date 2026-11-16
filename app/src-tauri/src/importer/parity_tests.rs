@@ -319,7 +319,7 @@ fn same_day_and_distance_counts_as_similar() {
     let mut conn = db.conn().unwrap();
 
     // The same run, recorded by another app: same day, 3.23 km instead of 3.21 km.
-    let start = tcx_start(&source).unwrap();
+    let start = file_start(&source).unwrap();
     insert_activity(
         &conn,
         77,
@@ -547,4 +547,195 @@ fn new_route_segment_is_matched_in_archived_activities() {
     assert_eq!(detail.leaderboard.len(), 1);
     assert_eq!(detail.leaderboard[0].activity_id, activity_id);
     assert_eq!(detail.leaderboard[0].rank, 1);
+}
+
+#[test]
+fn gpx_import_matches_the_same_run_as_tcx() {
+    use crate::db::{Db, activities};
+
+    let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let dir = tempfile::tempdir().unwrap();
+    let source = dir.path().join("synthetic_run.gpx");
+    std::fs::copy(fixtures.join("synthetic_run.gpx"), &source).unwrap();
+    let imports = dir.path().join("imports");
+    let db = Db::open_in_memory().unwrap();
+    let mut conn = db.conn().unwrap();
+
+    assert_eq!(
+        file_start(&source).unwrap().to_rfc3339(),
+        "2025-03-01T07:30:01+00:00",
+        "the first trackpoint, not the metadata time"
+    );
+    let (outcome, _) = import_file(&mut conn, &source, &imports, "en").unwrap();
+    let ImportOutcome::Imported { activity_id } = outcome else {
+        panic!("expected an import, got {outcome:?}");
+    };
+    let detail = activities::get(&conn, activity_id).unwrap();
+    assert_eq!(detail.view_mode, ViewMode::Running);
+    assert_eq!(detail.distance, Some(3.21));
+    assert_eq!(detail.avg_pace.as_deref(), Some("05:44"));
+    assert_eq!(detail.total_steps, Some(2928));
+
+    // Archived as TCX, so re-import and analysis read it like any other activity.
+    let xml = archive::read(&archive::archive_path(&imports, "synthetic_run")).unwrap();
+    assert_eq!(tcx::parse(&xml).unwrap().points.len(), 1100);
+    reimport(&mut conn, activity_id, &imports, "en").unwrap();
+    assert_eq!(
+        activities::get(&conn, activity_id).unwrap().distance,
+        Some(3.21)
+    );
+}
+
+#[test]
+fn fixing_a_route_recomputes_the_activity_and_reverts() {
+    use crate::db::{Db, activities};
+    use repair::FixEdit;
+
+    let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let dir = tempfile::tempdir().unwrap();
+    let source = dir.path().join("synthetic_run.tcx");
+    std::fs::copy(fixtures.join("synthetic_run.tcx"), &source).unwrap();
+    let imports = dir.path().join("imports");
+    let db = Db::open_in_memory().unwrap();
+    let mut conn = db.conn().unwrap();
+    let (ImportOutcome::Imported { activity_id }, _) =
+        import_file(&mut conn, &source, &imports, "en").unwrap()
+    else {
+        panic!("expected an import");
+    };
+    conn.execute(
+        "UPDATE activities SET title = 'My run' WHERE id = ?1",
+        [activity_id],
+    )
+    .unwrap();
+
+    let found = fix_source(&conn, activity_id, &imports).unwrap();
+    assert!(!found.has_original);
+    let samples = &found.samples;
+    // Everything from sample 100 on, drawn as a detour of a detour about 1 km east.
+    let (a, b) = (&samples[100], &samples[samples.len() - 1]);
+    let start = (a.lat.unwrap(), a.lon.unwrap());
+    let path = vec![
+        start,
+        (start.0, start.1 + 0.0135),
+        (b.lat.unwrap(), b.lon.unwrap()),
+    ];
+    let metres = |a: (f64, f64), b: (f64, f64)| -> f64 {
+        geographiclib_rs::InverseGeodesic::inverse(
+            &geographiclib_rs::Geodesic::wgs84(),
+            a.0,
+            a.1,
+            b.0,
+            b.1,
+        )
+    };
+    let before: f64 = samples[..=100]
+        .windows(2)
+        .map(|w| {
+            metres(
+                (w[0].lat.unwrap(), w[0].lon.unwrap()),
+                (w[1].lat.unwrap(), w[1].lon.unwrap()),
+            )
+        })
+        .sum();
+    let drawn: f64 = path.windows(2).map(|w| metres(w[0], w[1])).sum();
+    let edit = FixEdit {
+        from: a.time,
+        to: b.time,
+        path,
+    };
+    fix_activity(&mut conn, activity_id, &[edit], &imports, "en").unwrap();
+    let fixed = activities::get(&conn, activity_id).unwrap();
+    let expected = (before + drawn) / 1000.0;
+    let distance = fixed.distance.unwrap();
+    assert!(
+        (distance - expected).abs() < 0.02,
+        "{distance} vs {expected}"
+    );
+    assert_eq!(fixed.title.as_deref(), Some("My run"));
+    assert!(
+        fix_source(&conn, activity_id, &imports)
+            .unwrap()
+            .has_original
+    );
+
+    revert_fix(&mut conn, activity_id, &imports, "en").unwrap();
+    assert_eq!(
+        activities::get(&conn, activity_id).unwrap().distance,
+        Some(3.21)
+    );
+    assert!(
+        !fix_source(&conn, activity_id, &imports)
+            .unwrap()
+            .has_original
+    );
+}
+
+#[test]
+fn a_file_without_gps_waits_for_its_drawn_route() {
+    use crate::db::{Db, activities};
+    use repair::FixEdit;
+
+    // Ten minutes on a treadmill: times, heart rate and the foot pod's distance, no GPS.
+    let points: String = (0..=600)
+        .map(|s| {
+            format!(
+                "<Trackpoint><Time>{}</Time><DistanceMeters>{}</DistanceMeters><HeartRateBpm><Value>140</Value></HeartRateBpm></Trackpoint>",
+                (chrono::DateTime::from_timestamp(1_746_522_000 + s, 0).unwrap()).to_rfc3339(),
+                s * 3
+            )
+        })
+        .collect();
+    let xml = format!(
+        r#"<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"><Activities><Activity Sport="Running"><Lap><Track>{points}</Track></Lap></Activity></Activities></TrainingCenterDatabase>"#
+    );
+    let dir = tempfile::tempdir().unwrap();
+    let source = dir.path().join("treadmill.tcx");
+    std::fs::write(&source, xml).unwrap();
+    let imports = dir.path().join("imports");
+    let db = Db::open_in_memory().unwrap();
+    let mut conn = db.conn().unwrap();
+
+    let (outcome, _) = import_file(&mut conn, &source, &imports, "en").unwrap();
+    assert_eq!(
+        outcome,
+        ImportOutcome::NeedsRoute {
+            file_id: "treadmill".into()
+        }
+    );
+    let waiting = pending::list(&imports).unwrap();
+    assert_eq!(waiting.len(), 1);
+    assert_eq!(waiting[0].distance, Some(1.8));
+    assert_eq!(waiting[0].duration, 600.0);
+    assert!(pending::source(&conn, &imports, "../treadmill").is_err());
+
+    let found = pending::source(&conn, &imports, "treadmill").unwrap();
+    assert_eq!(found.issues[0].kind, repair::FixIssueKind::NoGps);
+    // 1.8 km north.
+    let edit = FixEdit {
+        from: found.samples[0].time,
+        to: found.samples[600].time,
+        path: vec![(48.0, 2.0), (48.0 + 1800.0 / 111_200.0, 2.0)],
+    };
+    let (outcome, _) = pending::import(&mut conn, "treadmill", &[edit], &imports, "en").unwrap();
+    let ImportOutcome::Imported { activity_id } = outcome else {
+        panic!("expected an import, got {outcome:?}");
+    };
+    let detail = activities::get(&conn, activity_id).unwrap();
+    assert!(
+        (detail.distance.unwrap() - 1.8).abs() < 0.02,
+        "{:?}",
+        detail.distance
+    );
+    assert!(pending::list(&imports).unwrap().is_empty());
+    assert!(archive::original_path(&imports, "treadmill").exists());
+
+    // The original has no route to go back to.
+    assert!(
+        !fix_source(&conn, activity_id, &imports)
+            .unwrap()
+            .has_original
+    );
+    assert!(revert_fix(&mut conn, activity_id, &imports, "en").is_err());
+    assert!(archive::archive_path(&imports, "treadmill").exists());
 }

@@ -2,8 +2,11 @@
 //! from `importer/file/tcx_file.py`; charts and maps are no longer pre-rendered.
 
 pub mod archive;
+pub mod gpx;
 pub mod metrics;
 pub mod outline;
+pub mod pending;
+pub mod repair;
 pub mod route_image;
 pub mod segment_match;
 pub mod segments;
@@ -51,6 +54,11 @@ pub enum ImportOutcome {
     Similar {
         #[ts(type = "number")]
         activity_id: i64,
+    },
+    /// No GPS in the file: kept in `imports/pending` until its route is drawn
+    /// (see [`pending`]).
+    NeedsRoute {
+        file_id: String,
     },
     Failed {
         error: String,
@@ -101,17 +109,46 @@ pub fn process(file_id: &str, xml: &str, weight: f64) -> AppResult<Processed> {
     })
 }
 
-/// `file_id` for a TCX path: the file name without `.tcx`, as in Python.
+/// File extensions the importer reads.
+pub const EXTENSIONS: [&str; 2] = ["tcx", "gpx"];
+
+/// Whether `path` is a file the importer reads (by extension).
+pub fn is_activity_file(path: &Path) -> bool {
+    path.extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| EXTENSIONS.iter().any(|x| e.eq_ignore_ascii_case(x)))
+}
+
+fn is_gpx(path: &Path) -> bool {
+    path.extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("gpx"))
+}
+
+/// `file_id` for a TCX or GPX path: the file name without `.tcx` or `.gpx`, as in Python. A run
+/// exported as both counts as a duplicate.
 pub fn file_id_for(path: &Path) -> AppResult<String> {
     let name = path
         .file_name()
         .and_then(|n| n.to_str())
         .ok_or_else(|| AppError::Invalid(format!("invalid file name: {}", path.display())))?;
-    let lower = name.to_ascii_lowercase();
-    if !lower.ends_with(".tcx") {
-        return Err(AppError::Invalid(format!("not a .tcx file: {name}")));
+    if !is_activity_file(path) {
+        return Err(AppError::Invalid(format!(
+            "not a .tcx or .gpx file: {name}"
+        )));
     }
     Ok(name[..name.len() - 4].to_string())
+}
+
+/// The TCX document for an activity file: the file itself, or a GPX file converted to TCX.
+/// The second value is the original GPX, archived next to the TCX.
+fn read_as_tcx(path: &Path) -> AppResult<(String, Option<String>)> {
+    let text = std::fs::read_to_string(path)?;
+    if is_gpx(path) {
+        let tcx = tcx::write(&gpx::parse(&text)?);
+        Ok((tcx, Some(text)))
+    } else {
+        Ok((text, None))
+    }
 }
 
 fn activity_by_file_id(conn: &Connection, file_id: &str) -> AppResult<Option<i64>> {
@@ -124,8 +161,9 @@ fn activity_by_file_id(conn: &Connection, file_id: &str) -> AppResult<Option<i64
         .optional()?)
 }
 
-/// Imports one TCX file: stores the activity and archives the file in `imports_dir`. The
-/// source file is left in place.
+/// Imports one TCX or GPX file: stores the activity and archives the file in `imports_dir`.
+/// The source file is left in place. A file with times but no GPS at all is kept in
+/// `imports/pending` instead, until its route is drawn.
 pub fn import_file(
     conn: &mut Connection,
     path: &Path,
@@ -136,8 +174,33 @@ pub fn import_file(
     if let Some(activity_id) = activity_by_file_id(conn, &file_id)? {
         return Ok((ImportOutcome::Duplicate { activity_id }, None));
     }
-    let xml = std::fs::read_to_string(path)?;
-    let processed = process(&file_id, &xml, body_weight(conn)?)?;
+    let (xml, gpx) = read_as_tcx(path)?;
+    if pending::needs_route(&tcx::parse(&xml)?) {
+        pending::keep(imports_dir, &file_id, &xml)?;
+        return Ok((ImportOutcome::NeedsRoute { file_id }, None));
+    }
+    let original = gpx.map(|gpx| (format!("{file_id}.gpx"), gpx));
+    import_tcx(
+        conn,
+        &file_id,
+        &xml,
+        original.as_slice(),
+        imports_dir,
+        language,
+    )
+}
+
+/// Stores a new activity from a TCX document and archives it with `extra` files, unless an
+/// activity on the same day with about the same distance exists.
+fn import_tcx(
+    conn: &mut Connection,
+    file_id: &str,
+    xml: &str,
+    extra: &[(String, String)],
+    imports_dir: &Path,
+    language: &str,
+) -> AppResult<(ImportOutcome, Option<WeatherPoint>)> {
+    let processed = process(file_id, xml, body_weight(conn)?)?;
     let day = processed
         .metrics
         .start
@@ -148,7 +211,7 @@ pub fn import_file(
         return Ok((ImportOutcome::Similar { activity_id }, None));
     }
     let activity_id = store(conn, &processed, None, language)?;
-    archive::write(imports_dir, &file_id, &xml)?;
+    archive::write_with(imports_dir, file_id, xml, extra)?;
     Ok((
         ImportOutcome::Imported { activity_id },
         weather_point(activity_id, &processed.segments),
@@ -176,11 +239,17 @@ pub fn similar_activity(conn: &Connection, day: &str, distance: f64) -> AppResul
         .map(|(id, _)| id))
 }
 
-/// Start of a TCX file, read from its first `<Time>` without parsing the whole document.
-pub fn tcx_start(path: &Path) -> Option<chrono::DateTime<chrono::Utc>> {
+/// Start of a TCX or GPX file, read from its first trackpoint time without parsing the whole
+/// document (a GPX `<metadata>` time may differ, so the search starts at the first `<trkpt`).
+pub fn file_start(path: &Path) -> Option<chrono::DateTime<chrono::Utc>> {
     let xml = std::fs::read_to_string(path).ok()?;
-    let start = xml.find("<Time>")? + "<Time>".len();
-    let end = start + xml[start..].find("</Time>")?;
+    let (from, open, close) = if is_gpx(path) {
+        (xml.find("<trkpt")?, "<time>", "</time>")
+    } else {
+        (0, "<Time>", "</Time>")
+    };
+    let start = from + xml[from..].find(open)? + open.len();
+    let end = start + xml[start..].find(close)?;
     chrono::DateTime::parse_from_rfc3339(xml[start..end].trim())
         .ok()
         .map(|t| t.to_utc())
@@ -209,6 +278,87 @@ pub fn reimport(
     let processed = process(&file_id, &xml, body_weight(conn)?)?;
     store(conn, &processed, Some(activity_id), language)?;
     Ok(weather_point(activity_id, &processed.segments))
+}
+
+fn archived_file_id(conn: &Connection, activity_id: i64) -> AppResult<String> {
+    conn.query_row(
+        "SELECT file_id FROM activities WHERE id = ?1",
+        [activity_id],
+        |row| row.get::<_, Option<String>>(0),
+    )
+    .optional()?
+    .ok_or_else(|| AppError::NotFound(format!("activity {activity_id}")))?
+    .ok_or_else(|| AppError::NotFound(format!("archived TCX file for activity {activity_id}")))
+}
+
+/// Samples and detected problems of an activity, for the route fix editor.
+pub fn fix_source(
+    conn: &Connection,
+    activity_id: i64,
+    imports_dir: &Path,
+) -> AppResult<repair::FixSource> {
+    let file_id = archived_file_id(conn, activity_id)?;
+    let activity = tcx::parse(&archive::read(&archive::archive_path(
+        imports_dir,
+        &file_id,
+    ))?)?;
+    Ok(repair::source(
+        &activity,
+        revertible(imports_dir, &file_id).is_ok(),
+    ))
+}
+
+/// The original TCX of a fixed activity, if it exists and can be computed (a file imported
+/// without GPS can't be: its only route is the drawn one).
+fn revertible(imports_dir: &Path, file_id: &str) -> AppResult<String> {
+    let original = archive::original_path(imports_dir, file_id);
+    if !original.exists() {
+        return Err(AppError::NotFound(format!("original file of {file_id}")));
+    }
+    let xml = archive::read(&original)?;
+    if pending::needs_route(&tcx::parse(&xml)?) {
+        return Err(AppError::Invalid(
+            "the original file has no GPS; redraw the route instead".into(),
+        ));
+    }
+    Ok(xml)
+}
+
+/// Applies drawn routes to an activity: archives the repaired track (keeping the original
+/// archive the first time) and recomputes the activity from it, like [`reimport`].
+pub fn fix_activity(
+    conn: &mut Connection,
+    activity_id: i64,
+    edits: &[repair::FixEdit],
+    imports_dir: &Path,
+    language: &str,
+) -> AppResult<Option<WeatherPoint>> {
+    let file_id = archived_file_id(conn, activity_id)?;
+    let path = archive::archive_path(imports_dir, &file_id);
+    let fixed = repair::apply(&tcx::parse(&archive::read(&path)?)?, edits)?;
+    let xml = tcx::write(&fixed);
+    // Fails before anything is written when the fixed track can't be stored.
+    process(&file_id, &xml, body_weight(conn)?)?;
+    let original = archive::original_path(imports_dir, &file_id);
+    if !original.exists() {
+        std::fs::copy(&path, &original)?;
+    }
+    archive::write(imports_dir, &file_id, &xml)?;
+    reimport(conn, activity_id, imports_dir, language)
+}
+
+/// Puts the archive from before the first fix back and recomputes the activity from it.
+pub fn revert_fix(
+    conn: &mut Connection,
+    activity_id: i64,
+    imports_dir: &Path,
+    language: &str,
+) -> AppResult<Option<WeatherPoint>> {
+    let file_id = archived_file_id(conn, activity_id)?;
+    revertible(imports_dir, &file_id)?;
+    let original = archive::original_path(imports_dir, &file_id);
+    std::fs::rename(&original, archive::archive_path(imports_dir, &file_id))?;
+    reimport(conn, activity_id, imports_dir, language)
 }
 
 /// Route outline of an activity from its archived TCX.

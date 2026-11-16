@@ -9,6 +9,7 @@ mod importer;
 mod media_files;
 mod menu;
 mod open_meteo;
+mod osm_routing;
 mod paths;
 mod photos_library;
 mod photos_picker;
@@ -110,6 +111,14 @@ pub fn run() {
             commands::import::folder_sync_status,
             commands::import::set_sync_folder,
             commands::import::sync_folder,
+            commands::repair::activity_fix_source,
+            commands::repair::apply_activity_fix,
+            commands::repair::revert_activity_fix,
+            commands::repair::pending_routes,
+            commands::repair::pending_fix_source,
+            commands::repair::apply_pending_fix,
+            commands::repair::discard_pending_route,
+            commands::repair::route_along_paths,
             commands::segments::create_segment,
             commands::segments::list_segments,
             commands::segments::get_segment,

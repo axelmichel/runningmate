@@ -2,6 +2,10 @@
 
 export type ImportSummary = { imported: number, duplicates: number, failed: number, 
 /**
+ * Files without GPS, waiting for their route to be drawn.
+ */
+needsRoute: number, 
+/**
  * Stopped early by the user.
  */
 cancelled: boolean, };

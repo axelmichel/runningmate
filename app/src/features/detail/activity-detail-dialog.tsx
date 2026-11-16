@@ -14,6 +14,7 @@ import {
   Pencil,
   Route,
   Share2,
+  Wrench,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -37,6 +38,7 @@ import { cn } from "@/lib/utils";
 
 import { EditTab } from "./edit-tab";
 import { EffectTab } from "./effect-tab";
+import { FixTab } from "./fix-tab";
 import { GeneralTab } from "./general-tab";
 import { MapTab } from "./map-tab";
 import { RouteSegmentsTab } from "./route-segments-tab";
@@ -54,7 +56,8 @@ type Tab =
   | "effect"
   | "zones"
   | "share"
-  | "edit";
+  | "edit"
+  | "fix";
 
 const NAV_ITEMS: (NavItem & { value: Tab })[] = [
   { value: "general", label: tk("General"), icon: LayoutDashboard },
@@ -66,6 +69,7 @@ const NAV_ITEMS: (NavItem & { value: Tab })[] = [
   { value: "zones", label: tk("Heart rate zones"), icon: HeartPulse },
   { value: "share", label: tk("Social share"), icon: Share2 },
   { value: "edit", label: tk("Edit"), icon: Pencil },
+  { value: "fix", label: tk("Fix route"), icon: Wrench },
 ];
 
 const NAV_STORAGE_KEY = "runningmate-detail-nav";
@@ -278,6 +282,9 @@ function DetailContent({
           </TabsContent>
           <TabsContent value="edit">
             <EditTab activity={activity} onSaved={() => onTabChange("general")} />
+          </TabsContent>
+          <TabsContent value="fix" className="h-full">
+            <FixTab activityId={activity.id} />
           </TabsContent>
         </div>
       </Tabs>

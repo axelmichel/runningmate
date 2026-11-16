@@ -180,8 +180,9 @@ function Overview({
 }
 
 /**
- * Goal star, training-session marker and segment trophy in one row of their own, details on
- * hover; nothing when the activity has none of them.
+ * Goal star, training-session marker and segment trophy in one row of their own, labelled with
+ * the number of goals, the kind of session and the number of trophies, details on hover; nothing
+ * when the activity has none of them.
  */
 function AchievementsCard({ activityId }: { activityId: number }) {
   const { data: hits = [] } = useGoalHits(activityId);
@@ -191,9 +192,9 @@ function AchievementsCard({ activityId }: { activityId: number }) {
   return (
     <Card size="sm">
       <CardContent className="flex flex-wrap items-center gap-2">
-        <GoalStar activityId={activityId} />
-        <SessionBadge activityId={activityId} />
-        <TrophyBadge activityId={activityId} />
+        <GoalStar activityId={activityId} labelled />
+        <SessionBadge activityId={activityId} labelled />
+        <TrophyBadge activityId={activityId} labelled />
       </CardContent>
     </Card>
   );

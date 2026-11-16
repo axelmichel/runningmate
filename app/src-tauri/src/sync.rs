@@ -12,7 +12,7 @@ use serde::Serialize;
 use serde_json::{Map, Value};
 use ts_rs::TS;
 
-use crate::{error::AppResult, paths};
+use crate::{error::AppResult, importer, paths};
 
 const FOLDER_KEY: &str = "icloud_folder";
 const LAST_SYNC_KEY: &str = "last_icloud_sync";
@@ -61,16 +61,14 @@ fn last_sync_from(map: &Map<String, Value>) -> Option<DateTime<Local>> {
         .earliest()
 }
 
-/// `.tcx` files directly in `folder` modified after `since` (all of them without a date).
-pub fn changed_tcx_files(folder: &Path, since: Option<SystemTime>) -> AppResult<Vec<PathBuf>> {
+/// `.tcx` and `.gpx` files directly in `folder` modified after `since` (all of them without a
+/// date).
+pub fn changed_activity_files(folder: &Path, since: Option<SystemTime>) -> AppResult<Vec<PathBuf>> {
     let mut files: Vec<PathBuf> = fs::read_dir(folder)?
         .filter_map(Result::ok)
         .filter(|entry| entry.file_type().is_ok_and(|t| t.is_file()))
         .map(|entry| entry.path())
-        .filter(|path| {
-            path.extension()
-                .is_some_and(|e| e.eq_ignore_ascii_case("tcx"))
-        })
+        .filter(|path| importer::is_activity_file(path))
         .filter(|path| match since {
             None => true,
             Some(since) => fs::metadata(path)
@@ -91,7 +89,7 @@ fn status_from(path: &Path) -> AppResult<FolderSyncStatus> {
     let last_sync = last_sync_from(&map);
     let new_files = match &folder {
         Some(folder) if Path::new(folder).is_dir() => {
-            changed_tcx_files(Path::new(folder), last_sync.map(SystemTime::from))?
+            changed_activity_files(Path::new(folder), last_sync.map(SystemTime::from))?
                 .into_iter()
                 .map(|p| p.to_string_lossy().into_owned())
                 .collect()
@@ -141,17 +139,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn lists_only_changed_tcx_files() {
+    fn lists_only_changed_activity_files() {
         let dir = tempfile::tempdir().unwrap();
-        for name in ["a.tcx", "b.TCX", "notes.txt"] {
+        for name in ["a.tcx", "b.TCX", "c.gpx", "notes.txt"] {
             fs::write(dir.path().join(name), "").unwrap();
         }
         fs::create_dir(dir.path().join("sub.tcx")).unwrap();
-        let all = changed_tcx_files(dir.path(), None).unwrap();
-        assert_eq!(all.len(), 2);
+        let all = changed_activity_files(dir.path(), None).unwrap();
+        assert_eq!(all.len(), 3);
         let future = SystemTime::now() + std::time::Duration::from_secs(60);
         assert!(
-            changed_tcx_files(dir.path(), Some(future))
+            changed_activity_files(dir.path(), Some(future))
                 .unwrap()
                 .is_empty()
         );
