@@ -26,6 +26,7 @@ import { trophyCount } from "@/features/segments/segment-math";
 import { TrophyBadge } from "@/features/segments/trophy";
 import { useSegmentEfforts } from "@/features/segments/use-segment-efforts";
 import { SessionBadge } from "@/features/training/session-badge";
+import { useActivitySession } from "@/features/training/use-training";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import {
@@ -154,12 +155,8 @@ function Overview({
             </Button>
           </CardAction>
         )}
-        <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span>
-            {formatDateTime(activity.date)} ·{" "}
-            {t(activity.typeDetail || activity.activityType || "")}
-          </span>
-          <SessionBadge activityId={activity.id} />
+        <div className="text-xs text-muted-foreground">
+          {formatDateTime(activity.date)} · {t(activity.typeDetail || activity.activityType || "")}
         </div>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -182,29 +179,21 @@ function Overview({
   );
 }
 
-/** Goals reached and segment top-3 places, in a box of their own; nothing when neither. */
+/**
+ * Goal star, training-session marker and segment trophy in one row of their own, details on
+ * hover; nothing when the activity has none of them.
+ */
 function AchievementsCard({ activityId }: { activityId: number }) {
   const { data: hits = [] } = useGoalHits(activityId);
+  const { data: session } = useActivitySession(activityId);
   const { data: efforts = [] } = useSegmentEfforts(activityId);
-  const trophies = trophyCount(efforts);
-  if (hits.length === 0 && trophies === 0) return null;
+  if (hits.length === 0 && !session && trophyCount(efforts) === 0) return null;
   return (
     <Card size="sm">
-      <CardContent className="grid gap-2 text-sm">
-        {hits.length > 0 && (
-          <div className="flex items-center gap-2">
-            <GoalStar activityId={activityId} />
-            <span className="min-w-0 truncate" title={hits.map((hit) => hit.name).join(", ")}>
-              {hits.map((hit) => hit.name).join(", ")}
-            </span>
-          </div>
-        )}
-        {trophies > 0 && (
-          <div className="flex items-center gap-2">
-            <TrophyBadge activityId={activityId} />
-            <span>{t("Top 3 on {{count}} segments", { count: trophies })}</span>
-          </div>
-        )}
+      <CardContent className="flex flex-wrap items-center gap-2">
+        <GoalStar activityId={activityId} />
+        <SessionBadge activityId={activityId} />
+        <TrophyBadge activityId={activityId} />
       </CardContent>
     </Card>
   );
