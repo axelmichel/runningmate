@@ -31,8 +31,19 @@ And with that, happy running, riding, or walking! (*There might be more in the f
 Download the latest release from [GitHub](https://github.com/axelmichel/runningmate/releases) and open the installer for your system
 (on macOS the `.dmg`). The app is not code-signed yet, so macOS asks for confirmation the first time you open it.
 
-All data stays on your computer in the `RunningData` folder in your home directory: the database, the archived TCX files and your photos and videos.
-Activities come in through **Sync**: TCX files, a watched folder (e.g. an iCloud export) or Garmin Connect, which also works in the other direction.
+All data stays on your computer in the `RunningData` folder in your home directory: the database, the archived activity files and your photos and videos.
+Activities come in through [**Sync**](ui/sync.md): TCX and GPX files, a watched folder (e.g. an iCloud export) or Garmin Connect, which also works in the other direction.
+
+## What's in the app
+- [Dashboard](ui/dashboard.md): latest photos, the last four weeks, goals, the training week, volume and an activity feed.
+- [Activities](ui/main-window.md): lists per sport with search, filters and a panel with the key figures.
+- [Detail view](ui/detail-window.md): maps, charts, splits, zones, training effect, an AI summary, a social-share image and
+  editors to fix GPS, heart rate and steps.
+- [Health data](ui/health.md), [Segments](ui/segments.md), [Goals](ui/goals.md), [Training plans](ui/training.md),
+  the [Heat map](ui/heat-map.md) and the [Gallery](ui/gallery.md).
+- [Settings](ui/settings.md) and [User settings](ui/user-settings.md).
+
+How the figures are computed is explained under **Metrics**, starting with [how a file becomes an activity](metrics/activity-data.md).
 
 ### Building it yourself
 You need [Rust](https://rustup.rs), [Node.js](https://nodejs.org) 22 with pnpm, and the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your system.
@@ -57,6 +68,9 @@ The maps are drawn with [Leaflet](https://leafletjs.com/) on [Esri](https://www.
 
 ### Charts
 The charts are created with [Recharts](https://recharts.org) (MIT licensed).
+
+### Place Names
+Place names are looked up with [Nominatim](https://nominatim.openstreetmap.org/) from [OpenStreetMap](https://www.openstreetmap.org/copyright) data, © OpenStreetMap contributors, available under the [Open Database License](https://opendatacommons.org/licenses/odbl/).
 
 ### Weather Data
 The weather data is fetched from [Open-Meteo](https://open-meteo.com/). API data are offered under Attribution 4.0 International (CC BY 4.0), for further details see [here](https://open-meteo.com/en/license).

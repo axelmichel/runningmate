@@ -13,4 +13,5 @@ runs, are left out.
 For the heat map, each track is simplified once (points that lie within about 5 m of the line are dropped) and stored
 with the activity. New activities get their track when they are imported. Activities imported before the heat map
 existed get it the first time they are shown, which can take a moment with many activities. After that, opening the
-page or changing the filters only reads the stored tracks. Deleting an activity removes its track as well.
+page or changing the filters only reads the stored tracks. Re-importing an activity or fixing its route in the
+detail window stores its track again. Deleting an activity removes its track as well.
