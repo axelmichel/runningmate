@@ -196,6 +196,7 @@ export function EditTab({ activity, onSaved }: { activity: ActivityDetail; onSav
             <div className="grid gap-2">
               <Label htmlFor="duration">{t("Duration (h:mm:ss)")}</Label>
               <Input
+                data-private
                 id="duration"
                 value={form.duration}
                 onChange={set("duration")}

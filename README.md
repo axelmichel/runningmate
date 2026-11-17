@@ -67,7 +67,8 @@ pnpm tauri build   # build the installer
 
 To work against a copy of your data, point the app at another folder:
 `RUNNINGMATE_DATA_DIR=/path/to/copy pnpm tauri dev`. For screenshots, `VITE_PRIVACY=1 pnpm tauri dev`
-blurs activity titles, comments and segment names (development builds only).
+blurs activity titles, comments, places and segment names and every figure (times, distances,
+paces, heart rates, health values), and leaves out focus rings (development builds only).
 
 ### Checks
 All pull requests run these:

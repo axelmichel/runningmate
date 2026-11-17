@@ -15,7 +15,7 @@ export function ZoneBars({ zones }: { zones: ZoneTime[] }) {
         <div key={zone.zone} className="contents">
           <span className="whitespace-nowrap">
             {t("Zone {{zone}}", { zone: zone.zone })}{" "}
-            <span className="text-muted-foreground">
+            <span data-private className="text-muted-foreground">
               ({zone.minBpm}–{zone.maxBpm})
             </span>
           </span>
