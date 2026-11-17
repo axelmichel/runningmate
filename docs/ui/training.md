@@ -97,6 +97,8 @@ Paces come from your VO2max after Jack Daniels' tables, each a range in min/km:
 Without a VO2max and without a target time, sessions only have distances.
 
 ## Following the plan
+![Training plan](../images/screens/training_01.png)
+
 The Training page shows the selected plan with its state (**Upcoming**, **Active** or **Finished**), its target and
 dates, the badge of its matching goal, and **Sessions with a run**, **Done as planned**, **Missed**, the **Distance**
 done and planned, and your paces. A coloured strip shows the phases. With several plans, pick one from the row at the

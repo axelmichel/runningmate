@@ -1,4 +1,6 @@
 # Health Data
+![Health data](../images/screens/health_01.png)
+
 
 The Health data page shows how your fitness, form and heart rate develop over a period, across all your activities.
 Open it from the sidebar or with ⇧⌘H, or click **Fitness** or **Form** on the [dashboard](dashboard.md). How the values

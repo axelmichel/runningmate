@@ -1,4 +1,6 @@
 # Dashboard
+![Dashboard](../images/screens/dashboard_01.png)
+
 
 The dashboard is the start page: your latest photos, goals and planned sessions, the last four weeks at a glance, your
 volume over time and a feed of your activities, with your statistics on the side. Open it from the sidebar or with ⇧⌘D.

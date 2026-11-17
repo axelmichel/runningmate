@@ -16,6 +16,9 @@ Firstbeat's model is proprietary. Its published form (the white paper *EPOC Base
 followed here, but the formulas and constants below are RunningMate's own approximation: the values come close to
 what a watch shows, but they won't be the same.
 
+Beside it, the Effect tab shows the [effect score](#the-effect-score-112) from 1 to 12, RunningMate's own rating carried
+over from the first version of the app. It compares the activity with your training of the last 90 days instead.
+
 ## Data used
 - The **heart rate** of every trackpoint of the archived activity file. Each point's heart rate counts for the time
   since the previous point. Without a recorded track, the [splits](activity-data.md#splits) are used instead: each
@@ -158,3 +161,40 @@ Some more examples for an average fitness level (VO2max 45):
 - Your heart rate zones aren't used, except for the zone 5 bound as a fallback for the maximum heart rate; they are
   only used for the [time in zones](heart-rate-zones.md).
 - The fitness, fatigue and form chart on the same tab is described under [Fitness and form](fitness.md).
+
+## The effect score (1–12)
+The effect score is a simpler rating that doesn't need your maximum or resting heart rate. It compares how hard the
+activity was with how hard your activities of the same sport were in the 90 days before it, using the averages of the
+splits.
+
+**Load.** For runs and walks the load of a split is its average heart rate times its pace (min/km) over its speed
+(m/s) plus one; for rides the power (W) takes the place of the pace:
+
+\( L_{\text{run}} = \frac{HR \cdot \text{pace}}{v + 1} \qquad L_{\text{ride}} = \frac{HR \cdot P}{v + 1} \)
+
+**Baseline.** The mean load of all splits of the same sport in the 90 days before the activity, at least 10 (10 without
+any). Splits without heart rate, pace or speed (and, for rides, power) are left out, so a run recorded without a strap
+doesn't pull the baseline down.
+
+**Score.** The activity's load \( L \) from the averages of all its splits is weighted by how high its heart rate was and
+compared with the baseline \( B \):
+
+\( z = 1 + \frac{HR - 120}{20} \qquad E = \left( \frac{L \cdot z}{B + 1} \right)^{0.8} \qquad
+\text{score} = \operatorname{round}(6E), \text{ between 1 and 12} \)
+
+An activity missing any of the averages scores 1. The suggested rest is \( 6 \cdot e^{0.28 \cdot \text{score}} \) hours,
+from about 8 hours for 1 to 5 days for 12.
+
+| Score | Meaning |
+|---|---|
+| 1–2 | Recovery |
+| 3–5 | Base endurance |
+| 6–7 | Tempo |
+| 8–9 | Threshold |
+| 10–11 | VO2max |
+| 12 | Anaerobic |
+
+Because the score is relative to your own recent training, the same run scores lower after a block of hard weeks than
+after a quiet month. Unlike the training effect, it doesn't know your heart-rate reserve or fitness, and as the load uses
+pace, a slow run at a high heart rate scores high.
+

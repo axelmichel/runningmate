@@ -4,7 +4,6 @@ The user settings hold your profile, your heart-rate zones and your shoes and bi
 bottom of the sidebar or with **RunningMate → User Profile…**. Pick a page on the left. **Heart rate zones**, **Shoes**
 and **Bikes** become available once you have saved a profile.
 
-![User Window: Overview](../images/screens/user_01.png)
 
 ## Profile
 Fill in the fields and click **Save**.
@@ -22,6 +21,8 @@ Fill in the fields and click **Save**.
 A changed weight applies to activities imported or recomputed afterwards.
 
 ## Heart rate zones
+![User settings: heart-rate zones](../images/screens/user_01.png)
+
 First pick how the five zones are set under **Method**:
 
 - **Custom**: you enter the upper bound of each zone in bpm. The lower bound of each zone is shown next to it: zone 1

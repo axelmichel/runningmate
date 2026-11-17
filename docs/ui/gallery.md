@@ -3,6 +3,8 @@
 The gallery shows the photos and videos of all activities in one place, newest activity first.
 
 ## The Gallery page
+![Gallery](../images/screens/gallery_01.jpg)
+
 Open it from the sidebar or with ⇧⌘P. Filter by sport at the top; the number of photos and videos shown is at the
 top right. **Grid** shows everything as one grid of tiles; **By activity** groups them under the activity's title and
 date. The choice is kept. In **By activity**, clicking the title opens the activity in the

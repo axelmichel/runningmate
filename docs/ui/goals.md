@@ -52,6 +52,8 @@ When you move the dashboard back in time (the arrows and date field below the ph
 show the goals as they stood on that day: later activities don't count yet.
 
 ## The Goals page
+![Goals page](../images/screens/goals_01.png)
+
 Each goal has a card with its state, what it asks for and its dates, the current period with its progress and days
 left, and the earlier periods as small bars, oldest on the left, up to twelve of them. A bar is filled in the sport's
 colour where the target was reached and fainter the further it was from the target; hover it for the period and its

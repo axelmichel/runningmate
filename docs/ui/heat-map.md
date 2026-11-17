@@ -4,6 +4,8 @@ The heat map draws the GPS track of every activity on one map. Each track is a t
 trails you use often add up to a brighter line, and places you went to only once stay faint.
 
 ## The Heat Map page
+![Heat map](../images/screens/heatmap_01.png)
+
 Open it from the sidebar or with ⇧⌘M. At first it shows all activities of all sports. Filter by sport at the top, and
 limit the period with **From** and **To**; **Any time** clears the dates again. The map zooms to the tracks of the
 selection and the number of activities shown is at the top right. Activities without a GPS track, such as treadmill

@@ -6,6 +6,8 @@ Settings…** or with ⌘,. Changes are saved as soon as you make them. They are
 `~/RunningData/appdata/settings.json`.
 
 ## General
+![Settings: General](../images/screens/settings_01.png)
+
 - **Language**: English or Deutsch. The language is also used for the titles of newly imported activities. Français
   can be chosen, but the app is shown in English then.
 - **Appearance**: **Follow the system**, **Light** or **Dark**.
@@ -23,6 +25,8 @@ Settings…** or with ⌘,. Changes are saved as soon as you make them. They are
   already found are kept. Names are in the language set when they were looked up.
 
 ## Activity panel
+![Settings: Activity panel](../images/screens/settings_02.png)
+
 Choose which boxes the panel beside the activity list and the detail window show, separately for **Runs**, **Rides**
 and **Walks**. Tick or untick a box per sport:
 
@@ -36,6 +40,8 @@ and **Walks**. Tick or untick a box per sport:
 Other activities always show every box.
 
 ## AI summary
+![Settings: AI summary](../images/screens/settings_03.png)
+
 RunningMate can write a short summary of each activity with a language model that runs on your own computer, through
 [Ollama](https://ollama.com). It is off until you turn it on.
 
@@ -73,6 +79,34 @@ Below it you see which model wrote it. AI can be wrong.
 The same setting turns on the AI notes on the [Training](training.md) page.
 
 ## Storage
+![Settings: Storage and photo size](../images/screens/settings_04.png)
+
 Shows the **Data folder** (`RunningData` in your home directory), how many **Photos and videos** are copied there and
-how much space they take, and the **Total size** of the folder. All data stays on this computer. The folder is shared
+how much space they take, the **Activity files (TCX, GPX)**, the archived file of each activity (with the GPX file it was
+converted from, if any) and how much space they take together with the originals kept when you fixed an activity and the
+files waiting for a route, and the **Total size** of the folder. All data stays on this computer. The folder is shared
 with the earlier Python version of RunningMate. See [Sync](sync.md#where-things-are-kept) for what is kept where.
+
+### Photo size
+Photos copied into RunningMate (from the Photos library, the photo picker, dropped onto the app or added from disk with
+**Copy into RunningMate**) are scaled down so their longest side fits the chosen size, and saved as JPEG. They are never
+scaled up, and turned upright first, so they keep their orientation; the capture date and the other photo details stay
+in the file. A photo that wouldn't come out noticeably smaller (by at least a tenth) is kept as it is, and so is one that
+can't be read. Linked photos and videos are never changed. PNG images with transparent areas stay PNG; HEIC photos are
+converted on macOS only.
+
+| Setting | Longest side | JPEG quality | Size per photo¹ | Good for |
+|---|---|---|---|---|
+| **Recommended** (default) | 2560 px | 85 | about 0.7–2.5 MB | Full screen on a Retina laptop, the gallery, sharing |
+| **Large** | 3840 px | 90 | about 2–5.5 MB | Full screen on a 4K or 5K display |
+| **Small** | 1920 px | 80 | about 0.4–1.3 MB | A Full HD screen and the gallery, the least space |
+| **Original** | unchanged | unchanged | about 2–8 MB | Keeping the photos exactly as taken |
+
+¹ Measured on 12-megapixel phone photos (4032 × 3024 px); detailed photos (grass, gravel, leaves) are at the top of the
+range, sky and water at the bottom. Photos already smaller than the setting stay about the same size.
+
+The setting applies to photos added from then on. **Shrink stored photos…** below it says how many of the photos
+already copied into RunningMate are larger than the setting and how much space they take, and after you confirm
+replaces them by smaller versions, a few at a time with progress. A HEIC or PNG photo becomes a `.jpg` file. Linked
+photos and their originals stay untouched. Replacing can't be undone, so keep the originals elsewhere (e.g. in your
+Photos library) if you may need them at full size again.

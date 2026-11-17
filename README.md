@@ -11,6 +11,8 @@ The app does not store any of your data outside your computer. Everything lives 
 `RunningData` folder in your home directory: a [SQLite](https://www.sqlite.org/) database, the
 archived activity files (`imports`) and your photos and videos (`media`).
 
+![Dashboard](docs/images/screens/dashboard_01.png)
+
 ## Documentation
 The documentation can be found [here](https://axelmichel.github.io/runningmate).
 
@@ -25,21 +27,25 @@ The documentation can be found [here](https://axelmichel.github.io/runningmate).
   filters and a heatmap of training time over the last year; a panel with the key figures, whose
   boxes you choose per sport. Places are named from OpenStreetMap (can be switched off).
 - A **detail view** per activity: route, pace and heart-rate maps, elevation, heart-rate, speed and
-  steps charts, grade-adjusted pace (GAP) for runs and walks, splits, best segments, heart-rate zones, EPOC-based aerobic and anaerobic training effect, weather from
+  steps charts, grade-adjusted pace (GAP) for runs and walks, splits, best segments, heart-rate zones, EPOC-based aerobic and anaerobic training effect beside
+  the 1–12 effect score, weather from
   [Open-Meteo](https://open-meteo.com) and an optional **AI summary** written by a local
   [Ollama](https://ollama.com) model (nothing leaves your computer).
 - **Fix data**: GPS spikes and dropouts redrawn on the map (optionally along OpenStreetMap paths),
-  heart rate and steps corrected per stretch or per split; the original file is kept.
+  heart rate and steps corrected per stretch or per split, with missing and implausible values
+  found for you and a missing stretch estimated from your pace; the original file is kept.
 - **Segments**: mark a stretch once, and every pass over it in past and new activities is ranked.
 - **Goals** for distance, time, climb or number of activities, once or repeating, and **training
   plans** for a race or for fitness, built from your recent runs.
 - **Health data**: fitness, fatigue and form, a cardio-fitness (VO2max) estimate, heart rate and
   time in zones over a period.
 - A **heat map** of all GPS tracks and a **gallery** of all photos and videos.
+- **Compare** up to ten activities in charts: key figures, pace and heart rate over distance, a
+  virtual race, splits, training effect and zones, also limited to the passes of a segment.
 - **Social share**: an image of an activity for Instagram, stories, X or Facebook, with the route
   and the figures placed freely.
 - Photos and videos per activity, picked from the Photos library on macOS, dropped onto the app or
-  linked from disk.
+  linked from disk; copied photos are scaled down to a size you choose to save space.
 - English and German.
 
 ## Installation

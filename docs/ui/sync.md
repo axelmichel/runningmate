@@ -98,7 +98,7 @@ Everything lives in the `RunningData` folder in your home directory:
 | `imports/` | One archive per activity, `{name}.tcx.tar.gz`, holding the TCX file. A GPX file is converted to TCX for this; the original GPX is kept in the same archive. |
 | `imports/{name}.orig.tcx.tar.gz` | The original file of an activity you fixed in the detail window, kept so you can reset to it. |
 | `imports/pending/` | Files waiting for a route. |
-| `media/` | Photos and videos copied into RunningMate. |
+| `media/` | Photos and videos copied into RunningMate, photos scaled down to the [photo size](settings.md#photo-size). |
 | `appdata/settings.json` | The [settings](settings.md). |
 | `appdata/sync.json` | The sync folder and the last folder and Garmin sync. |
 

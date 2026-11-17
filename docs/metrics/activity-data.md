@@ -183,6 +183,8 @@ database, recomputing them from their archived files:
 3. **Pauses and splits**: calories, total steps, the splits and the best segments are recomputed with the pause
    handling and split cuts described above.
 4. **Best segments** are recomputed so that none spans a split whose clock ran backwards.
+5. **Grade-adjusted pace** is computed for runs and walks imported before it existed: the activity's GAP and the GAP
+   of each split (see [Pace](pace.md)).
 
-Fixes 2 to 4 only change the values named; your title, comment, distance, duration and other edits stay as they are.
+Fixes 2 to 5 only change the values named; your title, comment, distance, duration and other edits stay as they are.
 Activities whose archived file is missing are skipped.

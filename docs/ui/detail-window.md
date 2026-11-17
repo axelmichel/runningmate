@@ -8,7 +8,8 @@ It opens on **General**. An activity you haven't reviewed yet (no edit, comment,
 instead, so you can give it a title and a comment right away. The page you pick stays selected when you move to another
 activity.
 
-The header shows the title, date and type, and these buttons:
+The header shows the title, date and type, and the place the activity started (see
+[place names](settings.md#general)), and these buttons:
 
 - **Toggle navigation** shows or hides the page names on the left; hidden, only their icons remain. The choice is kept.
 - **Previous activity** and **Next activity** move through the activities in the order of the list you opened the
@@ -20,7 +21,7 @@ If a page has changes you haven't saved (the **Edit** page, split corrections or
 it, move to another activity or close the window, the app asks **Save your changes?**: **Save** saves them and goes on,
 **Discard** drops them, **Cancel** stays.
 
-![Detail Window: Overview](../images/screens/detail_01.png)
+![Detail window: General](../images/screens/detail_01.png)
 ## General
 On the left is the same panel as beside the activity list: duration, pace (for runs and walks also the
 [grade-adjusted pace](../metrics/pace.md#grade-adjusted-pace-gap)), the route, distance and elevation, the
@@ -34,8 +35,9 @@ On the right you'll find:
   to have it written; this takes a moment. The note below it names the model.
 - **Photos and videos** of the activity (see [Photos and videos](#photos-and-videos) below).
 - Your comment.
-- Further figures, where available: calories, average heart rate, average power, average speed, fastest and slowest
-  pace, cadence and steps (not for rides), pause time, and the shoes or bike.
+- Further figures, where available: calories, average heart rate, average power, average speed, average pace, the
+  [grade-adjusted pace](../metrics/pace.md) (GAP, not for rides), fastest and slowest pace, cadence and steps (not for
+  rides), pause time, and the shoes or bike.
 
 ### Photos and videos
 Add photos and videos with the buttons above the gallery:
@@ -53,14 +55,15 @@ Photos from the Photos library are always copied. For files from disk the app as
 (the file is safe in the app's media folder) or **Link to originals** (saves space, but breaks if the original is moved
 or deleted). Tick **Remember my choice** to stop being asked; you can change it in the settings under **General**
 (**Adding photos and videos from files**). Linked files show a small link symbol; a file that can no longer be found
-shows **File missing**.
+shows **File missing**. Copied photos are scaled down to the [photo size](settings.md#photo-size) set under
+**Storage** in the settings; linked files are never changed.
 
 Click a photo or video to see it in full. Move with the arrows on screen or the arrow keys, or click a thumbnail in the
 strip below. **Slideshow** shows each photo for a few seconds and plays videos to their end; the space bar starts and
 stops it. To remove a file, hover over it and click **×**: a copied file is deleted from the media folder, for a linked
 one only the link is removed.
 
-![Detail Window; Splits](../images/screens/detail_05.png)
+![Detail window: Splits](../images/screens/detail_05.png)
 ## Splits
 This page lists the splits of the activity: one per kilometre, or per 5 kilometres for rides. For each split you'll see
 the distance, time, pace, **GAP** (the [grade-adjusted pace](../metrics/pace.md#gap-of-a-split), not for rides),
@@ -72,7 +75,7 @@ matches, and the activity is recomputed: the charts, zones, training effect and 
 written into the stored activity file, so it also holds when the activity is processed again. **Reset to original** on
 the **Fix data** page undoes it.
 
-![Detail Window; Maps](../images/screens/detail_02.png)
+![Detail window: Map](../images/screens/detail_02.png)
 ## Map
 The map shows the track of the activity, with a light or dark map following the app's appearance. A dot marks the
 start and another the finish.
@@ -91,6 +94,8 @@ The buttons above the map:
 The app remembers which of these you turned on.
 
 ## Segments
+![Detail window: Segments](../images/screens/detail_07.png)
+
 Lists the [segments](segments.md) this activity passes, each with its distance, grade and climb, the time, pace (speed
 for rides) and its place among all tries, e.g. "2 of 7". A gold, silver or bronze trophy marks the three fastest places.
 Click a segment to highlight it on the map, or click **Open segment** to see its full ranking, where this activity's
@@ -105,25 +110,31 @@ profile, give it a title and click **Save segment**. A segment must be at least 
 sport, in the background.
 
 ## Statistics
-Charts over the distance of the activity: **Elevation**, **Heart rate**, **Pace** (faster at the top; for runs and
-walks with the [grade-adjusted pace](../metrics/pace.md#grade-adjusted-pace-gap) as a dashed line) and, for runs,
+![Detail window: Statistics](../images/screens/detail_06.png)
+
+Charts over the distance of the activity: **Elevation**, **Heart rate**, **Pace** (faster at the top), for runs and
+walks **Grade-adjusted pace (GAP)** (the [pace on the flat for the same effort](../metrics/pace.md#grade-adjusted-pace-gap),
+with the pace faint behind it, so you see where climbs and descents made you slower or faster) and, for runs,
 **Steps per minute**. A chart only shows when its values were recorded. Hover over a chart to read the value at a point.
 See [Pace](../metrics/pace.md) and [Activity data](../metrics/activity-data.md) for how the values are worked out.
 
-![Detail Window; Effect](../images/screens/detail_04.png)
+![Detail window: Effect](../images/screens/detail_04.png)
 ## Effect
 - **Training effect** shows the **aerobic** and the **anaerobic** training effect of the activity, each from 0.0 to
   5.0 on a scale of five steps with its meaning (from "No effect" to "Overreaching"), the **peak EPOC** in ml/kg and
   the **recovery time**. Below, it lists the maximum and resting heart rate and the VO2max it was rated with and where
   they come from, e.g. "estimated as 220 − age" when your profile has no maximum heart rate. Activities without heart
   rate have no training effect. See [Trainings Effect](../metrics/trainings-effect.md) for how it is calculated.
+- **Effect score**, beside it, rates the activity from 1 to 12 on twelve rising bars, compared with your training of the
+  same sport in the last 90 days, with its meaning (from "Recovery" to "Anaerobic") and the suggested rest. See
+  [the effect score](../metrics/trainings-effect.md#the-effect-score-112).
 - **Heart rate by zone** (runs and rides with heart-rate data) shows the heart rate over the time of the activity, the
   line coloured by your heart-rate zones over light bands for each zone. The zones are set in the
   [user settings](user-settings.md).
 - **Fitness trend (90 days)** shows fitness, fatigue and form over the 90 days up to the activity. See
   [Fitness](../metrics/fitness.md).
 
-![Detail Window: Heart Rate Zones](../images/screens/detail_03.png)
+![Detail window: Heart rate zones](../images/screens/detail_03.png)
 ## Heart rate zones
 **Time in heart-rate zones** shows, for each zone with its heart-rate range, the share and the time you spent in it
 during the activity. You set the zones in the [user settings](user-settings.md); without them this box asks you to.
@@ -154,6 +165,8 @@ app that offers itself there). To post on Instagram, save the image and upload i
 The editor remembers your last settings for the next activity.
 
 ## Edit
+![Detail window: Edit](../images/screens/detail_08.png)
+
 Change the **Title**, the **Comment**, the **Type** (e.g. **Trail**, **Interval** or **Long Run** for runs, **Hiking** for walks, **Gravel Biking** for
 rides), the **Start** time, the **Duration (h:mm:ss)**, the **Distance (km)** and the **Elevation (m)**, and click
 **Save**. The window then goes back to **General**. Changing distance, duration or elevation here doesn't change the
@@ -178,6 +191,8 @@ effect, segments and goals follow. The original file is kept, so **Reset to orig
 heart rate and steps (and split corrections) and recomputes the activity from the file as it was imported.
 
 ### Route
+![Detail window: fixing the route](../images/screens/detail_09.png)
+
 The map shows the track; **Problems found** lists **GPS spike** (positions far off the route, faster than the sport
 allows) and **GPS dropout** (stretches without a position, or a long jump in time and place), marked red on the map.
 
@@ -193,15 +208,36 @@ no path can be found, straight lines are used.
 An activity recorded without GPS (**No GPS**) starts with drawing the whole route.
 
 ### Heart rate and steps
+![Detail window: heart rate after estimating a missing start from the pace](../images/screens/detail_10.png)
+
 A chart shows the recorded values (heart rate in bpm, or steps per minute) over the distance, with your changes on top.
-**Problems found** lists stretches that look wrong: a **Spike**, a **Dropout**, an **Implausible start** (a heart-rate
-strap settling in during the first minutes) or, for heart rate, **Reads the steps** (the strap picked up the step rate
-instead of the heart rate).
+**Problems found** lists stretches that look wrong:
 
-Click a problem or drag over the chart to select a stretch; you can fine-tune it in the **From (km)** and **To (km)**
-fields, and its average is shown. Then:
+- **No values recorded**: nothing at the start or the end, for example a chest strap that only connected after the
+  first kilometre.
+- **Dropout**: values missing for 10 s or more in between (for steps only while you were moving, since steps stop when
+  you stand still).
+- **Implausible values**: values far off the level both before and after them, by more than 20 bpm or 25 steps per
+  minute compared with the median of the 30 s on either side. A change of level, such as a climb, a walk break or
+  slowing down, isn't one; fewer steps while you also got slower aren't either. In the first minute only values that are
+  too high count, since starting low and warming up is normal, but a foot pod or strap reading far too high at the start
+  is caught.
+- **Implausible start**: a heart-rate strap reading high from the first seconds, then dropping suddenly and staying
+  lower.
 
-- **Interpolate** replaces the values with a straight line between the values before and after the stretch,
+Click a problem or drag over the chart to select a stretch, also where nothing was recorded; you can fine-tune it in the
+**From (km)** and **To (km)** fields, and its average is shown. Then:
+
+- **Estimate from the pace** works out the values from how fast you went, which suits a longer stretch, such as a strap
+  that only connected after the first kilometre. How your heart rate (or step rate) follows your speed is learned from
+  the rest of the activity: a straight line through the recorded values against your speed over the minute before each
+  point, while moving. Over the stretch the heart rate climbs towards that level with a delay of about 45 s, as it does
+  when you start running; at the very start of the activity it begins at a low value, between 55 % and 75 % of the
+  level the recording settles at. Finally the estimate is bent so it meets the recorded values on both sides. It needs at
+  least two minutes of recorded values elsewhere in the activity.
+- **Interpolate** replaces the values with a straight line from the level before the stretch to the level after it,
+  each the median of the 30 s beside the stretch, so a single stray value next to it doesn't set the level. A stretch
+  at the start or end gets the level of its one side.
 - **Set** sets them all to the value you type in,
 - **Shift** moves them up or down by the value you type in.
 

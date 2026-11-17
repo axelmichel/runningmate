@@ -31,6 +31,8 @@ Passes are looked for again whenever an activity is imported, re-imported or its
 [Fix data](detail-window.md#fix-data) page.
 
 ## The Segments page
+![Segments page](../images/screens/segments_01.png)
+
 Open it from the sidebar or with ⇧⌘G. Segments are shown as cards, grouped by sport, each with a small map, the
 distance, average grade, climb and number of tries. Below these, the card lists the three fastest passes, your
 latest pass and your fastest pass this year (**Best this year**), each with its time and place overall.
@@ -52,6 +54,9 @@ outlined, and the best time as a dashed line. Hover over a point to see its plac
 On the Segments page, click a row of the ranking, a highlight or a point of the chart to open that activity. When you
 open a segment from an activity's **Segments** page, that activity's passes are marked in the ranking, which opens on
 the page of its first pass.
+
+**Compare** opens the [Compare page](compare.md) with the activities of the fastest passes (one per activity, ten at
+most), limited to the segment's stretch of each.
 
 Click the pencil beside the title to rename the segment. **Delete segment** removes the segment and its ranking; the
 activities stay as they are.

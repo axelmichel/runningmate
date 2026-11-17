@@ -41,6 +41,7 @@ Activities come in through [**Sync**](ui/sync.md): TCX and GPX files, a watched 
   editors to fix GPS, heart rate and steps.
 - [Health data](ui/health.md), [Segments](ui/segments.md), [Goals](ui/goals.md), [Training plans](ui/training.md),
   the [Heat map](ui/heat-map.md) and the [Gallery](ui/gallery.md).
+- [Compare](ui/compare.md): up to ten activities side by side, including a virtual race and the passes of a segment.
 - [Settings](ui/settings.md) and [User settings](ui/user-settings.md).
 
 How the figures are computed is explained under **Metrics**, starting with [how a file becomes an activity](metrics/activity-data.md).
