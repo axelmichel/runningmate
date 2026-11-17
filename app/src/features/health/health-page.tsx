@@ -149,7 +149,8 @@ function CardioCard({ cardio }: { cardio: CardioFitness }) {
             {rating ? (
               <>
                 <ScaleBar scale={cardioScale(rating.bounds)} value={vo2max} />
-                <p className="text-xs text-muted-foreground">
+                {/* Age group and sex are personal; blurred in privacy mode. */}
+                <p data-private className="text-xs text-muted-foreground">
                   {rating.gender === "female"
                     ? t(
                         "Compared with women aged {{from}}–{{to}} (Cooper Institute norms, as used by Garmin).",

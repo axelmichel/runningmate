@@ -253,6 +253,27 @@ body:has([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"])
 }
 
 /* Privacy mode for screenshots (see main.tsx): activity titles and comments are unreadable. */
-.privacy [data-private] {
+.privacy [data-private],
+/* The figures too: anything set in tabular figures, values marked as figures, chart values. */
+.privacy .tabular-nums,
+.privacy .privacy-figure,
+.privacy input[type="number"],
+.privacy input[type="datetime-local"],
+.privacy .recharts-tooltip-wrapper {
   filter: blur(5px);
+}
+
+/* WebKit doesn't blur SVG text: figures in charts, and every value axis, are hidden instead
+   (important: the chart container sets the tick colour with a more specific rule). */
+.privacy svg .privacy-figure,
+.privacy [class*="yAxis"] text,
+.privacy .recharts-label-list text,
+.privacy .recharts-label {
+  fill: transparent !important;
+}
+
+/* No focus rings on screenshots: driving the app by keyboard shortcuts leaves them on. */
+.privacy *:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }

@@ -7,11 +7,12 @@ import App from "./App";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { startPrivacyMode } from "@/lib/privacy";
 import "./index.css";
 
-// Screenshots for the docs: `VITE_PRIVACY=1 pnpm tauri dev` blurs titles and comments.
+// Screenshots for the docs: `VITE_PRIVACY=1 pnpm tauri dev` blurs titles, comments and figures.
 if (import.meta.env.DEV && import.meta.env.VITE_PRIVACY) {
-  document.documentElement.classList.add("privacy");
+  startPrivacyMode();
 }
 
 // Data comes from the local database, so there is nothing to refetch on focus.
