@@ -3,4 +3,4 @@
 /**
  * Sortable table columns. Type-specific columns fall back to the date in the `All` view.
  */
-export type SortField = "date" | "title" | "type" | "duration" | "distance" | "elevationGain" | "avgSpeed" | "avgPace" | "avgHeartRate" | "totalSteps" | "avgPower" | "pause";
+export type SortField = "date" | "title" | "location" | "type" | "duration" | "distance" | "elevationGain" | "avgSpeed" | "avgPace" | "avgHeartRate" | "totalSteps" | "avgPower" | "pause";

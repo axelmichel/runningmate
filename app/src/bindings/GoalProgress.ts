@@ -28,4 +28,9 @@ streak: number,
 /**
  * Activities that hit the goal.
  */
-hits: number, lastHit: GoalActivity | null, };
+hits: number, lastHit: GoalActivity | null, 
+/**
+ * s, the fastest hit scaled to the target distance, e.g. 48 min for a 10 km goal hit by
+ * 12 km in 57:36. Per-activity distance goals only.
+ */
+bestDuration: number | null, };

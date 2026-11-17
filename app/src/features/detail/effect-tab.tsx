@@ -14,9 +14,8 @@ import {
 import { api } from "@/lib/api";
 import { t } from "@/i18n";
 import { formatNumber } from "@/lib/format";
-import { cn } from "@/lib/utils";
 
-import { effectDescription, formatRecovery } from "./training-effect";
+import { basisNotes, effectLabel, formatRecovery } from "./training-effect";
 import { ZoneChart } from "./zone-chart";
 
 const fitnessConfig = () =>
@@ -26,27 +25,42 @@ const fitnessConfig = () =>
     form: { label: t("Form"), color: "var(--chart-5)" },
   }) satisfies ChartConfig;
 
-/** Twelve rising bars, filled up to the score (the Python `TrainingEffectChart`). */
-function EffectMeter({ score }: { score: number }) {
+/** A training effect 0–5 as five steps filled up to the value, with its wording. */
+function EffectScale({ title, value }: { title: string; value: number }) {
   return (
-    <div
-      className="flex h-24 items-end gap-1.5"
-      role="meter"
-      aria-valuemin={1}
-      aria-valuemax={12}
-      aria-valuenow={score}
-      aria-label={t("Training effect")}
-    >
-      {Array.from({ length: 12 }, (_, i) => (
-        <div
-          key={i}
-          className={cn("w-4 rounded-sm", i < score ? "bg-primary" : "bg-muted")}
-          style={{
-            height: `${25 + (i / 11) * 75}%`,
-            opacity: i < score ? 0.45 + (i / 11) * 0.55 : 1,
-          }}
-        />
-      ))}
+    <div className="min-w-56 flex-1">
+      <div className="text-sm text-muted-foreground">{title}</div>
+      <div className="flex items-baseline gap-2">
+        <span className="text-3xl font-semibold text-primary tabular-nums">
+          {formatNumber(value, 1)}
+        </span>
+        <span className="text-sm">{effectLabel(value)}</span>
+      </div>
+      <div
+        className="mt-2 flex gap-1"
+        role="meter"
+        aria-valuemin={0}
+        aria-valuemax={5}
+        aria-valuenow={value}
+        aria-label={title}
+      >
+        {Array.from({ length: 5 }, (_, i) => (
+          <div key={i} className="h-2 flex-1 overflow-hidden rounded-sm bg-muted">
+            <div
+              className="h-full bg-primary"
+              style={{
+                width: `${Math.min(1, Math.max(0, value - i)) * 100}%`,
+                opacity: 0.45 + (i / 4) * 0.55,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="mt-1 flex justify-between text-xs text-muted-foreground tabular-nums">
+        {[0, 1, 2, 3, 4, 5].map((n) => (
+          <span key={n}>{n}</span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -68,18 +82,36 @@ export function EffectTab({ activityId, view }: { activityId: number; view: View
         <CardHeader>
           <CardTitle className="text-sm">{t("Training effect")}</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-wrap items-end gap-6">
-          {effect && <EffectMeter score={effect.score} />}
+        <CardContent className="grid gap-4">
+          {effect === null && (
+            <p className="text-sm text-muted-foreground">
+              {t("No heart rate recorded, so there is no training effect.")}
+            </p>
+          )}
           {effect && (
-            <div className="min-w-60 flex-1 text-sm">
-              <div className="text-3xl font-semibold text-primary tabular-nums">{effect.score}</div>
-              <p>{effectDescription(effect.score)}</p>
-              <p className="text-muted-foreground">
-                {t("To fully recover you should rest for {{time}}.", {
-                  time: formatRecovery(effect.recoveryHours),
-                })}
-              </p>
-            </div>
+            <>
+              <div className="flex flex-wrap gap-6">
+                <EffectScale title={t("Aerobic")} value={effect.aerobic} />
+                <EffectScale title={t("Anaerobic")} value={effect.anaerobic} />
+              </div>
+              <div className="flex flex-wrap gap-x-8 gap-y-1 text-sm">
+                <div>
+                  <span className="text-muted-foreground">{t("Peak EPOC")}: </span>
+                  <span className="tabular-nums">
+                    {t("{{value}} ml/kg", { value: formatNumber(effect.peakEpoc) })}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t("Recovery time")}: </span>
+                  <span className="tabular-nums">{formatRecovery(effect.recoveryHours)}</span>
+                </div>
+              </div>
+              <ul className="grid gap-0.5 text-xs text-muted-foreground">
+                {basisNotes(effect).map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+            </>
           )}
         </CardContent>
       </Card>

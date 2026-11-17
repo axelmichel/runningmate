@@ -9,6 +9,11 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./index.css";
 
+// Screenshots for the docs: `VITE_PRIVACY=1 pnpm tauri dev` blurs titles and comments.
+if (import.meta.env.DEV && import.meta.env.VITE_PRIVACY) {
+  document.documentElement.classList.add("privacy");
+}
+
 // Data comes from the local database, so there is nothing to refetch on focus.
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },

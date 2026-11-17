@@ -20,6 +20,7 @@ import { ActivityTable, type Sort } from "./activity-table";
 import { heatmapEnd } from "./heatmap";
 import { InfoCards } from "./info-cards";
 import { SearchBar } from "./search-bar";
+import { withSearch } from "./search-query";
 
 const PAGE_SIZE = 25;
 const DEFAULT_SORT: Sort = { field: "date", direction: "desc" };
@@ -61,8 +62,11 @@ export function ActivitiesPage({
     setPageIndex(0);
   }, []);
 
+  // What's queried: the search box's distance shortcuts taken out of the text.
+  const query = useMemo(() => withSearch(filter), [filter]);
+
   const page = useQuery({
-    queryKey: ["activities", view, filter, sort, pageIndex],
+    queryKey: ["activities", view, query, sort, pageIndex],
     queryFn: () =>
       api.listActivities({
         viewMode: view,
@@ -70,17 +74,17 @@ export function ActivitiesPage({
         limit: PAGE_SIZE,
         sortField: sort.field,
         sortDirection: sort.direction,
-        filter,
+        filter: query,
       }),
     placeholderData: keepPreviousData,
   });
   const summary = useQuery({
-    queryKey: ["activities", "summary", view, filter],
-    queryFn: () => api.activitySummary(view, filter),
+    queryKey: ["activities", "summary", view, query],
+    queryFn: () => api.activitySummary(view, query),
   });
   const heatmap = useQuery({
-    queryKey: ["activities", "heatmap", view, filter],
-    queryFn: () => api.activityHeatmap(view, filter),
+    queryKey: ["activities", "heatmap", view, query],
+    queryFn: () => api.activityHeatmap(view, query),
   });
   // Without a selection the panel shows the latest activity of the view.
   const latest = useQuery({
@@ -105,6 +109,9 @@ export function ActivitiesPage({
       invalidateSegments(queryClient);
       invalidateGoals(queryClient);
       invalidateTraining(queryClient);
+      // Its photos and videos are gone too.
+      queryClient.invalidateQueries({ queryKey: ["gallery"] });
+      queryClient.invalidateQueries({ queryKey: ["recentPhotos"] });
     },
     onError: (error) =>
       toast.error(t("Could not delete the activity: {{error}}", { error: String(error) })),
@@ -159,7 +166,7 @@ export function ActivitiesPage({
     const position = detailPosition + delta;
     try {
       const found = await queryClient.fetchQuery({
-        queryKey: ["activities", "at", view, filter, sort, position],
+        queryKey: ["activities", "at", view, query, sort, position],
         queryFn: () =>
           api.listActivities({
             viewMode: view,
@@ -167,7 +174,7 @@ export function ActivitiesPage({
             limit: 1,
             sortField: sort.field,
             sortDirection: sort.direction,
-            filter,
+            filter: query,
           }),
       });
       const next = found.rows[0];
@@ -181,7 +188,7 @@ export function ActivitiesPage({
   const canStep = (delta: -1 | 1) =>
     detailPosition >= 0 && detailPosition + delta >= 0 && detailPosition + delta < total;
 
-  const heatmapEndDate = useMemo(() => heatmapEnd(filter), [filter]);
+  const heatmapEndDate = useMemo(() => heatmapEnd(query), [query]);
   const panelId = activeId ?? latest.data?.rows[0]?.id;
 
   return (

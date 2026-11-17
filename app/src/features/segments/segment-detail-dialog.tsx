@@ -88,7 +88,9 @@ function Title({ segment }: { segment: RouteSegment }) {
   if (!editing) {
     return (
       <div className="flex min-w-0 items-center gap-1">
-        <DialogTitle className="truncate">{segment.title}</DialogTitle>
+        <DialogTitle data-private className="truncate">
+          {segment.title}
+        </DialogTitle>
         <Button
           variant="ghost"
           size="icon-sm"

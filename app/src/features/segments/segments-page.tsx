@@ -42,7 +42,9 @@ function SegmentCard({ segment, onOpen }: { segment: RouteSegment; onOpen: () =>
           {segment.points.length >= 2 && <RouteMap points={segment.points} />}
         </div>
         <div className="grid gap-3 px-4">
-          <div className="truncate font-semibold">{segment.title}</div>
+          <div data-private className="truncate font-semibold">
+            {segment.title}
+          </div>
           <div className="grid grid-cols-4 gap-2">
             <Metric label={t("Distance")} value={formatSegmentDistance(segment.distance)} />
             <Metric label={t("Grade")} value={formatGrade(segment.avgGrade)} />

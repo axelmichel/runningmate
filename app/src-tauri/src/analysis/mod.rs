@@ -21,18 +21,18 @@ use crate::{
 };
 
 use chrono::{DateTime, NaiveDateTime};
-use rusqlite::params_from_iter;
 use serde::Serialize;
 use ts_rs::TS;
 
 use self::{
     fitness::FitnessDay,
-    training_effect::{SegmentAverages, TrainingEffect},
+    training_effect::{HeartRateBasis, TrainingEffect},
     zones::ZoneTime,
 };
 use crate::db::{users, value::opt_f64};
 
-/// Days of history used by the training effect baseline, fitness chart and heart-rate trend.
+/// Days of history used by the fitness chart, the heart-rate trend and the VO2max of the
+/// training effect.
 pub const HISTORY_DAYS: i64 = 90;
 
 /// View and start time of an activity.
@@ -77,10 +77,14 @@ const DAY_SECONDS: i64 = 24 * 3600;
 
 /// Parses `seg_time_start`/`seg_time_end` ("2025-05-06 11:18:34+00:00").
 fn segment_time(text: &str) -> Option<i64> {
+    segment_millis(text).map(|ms| ms.div_euclid(1000))
+}
+
+fn segment_millis(text: &str) -> Option<i64> {
     let trimmed = text.split('+').next()?.trim();
     NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S%.f")
         .ok()
-        .map(|t| t.and_utc().timestamp())
+        .map(|t| t.and_utc().timestamp_millis())
 }
 
 /// One row of the segments table.
@@ -97,6 +101,8 @@ pub struct SegmentRow {
     pub duration: Option<i64>,
     /// min/km.
     pub pace: Option<f64>,
+    /// Grade-adjusted pace, min/km; `None` for rides and splits stored before it was computed.
+    pub gap: Option<f64>,
     /// m/s.
     pub speed: Option<f64>,
     pub heart_rate: Option<f64>,
@@ -105,12 +111,18 @@ pub struct SegmentRow {
     pub steps: Option<f64>,
     /// Metres.
     pub elevation_gain: Option<f64>,
+    /// Unix milliseconds of the first and last sample, for correcting the split's samples.
+    #[ts(type = "number | null")]
+    pub start: Option<i64>,
+    #[ts(type = "number | null")]
+    pub end: Option<i64>,
 }
 
 pub fn segments(conn: &Connection, id: i64) -> AppResult<Vec<SegmentRow>> {
     let mut stmt = conn.prepare(
         "SELECT segment_id, seg_distance, seg_time_start, seg_time_end, seg_avg_pace,
-            seg_avg_speed, seg_avg_heart_rate, seg_avg_power, seg_avg_steps, seg_elevation_gain
+            seg_avg_speed, seg_avg_heart_rate, seg_avg_power, seg_avg_steps, seg_elevation_gain,
+            seg_avg_gap
          FROM activity_details WHERE activity_id = ?1 ORDER BY segment_id",
     )?;
     let rows = stmt.query_map([id.to_string()], |row| {
@@ -128,23 +140,26 @@ pub fn segments(conn: &Connection, id: i64) -> AppResult<Vec<SegmentRow>> {
             distance: opt_f64(row, "seg_distance")?,
             duration,
             pace: opt_f64(row, "seg_avg_pace")?,
+            gap: opt_f64(row, "seg_avg_gap")?,
             speed: opt_f64(row, "seg_avg_speed")?,
             heart_rate: opt_f64(row, "seg_avg_heart_rate")?,
             power: opt_f64(row, "seg_avg_power")?,
             steps: opt_f64(row, "seg_avg_steps")?,
             elevation_gain: opt_f64(row, "seg_elevation_gain")?,
+            start: start.as_deref().and_then(segment_millis),
+            end: end.as_deref().and_then(segment_millis),
         })
     })?;
     Ok(rows.collect::<Result<_, _>>()?)
 }
 
-/// Heart-rate zone times; `None` until the user has saved zones.
+/// Heart-rate zone times; `None` while the user's zone method has no zones.
 pub fn heart_rate_zones(
     conn: &Connection,
     id: i64,
     imports_dir: &Path,
 ) -> AppResult<Option<Vec<ZoneTime>>> {
-    let Some(bounds) = users::get(conn)?.and_then(|u| u.zones) else {
+    let Some(bounds) = users::zones(conn)? else {
         return Ok(None);
     };
     if let Some(track) = load_track(conn, id, imports_dir)? {
@@ -157,73 +172,62 @@ pub fn heart_rate_zones(
     Ok(Some(zones::from_segments(&segments, &bounds)))
 }
 
-fn averages_from_row(row: &rusqlite::Row) -> rusqlite::Result<Option<SegmentAverages>> {
-    Ok(
-        match (
-            opt_f64(row, "hr")?,
-            opt_f64(row, "power")?,
-            opt_f64(row, "speed")?,
-            opt_f64(row, "pace")?,
-        ) {
-            (Some(heart_rate), Some(power), Some(speed), Some(pace)) => Some(SegmentAverages {
-                heart_rate,
-                power,
-                speed,
-                pace,
-            }),
-            _ => None,
-        },
-    )
-}
-
-pub fn training_effect(conn: &Connection, id: i64) -> AppResult<TrainingEffect> {
-    let (view, date) = activity_basics(conn, id)?;
-    let current = conn.query_row(
-        "SELECT AVG(seg_avg_heart_rate) AS hr, AVG(seg_avg_power) AS power,
-            AVG(seg_avg_speed) AS speed, AVG(seg_avg_pace) AS pace
-         FROM activity_details WHERE activity_id = ?1",
-        [id.to_string()],
-        averages_from_row,
-    )?;
-    // Python only scores activities where every average is non-zero.
-    let Some(current) = current.filter(|c| {
-        [c.heart_rate, c.power, c.speed, c.pace]
-            .iter()
-            .all(|v| *v != 0.0)
-    }) else {
-        return Ok(TrainingEffect {
-            score: 1,
-            recovery_hours: training_effect::recovery_hours(1),
-        });
+/// Training effect from the heart rate of the archived track or, without one, of the splits;
+/// `None` without any heart rate. Computed on demand like the zones: only the detail window and
+/// the AI summary ask for it, one activity at a time.
+pub fn training_effect(
+    conn: &Connection,
+    id: i64,
+    imports_dir: &Path,
+) -> AppResult<Option<TrainingEffect>> {
+    let (_, date) = activity_basics(conn, id)?;
+    let user = users::get(conn)?;
+    let day = DateTime::from_timestamp(date, 0).map(|t| t.date_naive());
+    let basis = match &user {
+        Some(u) => HeartRateBasis::resolve(
+            u.hr_max,
+            u.zones.map(|z| z.upper[4]).or(u.custom_zones.map(|z| z[4])),
+            u.birthday
+                .as_deref()
+                .zip(day)
+                .and_then(|(birthday, day)| users::age_on(birthday, day))
+                .or(u.age),
+            u.hr_min,
+        ),
+        None => HeartRateBasis::resolve(None, None, None, None),
     };
-
-    let types = view.allowed_types();
-    let placeholders = vec!["?"; types.len()].join(", ");
-    // Like the activity itself, earlier segments only count with the values the load uses: a
-    // segment recorded without heart rate has load 0 and would pull the baseline down.
-    let power = if view == ViewMode::Cycling {
-        " AND seg_avg_power > 0"
-    } else {
-        ""
-    };
-    let sql = format!(
-        "SELECT seg_avg_heart_rate AS hr, seg_avg_power AS power, seg_avg_speed AS speed,
-            seg_avg_pace AS pace
-         FROM activity_details JOIN activities ON activity_details.activity_id = activities.id
-         WHERE activities.id != ? AND activities.activity_type IN ({placeholders})
-           AND activities.date BETWEEN ? AND ?
-           AND seg_avg_heart_rate > 0 AND seg_avg_pace > 0 AND seg_avg_speed > 0{power}"
-    );
-    let mut values: Vec<rusqlite::types::Value> = vec![id.into()];
-    values.extend(types.iter().map(|t| (*t).to_string().into()));
-    values.push((date - HISTORY_DAYS * DAY_SECONDS).into());
-    values.push(date.into());
-    let history: Vec<SegmentAverages> = conn
-        .prepare(&sql)?
-        .query_map(params_from_iter(values), averages_from_row)?
-        .filter_map(|r| r.transpose())
-        .collect::<Result<_, _>>()?;
-    Ok(training_effect::training_effect(view, &current, &history))
+    let estimate = cardio::estimate(health::run_vo2max(
+        conn,
+        date - HISTORY_DAYS * DAY_SECONDS,
+        date,
+    )?)
+    .map(|v| (v, health::Vo2maxSource::Runs));
+    let vo2max = estimate.or_else(|| {
+        user.as_ref()
+            .and_then(|u| u.vo2max)
+            .filter(|v| *v > 0.0)
+            .map(|v| (v, health::Vo2maxSource::Profile))
+    });
+    if let Some(track) = load_track(conn, id, imports_dir)?
+        && let Some(effect) = training_effect::evaluate(
+            &training_effect::track_samples(&track),
+            &basis,
+            vo2max,
+            false,
+        )
+    {
+        return Ok(Some(effect));
+    }
+    let splits: Vec<(f64, f64)> = segments(conn, id)?
+        .into_iter()
+        .filter_map(|s| Some((s.heart_rate?, s.duration? as f64)))
+        .collect();
+    Ok(training_effect::evaluate(
+        &training_effect::split_samples(&splits),
+        &basis,
+        vo2max,
+        true,
+    ))
 }
 
 /// Fitness, fatigue and form for the 90 days up to the activity.
@@ -328,9 +332,7 @@ pub fn heart_rate_trend(conn: &Connection, id: i64) -> AppResult<HeartRateTrend>
             }
         })
         .collect();
-    let references = users::get(conn)?
-        .and_then(|u| u.zones)
-        .map(|z| [z[0], z[2], z[4]]);
+    let references = users::zones(conn)?.map(|z| [z.upper[0], z.upper[2], z.upper[4]]);
     Ok(HeartRateTrend { points, references })
 }
 
@@ -360,8 +362,34 @@ mod tests {
                 .unwrap()
                 .is_none()
         );
-        let effect = training_effect(&conn, 1).unwrap();
-        assert!((1..=12).contains(&effect.score));
+        // Without a profile and a track: the default heart rates and the split averages.
+        let effect = training_effect(&conn, 1, Path::new("/nonexistent"))
+            .unwrap()
+            .unwrap();
+        assert!(effect.from_splits);
+        assert_eq!(
+            effect.max_heart_rate_source,
+            training_effect::MaxHeartRateSource::Default
+        );
+        assert!(effect.aerobic > 0.0 && effect.aerobic < 2.0, "{effect:?}");
+        assert_eq!(effect.anaerobic, 0.0);
+        assert_eq!(effect.vo2max, None);
+
+        // The profile's heart rates count: closer to the maximum is harder.
+        conn.execute(
+            "INSERT INTO users (name, hr_min, hr_max, vo2max) VALUES ('Me', 50, 160, 40)",
+            [],
+        )
+        .unwrap();
+        let profile = training_effect(&conn, 1, Path::new("/nonexistent"))
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            (profile.resting_heart_rate, profile.max_heart_rate),
+            (50, 160)
+        );
+        assert_eq!(profile.vo2max_source, Some(health::Vo2maxSource::Profile));
+        assert!(profile.peak_epoc > effect.peak_epoc);
         assert_eq!(heart_rate_trend(&conn, 1).unwrap().points.len(), 1);
         assert_eq!(fitness_trend(&conn, 1).unwrap().len(), 1);
     }
@@ -391,11 +419,9 @@ mod tests {
         segment(1, 125);
         insert_activity(&conn, 3, "Running", day, 1.0, "Today");
         segment(3, 125);
-        let with_history = training_effect(&conn, 3).unwrap();
-        assert_eq!(with_history.score, 7);
         let fitness = fitness_trend(&conn, 3).unwrap();
 
-        // An earlier run recorded without heart rate changes neither.
+        // An earlier run recorded without heart rate doesn't change it.
         insert_activity(
             &conn,
             2,
@@ -405,7 +431,6 @@ mod tests {
             "Without heart rate",
         );
         segment(2, 0);
-        assert_eq!(training_effect(&conn, 3).unwrap(), with_history);
         assert_eq!(fitness_trend(&conn, 3).unwrap(), fitness);
     }
 }

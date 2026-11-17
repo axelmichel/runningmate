@@ -14,6 +14,8 @@ import type { CategoricalChartFunc } from "recharts/types/chart/types";
 import type { TrackPoint } from "@/bindings/TrackPoint";
 import {
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -23,13 +25,14 @@ import { formatNumber } from "@/lib/format";
 
 import { speedFromPace } from "./track-position";
 
-type ChartPoint = TrackPoint & { speed: number | null };
+type ChartPoint = TrackPoint & { speed: number | null; gapSpeed: number | null };
 
 const chartConfig = () =>
   ({
     elevation: { label: t("Elevation (m)"), color: "var(--chart-2)" },
     heartRate: { label: t("Heart rate (bpm)"), color: "var(--chart-3)" },
     speed: { label: t("Speed (km/h)"), color: "var(--chart-4)" },
+    gapSpeed: { label: t("Grade-adjusted (km/h)"), color: "var(--chart-1)" },
     cadence: { label: t("Steps per minute"), color: "var(--chart-5)" },
   }) satisfies ChartConfig;
 
@@ -37,7 +40,8 @@ const chartConfig = () =>
 const SYNC_ID = "track";
 
 /**
- * Elevation, heart rate, speed and (for runs) steps per minute over distance, below the map.
+ * Elevation, heart rate, speed (with the grade-adjusted speed of runs and walks, dashed) and
+ * (for runs) steps per minute over distance, below the map.
  * Hovering reports the point's index (`null` on leaving); `markKm` draws a line at a chosen
  * distance.
  */
@@ -55,11 +59,13 @@ export const TrackCharts = memo(function TrackCharts({
 }) {
   const config = chartConfig();
   const data = useMemo<ChartPoint[]>(
-    () => points.map((p) => ({ ...p, speed: speedFromPace(p.pace) })),
+    () =>
+      points.map((p) => ({ ...p, speed: speedFromPace(p.pace), gapSpeed: speedFromPace(p.gap) })),
     [points],
   );
   const hasHeartRate = points.some((p) => p.heartRate != null);
   const hasSpeed = data.some((p) => p.speed != null);
+  const hasGap = data.some((p) => p.gapSpeed != null);
   const hasCadence = showCadence && points.some((p) => p.cadence != null);
   const onMouseMove: CategoricalChartFunc = (state) => {
     const index = Number(state.activeTooltipIndex);
@@ -172,6 +178,26 @@ export const TrackCharts = memo(function TrackCharts({
               connectNulls
               isAnimationActive={false}
             />
+            {hasGap && (
+              <Line
+                dataKey="gapSpeed"
+                type="monotone"
+                stroke="var(--color-gapSpeed)"
+                strokeDasharray="4 3"
+                dot={false}
+                strokeWidth={1.5}
+                connectNulls
+                isAnimationActive={false}
+              />
+            )}
+            {hasGap && (
+              <ChartLegend
+                verticalAlign="top"
+                align="right"
+                height={16}
+                content={<ChartLegendContent className="justify-end pt-0 pb-1 text-[10px]" />}
+              />
+            )}
           </LineChart>
         </ChartContainer>
       )}

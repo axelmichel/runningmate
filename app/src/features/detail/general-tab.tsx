@@ -26,7 +26,11 @@ export function GeneralTab({ activity, dataDir }: { activity: ActivityDetail; da
       <div className="grid content-start gap-6">
         <AiSummaryCard activityId={activity.id} />
         <MediaGallery activityId={activity.id} />
-        {activity.comment && <p className="text-sm whitespace-pre-wrap">{activity.comment}</p>}
+        {activity.comment && (
+          <p data-private className="text-sm whitespace-pre-wrap">
+            {activity.comment}
+          </p>
+        )}
         <div>
           <Fact
             label={t("Calories")}

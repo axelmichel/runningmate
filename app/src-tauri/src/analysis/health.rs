@@ -49,7 +49,7 @@ pub struct HealthReport {
     /// Zone 1, 3 and 5 bounds drawn as reference lines (min, ideal, max).
     #[ts(type = "[number, number, number] | null")]
     pub references: Option<[i64; 3]>,
-    /// Time in heart-rate zones from the per-km segments; `None` until zones are saved.
+    /// Time in heart-rate zones from the per-km segments; `None` while the user's zone method has no zones.
     pub zones: Option<Vec<ZoneTime>>,
     /// Activities in the period (with or without heart rate).
     #[ts(type = "number")]
@@ -216,6 +216,7 @@ fn cardio_fitness(
 pub fn report(conn: &Connection, from: i64, to: i64) -> AppResult<HealthReport> {
     let user = users::get(conn)?;
     let curve = fitness_until(conn, to)?;
+    // `users::get` resolves the zones for the user's method, as `users::zones` does.
     let bounds = user.as_ref().and_then(|u| u.zones);
     let zones = match bounds {
         Some(bounds) => Some(zones::from_segments(
@@ -236,7 +237,7 @@ pub fn report(conn: &Connection, from: i64, to: i64) -> AppResult<HealthReport> 
             .cloned(),
         fitness: in_period(curve, from),
         heart_rate: heart_rate_points(conn, from, to)?,
-        references: bounds.map(|z| [z[0], z[2], z[4]]),
+        references: bounds.map(|z| [z.upper[0], z.upper[2], z.upper[4]]),
         zones,
         activities,
         cardio: cardio_fitness(conn, user.as_ref(), from, to)?,

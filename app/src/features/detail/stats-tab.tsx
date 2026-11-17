@@ -5,6 +5,8 @@ import type { ViewMode } from "@/bindings/ViewMode";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -20,6 +22,7 @@ const chartConfig = () =>
     elevation: { label: t("Elevation (m)"), color: "var(--chart-2)" },
     heartRate: { label: t("Heart rate (bpm)"), color: "var(--chart-3)" },
     pace: { label: t("Pace (/km)"), color: "var(--chart-4)" },
+    gap: { label: t("GAP (/km)"), color: "var(--chart-1)" },
     cadence: { label: t("Steps per minute"), color: "var(--chart-5)" },
   }) satisfies ChartConfig;
 
@@ -46,8 +49,8 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 }
 
 /**
- * Elevation, heart rate, pace and (for runs) steps per minute over distance (the Python
- * statistics page).
+ * Elevation, heart rate, pace (with the grade-adjusted pace of runs and walks, dashed) and (for
+ * runs) steps per minute over distance (the Python statistics page).
  */
 export function StatsTab({ activityId, view }: { activityId: number; view: ViewMode }) {
   const { data: points, isPending } = useSeries(activityId);
@@ -62,6 +65,7 @@ export function StatsTab({ activityId, view }: { activityId: number; view: ViewM
   }
   const hasHeartRate = points.some((p) => p.heartRate != null);
   const hasPace = points.some((p) => p.pace != null);
+  const hasGap = points.some((p) => p.gap != null);
   const hasCadence = view === "Running" && points.some((p) => p.cadence != null);
   const tooltip = (
     <ChartTooltip
@@ -143,7 +147,16 @@ export function StatsTab({ activityId, view }: { activityId: number; view: ViewM
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    formatter={(value) => `${formatPace(Number(value))} /km`}
+                    formatter={(value, name) => (
+                      <div className="flex flex-1 items-center justify-between gap-4 leading-none">
+                        <span className="text-muted-foreground">
+                          {name === "gap" ? t("GAP") : t("Pace")}
+                        </span>
+                        <span className="font-mono font-medium text-foreground tabular-nums">
+                          {formatPace(Number(value))} /km
+                        </span>
+                      </div>
+                    )}
                     labelFormatter={(_, payload) =>
                       `${formatNumber((payload?.[0]?.payload as TrackPoint | undefined)?.distance, 2)} km`
                     }
@@ -158,6 +171,18 @@ export function StatsTab({ activityId, view }: { activityId: number; view: ViewM
                 connectNulls
                 isAnimationActive={false}
               />
+              {hasGap && (
+                <Line
+                  dataKey="gap"
+                  type="monotone"
+                  stroke="var(--color-gap)"
+                  strokeDasharray="4 3"
+                  dot={false}
+                  connectNulls
+                  isAnimationActive={false}
+                />
+              )}
+              {hasGap && <ChartLegend content={<ChartLegendContent />} />}
             </LineChart>
           </ChartContainer>
         </ChartCard>

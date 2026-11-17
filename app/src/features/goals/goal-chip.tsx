@@ -5,6 +5,7 @@ import type { GoalProgress } from "@/bindings/GoalProgress";
 import { Progress } from "@/components/ui/progress";
 import { SPORT_COLORS, VIEW_MODES } from "@/features/activities/view-mode";
 import { t } from "@/i18n";
+import { formatDuration } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { formatGoalValue, goalHint, windowPercent } from "./goal-math";
@@ -29,6 +30,8 @@ export function GoalChip({
   const target = formatGoalValue(spec.metric, spec.target);
   const hint = goalHint(progress, now);
   const style = { "--goal-color": SPORT_COLORS[goal.view] } as CSSProperties;
+  // A distance one run has to cover counts its hits instead of showing one run's distance.
+  const counted = spec.metric === "distance" && spec.perActivity;
 
   return (
     <button
@@ -53,19 +56,44 @@ export function GoalChip({
           />
         )}
       </div>
-      <div className="text-sm font-semibold tabular-nums">
-        {spec.perActivity && !reached && current.value > 0 && (
-          <span className="mr-1 text-xs font-normal text-muted-foreground">{t("Best so far")}</span>
-        )}
-        {value}
-        <span className="font-normal text-muted-foreground"> / {target}</span>
-      </div>
-      <Progress
-        value={windowPercent(spec, current)}
-        className="h-1.5 **:data-[slot=progress-indicator]:bg-(--goal-color)"
-      />
+      {counted ? (
+        <>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-2xl leading-none font-semibold tabular-nums">
+              {progress.hits}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {t("times reached")} · {target}
+            </span>
+          </div>
+          <div className="truncate text-xs text-muted-foreground tabular-nums">
+            {progress.bestDuration !== null
+              ? t("Best time {{time}}", { time: formatDuration(progress.bestDuration) })
+              : t("Not reached yet")}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="text-sm font-semibold tabular-nums">
+            {spec.perActivity && !reached && current.value > 0 && (
+              <span className="mr-1 text-xs font-normal text-muted-foreground">
+                {t("Best so far")}
+              </span>
+            )}
+            {value}
+            <span className="font-normal text-muted-foreground"> / {target}</span>
+          </div>
+          <Progress
+            value={windowPercent(spec, current)}
+            className="h-1.5 **:data-[slot=progress-indicator]:bg-(--goal-color)"
+          />
+        </>
+      )}
       <div className="truncate text-xs text-muted-foreground">
-        {[hint, progress.streak > 1 && t("{{count}} in a row", { count: progress.streak })]
+        {[
+          (!counted || !reached) && hint,
+          progress.streak > 1 && t("{{count}} in a row", { count: progress.streak }),
+        ]
           .filter(Boolean)
           .join(" · ") || " "}
       </div>

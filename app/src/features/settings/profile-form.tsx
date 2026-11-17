@@ -18,6 +18,7 @@ import { t, tk } from "@/i18n";
 import { api } from "@/lib/api";
 
 import { validateProfile, type ProfileForm } from "./validation";
+import { invalidateZones } from "./zones";
 
 const FIELDS: { key: keyof ProfileForm; label: string; placeholder?: string; type?: string }[] = [
   { key: "name", label: tk("Name") },
@@ -63,6 +64,8 @@ export function ProfileFormView({ user }: { user: User | null }) {
       }),
     onSuccess: (saved) => {
       queryClient.setQueryData(["user"], saved);
+      // Zones from % of max or Karvonen follow the heart rates of the profile.
+      invalidateZones(queryClient);
       toast.success(t("Profile saved"));
     },
     onError: (error) => toast.error(t("Could not save: {{error}}", { error: String(error) })),

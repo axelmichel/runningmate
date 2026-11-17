@@ -3,7 +3,7 @@
 
 use tauri::{AppHandle, State};
 
-use super::{ai, import::fetch_weather_later};
+use super::{ai, import::fetch_weather_later, locations};
 use crate::{
     activity_type::ViewMode,
     db::{Db, ai_summaries},
@@ -11,7 +11,7 @@ use crate::{
     importer::{
         self, ImportOutcome, WeatherPoint,
         pending::{self, PendingRoute},
-        repair::{FixEdit, FixSource},
+        repair::{FixEdit, FixSource, SampleEdit},
     },
     osm_routing, paths, settings,
 };
@@ -21,13 +21,15 @@ pub fn activity_fix_source(db: State<'_, Db>, id: i64) -> AppResult<FixSource> {
     importer::fix_source(&*db.conn()?, id, &paths::imports_dir()?)
 }
 
-/// Like `reimport_activity` afterwards: the old summary and weather were for the old track.
+/// Like `reimport_activity` afterwards: the old summary, weather and place name were for the old
+/// track.
 fn recomputed(app: &AppHandle, db: &Db, id: i64, point: Option<WeatherPoint>) -> AppResult<()> {
     ai_summaries::delete(&*db.conn()?, id)?;
     if let Some(point) = point {
         fetch_weather_later(app, point);
     }
     ai::summarize_later(app, id);
+    locations::relocate_later(app, id);
     Ok(())
 }
 
@@ -41,6 +43,25 @@ pub fn apply_activity_fix(
 ) -> AppResult<()> {
     let language = settings::load().map(|s| s.language).unwrap_or_default();
     let point = importer::fix_activity(
+        &mut *db.conn()?,
+        id,
+        &edits,
+        &paths::imports_dir()?,
+        &language,
+    )?;
+    recomputed(&app, &db, id, point)
+}
+
+/// Corrects the heart rate or steps of stretches and recomputes the activity.
+#[tauri::command(async)]
+pub fn apply_sample_fix(
+    app: AppHandle,
+    db: State<'_, Db>,
+    id: i64,
+    edits: Vec<SampleEdit>,
+) -> AppResult<()> {
+    let language = settings::load().map(|s| s.language).unwrap_or_default();
+    let point = importer::fix_samples(
         &mut *db.conn()?,
         id,
         &edits,
@@ -89,6 +110,7 @@ pub fn apply_pending_fix(
     }
     if let ImportOutcome::Imported { activity_id } = outcome {
         ai::summarize_later(&app, activity_id);
+        locations::locate_later(&app);
     }
     Ok(outcome)
 }

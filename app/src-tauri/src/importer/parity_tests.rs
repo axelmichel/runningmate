@@ -401,6 +401,56 @@ fn energy_is_recomputed_once_and_keeps_edits() {
 }
 
 #[test]
+fn grade_adjusted_pace_is_stored_and_filled_in_once() {
+    use crate::db::{Db, activities};
+
+    let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let dir = tempfile::tempdir().unwrap();
+    let source = dir.path().join("synthetic_run.tcx");
+    std::fs::copy(fixtures.join("synthetic_run.tcx"), &source).unwrap();
+    let imports = dir.path().join("imports");
+    let db = Db::open_in_memory().unwrap();
+    let (outcome, _) = import_file(&mut db.conn().unwrap(), &source, &imports, "en").unwrap();
+    let ImportOutcome::Imported { activity_id } = outcome else {
+        panic!("expected an import, got {outcome:?}");
+    };
+    let stored = || {
+        let conn = db.conn().unwrap();
+        let detail = activities::get(&conn, activity_id).unwrap();
+        let splits = crate::analysis::segments(&conn, activity_id).unwrap();
+        (
+            detail.avg_gap,
+            splits.iter().map(|s| s.gap).collect::<Vec<_>>(),
+        )
+    };
+    let imported = stored();
+    assert!(
+        imported.0.as_deref().is_some_and(|g| g.len() == 5),
+        "{imported:?}"
+    );
+    assert_eq!(imported.1.len(), 4);
+    assert!(imported.1.iter().all(|g| g.is_some_and(|g| g > 0.0)));
+
+    // As stored before the grade-adjusted pace was computed.
+    let forget = || {
+        db.conn()
+            .unwrap()
+            .execute_batch(
+                "UPDATE runs SET avg_gap = NULL;
+                 UPDATE activity_details SET seg_avg_gap = NULL;",
+            )
+            .unwrap();
+    };
+    forget();
+    apply_data_fixes(&db, &imports, "en").unwrap();
+    assert_eq!(stored(), imported);
+
+    forget();
+    apply_data_fixes(&db, &imports, "en").unwrap();
+    assert_eq!(stored().0, None, "runs only once");
+}
+
+#[test]
 fn pauses_and_segments_are_recomputed_once_and_keep_edits() {
     use crate::db::{Db, activities};
 

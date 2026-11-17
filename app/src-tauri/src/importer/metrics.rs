@@ -22,6 +22,10 @@ pub struct ActivityMetrics {
     pub avg_power: i64,
     /// min/km, `NaN` when no point had a plausible pace.
     pub avg_pace: f64,
+    /// Grade-adjusted pace, min/km: `avg_pace` times the distance over the flat distance that
+    /// costs as much ([`flat_ratio`]), as a split's is formed from its pace. `None` for rides and
+    /// without a plausible pace.
+    pub avg_gap: Option<f64>,
     /// 5th / 95th percentile of the per-point pace.
     pub fastest_pace: f64,
     pub slowest_pace: f64,
@@ -53,6 +57,23 @@ fn quantile_nearest(values: &[f64], q: f64) -> f64 {
     sorted.sort_by(f64::total_cmp);
     let index = (q * (sorted.len() - 1) as f64).round_ties_even() as usize;
     sorted[index]
+}
+
+/// Distance over the flat distance costing as much, over the steps with a grade-adjusted pace:
+/// what turns a pace into the grade-adjusted pace. `None` for rides, which have none. (A mean of
+/// the per-point grade-adjusted paces would come out slower than the pace on a hilly loop: a
+/// pace 1.3 times faster uphill and 1.3 times slower downhill averages to slower.)
+fn flat_ratio(track: &Track) -> Option<f64> {
+    let (distance, flat) =
+        (0..track.len())
+            .filter(|i| track.gap[*i].is_finite())
+            .fold((0.0, 0.0), |(d, f), i| {
+                (
+                    d + track.geodesic[i],
+                    f + track.geodesic[i] * track.grade_factor[i],
+                )
+            });
+    (flat > 0.0).then(|| distance / flat)
 }
 
 pub fn compute(track: &Track) -> ActivityMetrics {
@@ -113,6 +134,9 @@ pub fn compute(track: &Track) -> ActivityMetrics {
             .map_or(0, |hr| round_even(hr, 0) as i64),
         avg_power: mean(track.power.iter().copied()).map_or(0, |p| round_even(p, 0) as i64),
         avg_pace: mean(track.pace.iter().copied()).unwrap_or(f64::NAN),
+        avg_gap: flat_ratio(track)
+            .zip(mean(track.pace.iter().copied()))
+            .map(|(ratio, pace)| pace * ratio),
         fastest_pace: quantile_nearest(&track.pace, 0.05),
         slowest_pace: quantile_nearest(&track.pace, 0.95),
         pause_minutes: pause_seconds / 60.0,

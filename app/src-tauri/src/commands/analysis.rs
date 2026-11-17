@@ -27,9 +27,10 @@ pub fn activity_heart_rate_zones(db: State<'_, Db>, id: i64) -> AppResult<Option
     analysis::heart_rate_zones(&*db.conn()?, id, &paths::imports_dir()?)
 }
 
+/// EPOC-based training effect; `None` without any heart rate.
 #[tauri::command(async)]
-pub fn activity_training_effect(db: State<'_, Db>, id: i64) -> AppResult<TrainingEffect> {
-    analysis::training_effect(&*db.conn()?, id)
+pub fn activity_training_effect(db: State<'_, Db>, id: i64) -> AppResult<Option<TrainingEffect>> {
+    analysis::training_effect(&*db.conn()?, id, &paths::imports_dir()?)
 }
 
 #[tauri::command(async)]

@@ -204,7 +204,7 @@ function GoalCard({
             onClick={() => onOpenActivity(progress.lastHit!.id)}
           >
             <Star className="size-3.5 shrink-0 fill-current text-primary" />
-            <span className="truncate">
+            <span data-private className="truncate">
               {progress.lastHit.title || t("Activity")} · {formatDate(progress.lastHit.date)}
             </span>
           </button>

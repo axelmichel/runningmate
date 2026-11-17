@@ -14,6 +14,7 @@ const points: TrackPoint[] = Array.from({ length: 11 }, (_, i) => ({
   elevation: 100 + i * 5,
   heartRate: null,
   pace: null,
+  gap: null,
   cadence: null,
 }));
 

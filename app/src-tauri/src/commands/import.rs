@@ -1,6 +1,6 @@
 //! TCX import, re-import and folder sync. Imports run on a blocking thread and report each
-//! file through `import://progress` events; weather (and the AI summary, if enabled) is fetched
-//! in the background afterwards.
+//! file through `import://progress` events; weather, the place name (and the AI summary, if
+//! enabled) are fetched in the background afterwards.
 
 use std::{
     path::{Path, PathBuf},
@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 use ts_rs::TS;
 
-use super::ai;
+use super::{ai, locations};
 use crate::{
     db::{Db, ai_summaries, weather},
     error::{AppError, AppResult},
@@ -203,6 +203,7 @@ pub(crate) fn import_one(app: &AppHandle, file: &Path) -> AppResult<ImportOutcom
             }
             if let ImportOutcome::Imported { activity_id } = outcome {
                 ai::summarize_later(app, activity_id);
+                locations::locate_later(app);
             }
             outcome
         }
@@ -302,6 +303,7 @@ pub fn reimport_activity(app: AppHandle, db: State<'_, Db>, id: i64) -> AppResul
         fetch_weather_later(&app, point);
     }
     ai::summarize_later(&app, id);
+    locations::relocate_later(&app, id);
     Ok(())
 }
 

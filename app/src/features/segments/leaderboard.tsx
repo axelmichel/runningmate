@@ -87,7 +87,11 @@ export function Leaderboard({
                 </TableCell>
                 <TableCell className="whitespace-nowrap">{formatDate(e.date)}</TableCell>
                 {/* Takes the width the other columns leave and cuts long titles; cells ignore max-w. */}
-                <TableCell className="w-full max-w-0 truncate" title={e.activityTitle ?? undefined}>
+                <TableCell
+                  data-private
+                  className="w-full max-w-0 truncate"
+                  title={e.activityTitle ?? undefined}
+                >
                   {e.activityTitle || t("Activity")}
                 </TableCell>
                 <TableCell className={cell}>{formatDuration(e.elapsed)}</TableCell>

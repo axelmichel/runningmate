@@ -227,3 +227,8 @@ body:has([data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"])
   > * {
   opacity: 0.4;
 }
+
+/* Privacy mode for screenshots (see main.tsx): activity titles and comments are unreadable. */
+.privacy [data-private] {
+  filter: blur(5px);
+}

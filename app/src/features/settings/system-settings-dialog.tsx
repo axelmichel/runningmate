@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { HardDrive, Loader2, SlidersHorizontal, Sparkles } from "lucide-react";
+import { HardDrive, Loader2, PanelRight, SlidersHorizontal, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import { mediaMode, setMediaMode, type MediaMode } from "@/features/detail/media-mode";
@@ -27,6 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { PANEL_BOXES, PANEL_SPORTS, hiddenBoxes, withBox } from "@/features/activities/panel-boxes";
+import { VIEW_MODES } from "@/features/activities/view-mode";
 import { useTheme, type Theme } from "@/hooks/use-theme";
 import { setLanguage, t, tk } from "@/i18n";
 import { api } from "@/lib/api";
@@ -34,10 +36,11 @@ import { formatNumber } from "@/lib/format";
 
 import { formatBytes } from "./validation";
 
-type Page = "general" | "ai" | "storage";
+type Page = "general" | "panel" | "ai" | "storage";
 
 const ITEMS: (NavItem & { value: Page })[] = [
   { value: "general", label: tk("General"), icon: SlidersHorizontal },
+  { value: "panel", label: tk("Activity panel"), icon: PanelRight },
   { value: "ai", label: tk("AI summary"), icon: Sparkles },
   { value: "storage", label: tk("Storage"), icon: HardDrive },
 ];
@@ -104,10 +107,15 @@ function useSettings() {
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: api.getSettings });
   const save = useMutation({
     scope: { id: "settings" },
-    mutationFn: (change: Partial<SystemSettings>) => {
+    mutationFn: (
+      change: Partial<SystemSettings> | ((current: SystemSettings) => Partial<SystemSettings>),
+    ) => {
       const current = queryClient.getQueryData<SystemSettings>(["settings"]);
       if (!current) throw new Error("settings not loaded");
-      return api.saveSettings({ ...current, ...change });
+      return api.saveSettings({
+        ...current,
+        ...(typeof change === "function" ? change(current) : change),
+      });
     },
     onSuccess: (saved) => {
       queryClient.setQueryData(["settings"], saved);
@@ -160,6 +168,79 @@ function GeneralPage() {
         </RadioGroup>
       </div>
       <MediaModeSetting />
+      <div className="grid gap-2">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="location-lookup"
+            checked={settings.location_lookup}
+            onCheckedChange={(checked) => save.mutate({ location_lookup: checked === true })}
+          />
+          <Label htmlFor="location-lookup">{t("Look up place names")}</Label>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {t(
+            "Names the town and part of town an activity starts in, for the list and the search. Sends the start's coordinates to nominatim.openstreetmap.org, one activity a second, each only once.",
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** Which boxes the panel beside the activity list and in the detail window shows, per sport. */
+function PanelPage() {
+  const { settings, save } = useSettings();
+  if (!settings) return null;
+  const sports = PANEL_SPORTS.map((sport) => VIEW_MODES.find((v) => v.mode === sport)!);
+
+  return (
+    <div className="grid max-w-xl gap-4">
+      <p className="text-sm text-muted-foreground">
+        {t("Boxes shown beside the activity list and in the detail window.")}
+      </p>
+      <table className="text-sm">
+        <thead>
+          <tr className="text-muted-foreground">
+            <th className="py-2 text-left font-normal" />
+            {sports.map(({ mode, label, icon: Icon }) => (
+              <th key={mode} className="w-20 py-2 font-normal">
+                <span className="inline-flex flex-col items-center gap-1">
+                  <Icon className="size-4" />
+                  {t(label)}
+                </span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y">
+          {PANEL_BOXES.map(({ box, label }) => (
+            <tr key={box}>
+              <td className="py-2">{t(label)}</td>
+              {PANEL_SPORTS.map((sport) => (
+                <td key={sport} className="py-2 text-center">
+                  <Checkbox
+                    aria-label={`${t(label)} · ${t(sports.find((s) => s.mode === sport)!.label)}`}
+                    checked={!hiddenBoxes(settings, sport).includes(box)}
+                    onCheckedChange={(checked) =>
+                      save.mutate((current) => ({
+                        activity_panel_hidden: withBox(
+                          current.activity_panel_hidden,
+                          sport,
+                          box,
+                          checked === true,
+                        ),
+                      }))
+                    }
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="text-xs text-muted-foreground">
+        {t("Photos, comment and summary only show beside the activity list.")}
+      </p>
     </div>
   );
 }
@@ -315,7 +396,7 @@ export function SystemSettingsDialog({
         <DialogHeader>
           <DialogTitle>{t("Settings")}</DialogTitle>
           <DialogDescription className="sr-only">
-            {t("Language, appearance, AI summary and storage")}
+            {t("Language, appearance, activity panel, AI summary and storage")}
           </DialogDescription>
         </DialogHeader>
         <Tabs
@@ -328,6 +409,9 @@ export function SystemSettingsDialog({
           <div className="min-h-0 min-w-0 flex-1 overflow-auto">
             <TabsContent value="general">
               <GeneralPage />
+            </TabsContent>
+            <TabsContent value="panel">
+              <PanelPage />
             </TabsContent>
             <TabsContent value="ai">
               <AiPage />

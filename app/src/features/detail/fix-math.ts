@@ -1,8 +1,12 @@
-import type { QueryClient } from "@tanstack/react-query";
+import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import type { LatLngTuple } from "leaflet";
+import { toast } from "sonner";
 
 import type { FixEdit } from "@/bindings/FixEdit";
 import type { FixSample } from "@/bindings/FixSample";
+import { invalidateGoals } from "@/features/goals/goal-math";
+import { invalidateSegments } from "@/features/segments/segment-math";
+import { invalidateTraining } from "@/features/training/training-math";
 
 const EARTH_RADIUS = 6_371_008.8;
 
@@ -103,6 +107,18 @@ export function nearestSample(
     }
   });
   return best;
+}
+
+/** Refreshes everything computed from the track after a fix or reset, with a toast. */
+export function useRecomputed(activityId: number) {
+  const queryClient = useQueryClient();
+  return (message: string) => {
+    invalidateActivityTrack(queryClient, activityId);
+    invalidateSegments(queryClient);
+    invalidateGoals(queryClient);
+    invalidateTraining(queryClient);
+    toast.success(message);
+  };
 }
 
 /** Everything computed from an activity's track, after it was fixed or reset. */

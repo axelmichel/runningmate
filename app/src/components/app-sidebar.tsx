@@ -1,6 +1,7 @@
 import {
   CalendarCheck,
   Flame,
+  Images,
   Gauge,
   HeartPulse,
   RefreshCw,
@@ -26,12 +27,20 @@ import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
 import { t } from "@/i18n";
 
 type AppSidebarProps = {
-  page: "dashboard" | "activities" | "health" | "segments" | "goals" | "training" | "heatmap";
+  page:
+    | "dashboard"
+    | "activities"
+    | "health"
+    | "segments"
+    | "goals"
+    | "training"
+    | "heatmap"
+    | "gallery";
   /** The activity view, marked while the activities page is shown. */
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   onPageChange: (
-    page: "dashboard" | "health" | "segments" | "goals" | "training" | "heatmap",
+    page: "dashboard" | "health" | "segments" | "goals" | "training" | "heatmap" | "gallery",
   ) => void;
   searchOpen: boolean;
   onSearchToggle: () => void;
@@ -147,6 +156,16 @@ export function AppSidebar({
                 >
                   <Flame />
                   <span>{t("Heat map")}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={page === "gallery"}
+                  tooltip={`${t("Gallery")} (⇧⌘P)`}
+                  onClick={() => onPageChange("gallery")}
+                >
+                  <Images />
+                  <span>{t("Gallery")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

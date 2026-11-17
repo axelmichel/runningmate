@@ -12,6 +12,7 @@ import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
 import { lastConnector, type Connector } from "@/features/connectors/connector";
 import { ConnectorsDialog } from "@/features/connectors/connectors-dialog";
 import { DashboardPage } from "@/features/dashboard/dashboard-page";
+import { GalleryPage } from "@/features/gallery/gallery-page";
 import { GoalsPage } from "@/features/goals/goals-page";
 import { HealthPage } from "@/features/health/health-page";
 import { RouteHeatmapPage } from "@/features/route-heatmap/route-heatmap-page";
@@ -26,7 +27,8 @@ import { api } from "@/lib/api";
 
 const DETAILS_STORAGE_KEY = "runningmate-details-panel";
 
-type Page = "dashboard" | "activities" | "health" | "segments" | "goals" | "training" | "heatmap";
+type Page =
+  "dashboard" | "activities" | "health" | "segments" | "goals" | "training" | "heatmap" | "gallery";
 
 function App() {
   const queryClient = useQueryClient();
@@ -77,6 +79,7 @@ function App() {
       if (payload === "goals") setPage("goals");
       if (payload === "training") setPage("training");
       if (payload === "heatmap") setPage("heatmap");
+      if (payload === "gallery") setPage("gallery");
       if (payload === "settings") setSettingsOpen(true);
       if (payload === "user") setUserSettingsOpen(true);
     });
@@ -92,6 +95,23 @@ function App() {
       queryClient.invalidateQueries({ queryKey: ["aiSummary", payload] });
     });
     return () => {
+      unlisten.then((stop) => stop());
+    };
+  }, [queryClient]);
+
+  // Place names are looked up in the background, up to one a second while older activities
+  // are caught up on, so the list is refreshed at most every few seconds.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const unlisten = listen<number>("activity://located", ({ payload }) => {
+      queryClient.invalidateQueries({ queryKey: ["activity", payload] });
+      timer ??= setTimeout(() => {
+        timer = undefined;
+        queryClient.invalidateQueries({ queryKey: ["activities"] });
+      }, 3000);
+    });
+    return () => {
+      clearTimeout(timer);
       unlisten.then((stop) => stop());
     };
   }, [queryClient]);
@@ -118,7 +138,9 @@ function App() {
               ? t("Training")
               : page === "heatmap"
                 ? t("Heat map")
-                : t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
+                : page === "gallery"
+                  ? t("Gallery")
+                  : t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
 
   return (
     <SidebarProvider>
@@ -162,6 +184,8 @@ function App() {
           <TrainingPage dataDir={info?.dataDir} />
         ) : page === "heatmap" ? (
           <RouteHeatmapPage />
+        ) : page === "gallery" ? (
+          <GalleryPage dataDir={info?.dataDir} />
         ) : (
           <ActivitiesPage
             view={viewMode}

@@ -23,6 +23,8 @@ pub struct TrackPoint {
     pub heart_rate: Option<f64>,
     /// min/km, `None` where implausible for the activity type.
     pub pace: Option<f64>,
+    /// Grade-adjusted pace, min/km; `None` where the pace is, for rides and after a pause.
+    pub gap: Option<f64>,
     /// Steps per minute (both feet), `None` without cadence or when standing still.
     pub cadence: Option<f64>,
 }
@@ -36,6 +38,7 @@ pub fn series(track: &Track) -> Vec<TrackPoint> {
         .map(|i| {
             let point = &track.points[i];
             let pace = track.pace[i];
+            let gap = track.gap[i];
             TrackPoint {
                 distance: track.distance_km[i],
                 elapsed: start.map_or(0.0, |s| (point.time - s).as_seconds_f64()),
@@ -44,6 +47,7 @@ pub fn series(track: &Track) -> Vec<TrackPoint> {
                 elevation: point.elevation,
                 heart_rate: point.heart_rate,
                 pace: (!pace.is_nan()).then_some(pace),
+                gap: gap.is_finite().then_some(gap),
                 // TCX cadence counts one foot.
                 cadence: point.cadence.filter(|c| *c > 0.0).map(|c| c * 2.0),
             }

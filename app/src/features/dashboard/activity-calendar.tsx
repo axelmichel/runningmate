@@ -102,8 +102,8 @@ export function ActivityCalendar({
                   <div className="grid gap-0.5">
                     {list.map((row) => (
                       <div key={row.id}>
-                        {row.title || t("Activity")} · {formatNumber(row.distance, 1)} km ·{" "}
-                        {formatDuration(row.duration)}
+                        <span data-private>{row.title || t("Activity")}</span> ·{" "}
+                        {formatNumber(row.distance, 1)} km · {formatDuration(row.duration)}
                       </div>
                     ))}
                     <SessionLines sessions={daySessions} />

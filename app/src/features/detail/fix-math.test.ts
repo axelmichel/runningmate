@@ -24,6 +24,7 @@ function samples(count: number, gaps: number[] = []): FixSample[] {
     lon: gaps.includes(i) ? null : 2,
     elevation: null,
     heartRate: null,
+    steps: null,
   }));
 }
 

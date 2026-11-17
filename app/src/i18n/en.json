@@ -35,6 +35,8 @@
   "{{count}} new file_other": "{{count}} new files",
   "{{count}} photo_one": "{{count}} photo",
   "{{count}} photo_other": "{{count}} photos",
+  "{{count}} photos and videos_one": "{{count}} photo or video",
+  "{{count}} photos and videos_other": "{{count}} photos and videos",
   "{{count}} selected_one": "{{count}} selected",
   "{{count}} selected_other": "{{count}} selected",
   "{{count}} squares across_one": "{{count}} square across",

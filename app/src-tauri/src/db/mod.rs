@@ -5,6 +5,7 @@ pub mod activities;
 pub mod ai_summaries;
 pub mod connectors;
 pub mod goals;
+pub mod locations;
 pub mod media;
 pub mod migrations;
 pub mod performances;
@@ -117,7 +118,7 @@ mod tests {
         let db = Db::open_in_memory().unwrap();
         let conn = db.conn().unwrap();
 
-        assert_eq!(current_version(&conn).unwrap(), 63);
+        assert_eq!(current_version(&conn).unwrap(), 66);
         assert_eq!(
             columns(&conn, "activities"),
             [
@@ -133,7 +134,10 @@ mod tests {
                 "elevation_gain",
                 "edited",
                 "new",
-                "type_detail"
+                "type_detail",
+                "location",
+                "location_latitude",
+                "location_longitude"
             ]
         );
         assert_eq!(
@@ -154,7 +158,8 @@ mod tests {
                 "elevation_img",
                 "map_html",
                 "activity_id",
-                "shoe_id"
+                "shoe_id",
+                "avg_gap"
             ]
         );
         assert!(columns(&conn, "walking").contains(&"shoe_id".to_string()));
@@ -271,20 +276,24 @@ mod real_database {
         println!("decoded {} activities", ids.len());
 
         let started = std::time::Instant::now();
-        let mut scores = [0usize; 13];
+        // Aerobic training effect 0–5 in whole steps; without archives from the splits.
+        let mut effects = [0usize; 6];
         for id in &ids {
             crate::analysis::segments(&conn, *id).unwrap();
-            let effect = crate::analysis::training_effect(&conn, *id)
-                .unwrap_or_else(|e| panic!("training effect {id}: {e}"));
-            scores[effect.score as usize] += 1;
+            let effect =
+                crate::analysis::training_effect(&conn, *id, Path::new("/nonexistent-imports"))
+                    .unwrap_or_else(|e| panic!("training effect {id}: {e}"));
+            if let Some(effect) = effect {
+                effects[effect.aerobic as usize] += 1;
+            }
             crate::analysis::fitness_trend(&conn, *id).unwrap();
             crate::analysis::heart_rate_trend(&conn, *id).unwrap();
         }
         println!(
-            "analysed {} activities in {:?}; training effect scores 1-12: {:?}",
+            "analysed {} activities in {:?}; aerobic training effects 0-5: {:?}",
             ids.len(),
             started.elapsed(),
-            &scores[1..]
+            effects
         );
 
         // Optionally also outline the newest routes from the archives (read-only).

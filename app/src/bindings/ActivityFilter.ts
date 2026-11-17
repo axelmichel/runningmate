@@ -5,7 +5,7 @@
  */
 export type ActivityFilter = { 
 /**
- * Matched against title and comment.
+ * Words that each have to appear in the title, comment or place name.
  */
 searchText?: string, 
 /**

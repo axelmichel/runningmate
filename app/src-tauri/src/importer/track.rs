@@ -4,7 +4,7 @@
 
 use geographiclib_rs::{Geodesic, InverseGeodesic};
 
-use super::tcx::RawPoint;
+use super::{grade, tcx::RawPoint};
 use crate::activity_type::ViewMode;
 
 const GRAVITY: f64 = 9.81;
@@ -65,6 +65,12 @@ pub struct Track {
     pub power: Vec<f64>,
     /// min/km, `NaN` outside the plausible range for the activity type.
     pub pace: Vec<f64>,
+    /// Energy cost of the point's smoothed gradient over that of the flat
+    /// ([`grade::cost_factor`]); `NaN` for rides.
+    pub grade_factor: Vec<f64>,
+    /// Grade-adjusted pace, min/km: the pace divided by [`Self::grade_factor`]. `NaN` where the
+    /// pace is, for rides and for the point after a pause.
+    pub gap: Vec<f64>,
     /// Cumulative km over UTM-projected coordinates.
     pub distance_km: Vec<f64>,
     /// kcal since the previous point.
@@ -140,7 +146,7 @@ impl Track {
             .collect();
 
         let (min_pace, max_pace, min_dist) = pace_limits(view);
-        let pace = dist_diff
+        let pace: Vec<f64> = dist_diff
             .iter()
             .zip(&time_diff)
             .map(|(d, t)| {
@@ -157,6 +163,28 @@ impl Track {
             .collect();
 
         let distance_km = utm_cumulative_km(&points);
+
+        let along: Vec<f64> = geodesic
+            .iter()
+            .scan(0.0, |total, d| {
+                *total += d;
+                Some(*total)
+            })
+            .collect();
+        let elevation: Vec<f64> = points.iter().map(|p| p.elevation).collect();
+        let grade_factor: Vec<f64> = grade::gradients(&along, &elevation)
+            .into_iter()
+            .map(|g| grade::cost_factor(view, g).unwrap_or(f64::NAN))
+            .collect();
+        let gap = (0..n)
+            .map(|i| {
+                if raw_time_diff[i] > PAUSE_THRESHOLD {
+                    f64::NAN
+                } else {
+                    pace[i] / grade_factor[i]
+                }
+            })
+            .collect();
 
         let calories = (0..n)
             .map(|i| {
@@ -186,6 +214,8 @@ impl Track {
             speed,
             power,
             pace,
+            grade_factor,
+            gap,
             distance_km,
             calories,
         }

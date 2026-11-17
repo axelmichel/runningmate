@@ -3,6 +3,7 @@
 
 pub mod archive;
 pub mod gpx;
+pub mod grade;
 pub mod metrics;
 pub mod outline;
 pub mod pending;
@@ -324,18 +325,18 @@ fn revertible(imports_dir: &Path, file_id: &str) -> AppResult<String> {
     Ok(xml)
 }
 
-/// Applies drawn routes to an activity: archives the repaired track (keeping the original
-/// archive the first time) and recomputes the activity from it, like [`reimport`].
-pub fn fix_activity(
+/// Archives the track `fix` makes of an activity's track (keeping the original archive the first
+/// time) and recomputes the activity from it, like [`reimport`].
+fn rewrite_activity(
     conn: &mut Connection,
     activity_id: i64,
-    edits: &[repair::FixEdit],
     imports_dir: &Path,
     language: &str,
+    fix: impl FnOnce(&tcx::TcxActivity) -> AppResult<tcx::TcxActivity>,
 ) -> AppResult<Option<WeatherPoint>> {
     let file_id = archived_file_id(conn, activity_id)?;
     let path = archive::archive_path(imports_dir, &file_id);
-    let fixed = repair::apply(&tcx::parse(&archive::read(&path)?)?, edits)?;
+    let fixed = fix(&tcx::parse(&archive::read(&path)?)?)?;
     let xml = tcx::write(&fixed);
     // Fails before anything is written when the fixed track can't be stored.
     process(&file_id, &xml, body_weight(conn)?)?;
@@ -345,6 +346,32 @@ pub fn fix_activity(
     }
     archive::write(imports_dir, &file_id, &xml)?;
     reimport(conn, activity_id, imports_dir, language)
+}
+
+/// Applies drawn routes to an activity and recomputes it.
+pub fn fix_activity(
+    conn: &mut Connection,
+    activity_id: i64,
+    edits: &[repair::FixEdit],
+    imports_dir: &Path,
+    language: &str,
+) -> AppResult<Option<WeatherPoint>> {
+    rewrite_activity(conn, activity_id, imports_dir, language, |activity| {
+        repair::apply(activity, edits)
+    })
+}
+
+/// Corrects the heart rate or steps of stretches of an activity and recomputes it.
+pub fn fix_samples(
+    conn: &mut Connection,
+    activity_id: i64,
+    edits: &[repair::SampleEdit],
+    imports_dir: &Path,
+    language: &str,
+) -> AppResult<Option<WeatherPoint>> {
+    rewrite_activity(conn, activity_id, imports_dir, language, |activity| {
+        repair::apply_samples(activity, edits)
+    })
 }
 
 /// Puts the archive from before the first fix back and recomputes the activity from it.
@@ -490,6 +517,36 @@ pub fn recompute_energy(db: &Db, imports_dir: &Path) -> AppResult<usize> {
     })
 }
 
+/// Fills in the grade-adjusted pace (activity and splits) of every run and walk with an
+/// archived TCX, imported before it was computed. Nothing else is touched, so edits survive.
+pub fn recompute_grade_adjusted_pace(db: &Db, imports_dir: &Path) -> AppResult<usize> {
+    update_archived(db, imports_dir, |tx, activity_id, processed| {
+        if processed.view == ViewMode::Cycling {
+            return Ok(());
+        }
+        let table = processed
+            .view
+            .table()
+            .expect("process() rejects activities without a view");
+        tx.execute(
+            &format!("UPDATE {table} SET avg_gap = ?1 WHERE activity_id = ?2"),
+            params![
+                processed.metrics.avg_gap.map(metrics::format_min_sec),
+                activity_id
+            ],
+        )?;
+        // `activity_details.activity_id` is a TEXT column in the Python schema.
+        for (index, segment) in processed.segments.iter().enumerate() {
+            tx.execute(
+                "UPDATE activity_details SET seg_avg_gap = ?1
+                 WHERE activity_id = ?2 AND segment_id = ?3",
+                params![segment.avg_gap, activity_id.to_string(), index as i64],
+            )?;
+        }
+        Ok(())
+    })
+}
+
 /// Recomputes what pauses, standing still and the segment cuts got wrong before: calories,
 /// total steps, the segments and the best segments. Title, distance, duration and the other
 /// fields the edit page saves are left as they are.
@@ -592,7 +649,8 @@ fn mark_data_fix(db: &Db, name: &str) -> AppResult<()> {
 /// Corrects what earlier versions stored, each fix once per database: activities dated by a
 /// clock jump ([`fix_clock_jumps`]), calories and power from the ACSM estimates
 /// ([`recompute_energy`]), pauses and segment cuts ([`recompute_pauses_and_segments`]), then
-/// best segments across a clock running backwards. Returns where to look the weather up again.
+/// best segments across a clock running backwards, then the grade-adjusted pace
+/// ([`recompute_grade_adjusted_pace`]). Returns where to look the weather up again.
 pub fn apply_data_fixes(
     db: &Db,
     imports_dir: &Path,
@@ -617,6 +675,10 @@ pub fn apply_data_fixes(
             store_best_segments(tx, processed, activity_id)
         })?;
         mark_data_fix(db, "best-segments-clock")?;
+    }
+    if !data_fix_applied(db, "grade-adjusted-pace")? {
+        recompute_grade_adjusted_pace(db, imports_dir)?;
+        mark_data_fix(db, "grade-adjusted-pace")?;
     }
     Ok(weather)
 }
@@ -698,7 +760,7 @@ fn store_type_row(tx: &Transaction, p: &Processed, activity_id: i64) -> AppResul
         metrics::format_min_sec(m.pause_minutes),
     ];
     let steps = if has_steps {
-        ", avg_steps = ?10, total_steps = ?11"
+        ", avg_steps = ?10, total_steps = ?11, avg_gap = ?12"
     } else {
         ""
     };
@@ -727,6 +789,7 @@ fn store_type_row(tx: &Transaction, p: &Processed, activity_id: i64) -> AppResul
     if has_steps {
         values.push(m.avg_steps.into());
         values.push(m.total_steps.into());
+        values.push(m.avg_gap.map(metrics::format_min_sec).into());
     }
     tx.execute(&sql, rusqlite::params_from_iter(values))?;
     Ok(())
@@ -739,8 +802,8 @@ fn store_segments(tx: &Transaction, activity_id: i64, segments: &[Segment]) -> A
     let mut insert = tx.prepare(
         "INSERT INTO activity_details (activity_id, segment_id, seg_latitude, seg_longitude,
             seg_avg_heart_rate, seg_avg_power, seg_avg_speed, seg_avg_pace, seg_avg_steps,
-            seg_distance, seg_time_start, seg_time_end, seg_elevation_gain)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+            seg_distance, seg_time_start, seg_time_end, seg_elevation_gain, seg_avg_gap)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
     )?;
     for (index, s) in segments.iter().enumerate() {
         insert.execute(params![
@@ -756,7 +819,8 @@ fn store_segments(tx: &Transaction, activity_id: i64, segments: &[Segment]) -> A
             s.distance,
             segments::format_time(s.time_start),
             segments::format_time(s.time_end),
-            s.elevation_gain
+            s.elevation_gain,
+            s.avg_gap
         ])?;
     }
     Ok(())

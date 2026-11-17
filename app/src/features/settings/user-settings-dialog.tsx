@@ -69,7 +69,10 @@ export function UserSettingsDialog({
               {user && (
                 <>
                   <TabsContent value="zones">
-                    <ZonesFormView key={JSON.stringify(user.zones)} user={user} />
+                    <ZonesFormView
+                      key={JSON.stringify([user.zoneMethod, user.customZones])}
+                      user={user}
+                    />
                   </TabsContent>
                   <TabsContent value="shoes">
                     <EquipmentList kind="shoe" />

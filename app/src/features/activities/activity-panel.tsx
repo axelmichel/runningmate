@@ -7,6 +7,7 @@ import {
   Droplets,
   ExternalLink,
   Images,
+  MapPin,
   Maximize2,
   MessageSquareText,
   Sparkles,
@@ -37,12 +38,26 @@ import {
   formatPace,
 } from "@/lib/format";
 
+import { hiddenBoxes, type PanelBox } from "./panel-boxes";
 import { weatherLabel } from "./weather";
 import { WeatherIcon } from "./weather-icon";
 
-function Metric({ label, value, align }: { label: string; value: string; align?: "right" }) {
+function Metric({
+  label,
+  value,
+  align,
+  title,
+}: {
+  label: string;
+  value: string;
+  align?: "center" | "right";
+  title?: string;
+}) {
   return (
-    <div className={align === "right" ? "text-right" : undefined}>
+    <div
+      className={align === "right" ? "text-right" : align === "center" ? "text-center" : undefined}
+      title={title}
+    >
       <div className="text-lg font-semibold text-primary tabular-nums">{value}</div>
       <div className="text-xs text-muted-foreground">{label}</div>
     </div>
@@ -133,15 +148,20 @@ function Overview({
   activity,
   dataDir,
   onOpenDetails,
+  shown,
 }: {
   activity: ActivityDetail;
   dataDir?: string;
   onOpenDetails?: (id: number) => void;
+  shown: (box: PanelBox) => boolean;
 }) {
+  const gap = activity.viewMode !== "Cycling" ? activity.avgGap : null;
   return (
     <Card size="sm">
       <CardHeader>
-        <CardTitle className="leading-snug">{activity.title}</CardTitle>
+        <CardTitle data-private className="leading-snug">
+          {activity.title}
+        </CardTitle>
         {onOpenDetails && (
           <CardAction>
             <Button
@@ -157,14 +177,35 @@ function Overview({
         )}
         <div className="text-xs text-muted-foreground">
           {formatDateTime(activity.date)} · {t(activity.typeDetail || activity.activityType || "")}
+          {activity.location && (
+            <span className="flex items-center gap-1" title={activity.location}>
+              <MapPin className="size-3 shrink-0" />
+              <span data-private className="truncate">
+                {activity.location}
+              </span>
+            </span>
+          )}
         </div>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <div className="grid grid-cols-2 gap-2">
+        {/* Grade-adjusted pace beside the pace, for runs and walks. */}
+        <div className={`grid gap-2 ${gap ? "grid-cols-3" : "grid-cols-2"}`}>
           <Metric label={t("Duration")} value={formatDuration(activity.duration)} />
-          <Metric label={t("Pace (/km)")} value={formatMinSec(activity.avgPace)} align="right" />
+          <Metric
+            label={t("Pace (/km)")}
+            value={formatMinSec(activity.avgPace)}
+            align={gap ? "center" : "right"}
+          />
+          {gap && (
+            <Metric
+              label={t("GAP (/km)")}
+              value={formatMinSec(gap)}
+              align="right"
+              title={t("Grade-adjusted pace: the pace on the flat for the same effort")}
+            />
+          )}
         </div>
-        <Route activity={activity} dataDir={dataDir} />
+        {shown("map") && <Route activity={activity} dataDir={dataDir} />}
         <div className="grid grid-cols-2 gap-2">
           <Metric label={t("Distance")} value={`${formatNumber(activity.distance, 2)} km`} />
           <Metric
@@ -173,7 +214,7 @@ function Overview({
             align="right"
           />
         </div>
-        <Links activityId={activity.id} />
+        {shown("links") && <Links activityId={activity.id} />}
       </CardContent>
     </Card>
   );
@@ -232,7 +273,9 @@ function Excerpt({ icon: Icon, label, text }: { icon: LucideIcon; label: string;
   return (
     <div className="flex gap-2">
       <Icon className="mt-0.5 size-4 shrink-0 text-primary" aria-label={label} />
-      <p className="line-clamp-3 text-sm whitespace-pre-line">{text}</p>
+      <p data-private className="line-clamp-3 text-sm whitespace-pre-line">
+        {text}
+      </p>
     </div>
   );
 }
@@ -359,6 +402,7 @@ export function ActivityPanel({
     queryFn: () => api.getActivity(activityId!),
     enabled: activityId != null,
   });
+  const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: api.getSettings });
 
   if (activityId == null) {
     return <p className="p-2 text-sm text-muted-foreground">{t("No activity yet.")}</p>;
@@ -366,13 +410,17 @@ export function ActivityPanel({
   if (isPending || !activity) {
     return <Skeleton className="h-80 w-full" />;
   }
+  const hidden = hiddenBoxes(settings, activity.viewMode);
+  const shown = (box: PanelBox) => !hidden.includes(box);
   return (
     <div className="grid content-start gap-3">
-      <Overview activity={activity} dataDir={dataDir} onOpenDetails={onOpenDetails} />
-      <AchievementsCard activityId={activity.id} />
-      {onOpenDetails && <NotesCard activity={activity} onOpenDetails={onOpenDetails} />}
-      <WeatherCard activityId={activity.id} />
-      <BestPerformances activityId={activity.id} />
+      <Overview activity={activity} dataDir={dataDir} onOpenDetails={onOpenDetails} shown={shown} />
+      {shown("achievements") && <AchievementsCard activityId={activity.id} />}
+      {onOpenDetails && shown("notes") && (
+        <NotesCard activity={activity} onOpenDetails={onOpenDetails} />
+      )}
+      {shown("weather") && <WeatherCard activityId={activity.id} />}
+      {shown("best") && <BestPerformances activityId={activity.id} />}
     </div>
   );
 }

@@ -466,9 +466,9 @@ pub fn delete(conn: &Connection, id: i64) -> AppResult<()> {
     Ok(())
 }
 
-/// Upper bound of heart-rate zone 2, once the zones are saved.
+/// Upper bound of heart-rate zone 2, once the user's zone method has zones.
 fn zone_two(conn: &Connection) -> AppResult<Option<i64>> {
-    Ok(users::get(conn)?.and_then(|u| u.zones).map(|z| z[1]))
+    Ok(users::zones(conn)?.map(|z| z.upper[1]))
 }
 
 /// Sessions with the runs that did them.

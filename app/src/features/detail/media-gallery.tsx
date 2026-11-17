@@ -28,6 +28,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { MediaLightbox } from "@/components/media-lightbox";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { isMac } from "@/lib/platform";
@@ -150,8 +151,11 @@ export function MediaGallery({ activityId }: { activityId: number }) {
     queryKey: ["media", activityId],
     queryFn: () => api.listMedia(activityId),
   });
+  const viewable = media.filter((m) => !m.missing);
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ["media", activityId] });
+    void queryClient.invalidateQueries({ queryKey: ["gallery"] });
+    void queryClient.invalidateQueries({ queryKey: ["recentPhotos"] });
     // Media makes an activity count as reviewed.
     void queryClient.invalidateQueries({ queryKey: ["activity", activityId] });
   };
@@ -310,27 +314,18 @@ export function MediaGallery({ activityId }: { activityId: number }) {
         }}
       />
 
-      <Dialog open={viewing !== null} onOpenChange={(open) => !open && setViewing(null)}>
-        <DialogContent className="max-w-4xl p-2 sm:max-w-4xl">
-          <DialogTitle className="sr-only">{t("Media")}</DialogTitle>
-          {viewing?.mediaType === "video" ? (
-            <video
-              src={convertFileSrc(viewing.filePath)}
-              controls
-              autoPlay
-              className="max-h-[80vh] w-full"
-            />
-          ) : (
-            viewing && (
-              <img
-                src={convertFileSrc(viewing.filePath)}
-                alt=""
-                className="max-h-[80vh] w-full object-contain"
-              />
-            )
-          )}
-        </DialogContent>
-      </Dialog>
+      <MediaLightbox
+        items={viewable.map((m) => ({ media: m }))}
+        index={
+          viewing === null
+            ? null
+            : Math.max(
+                0,
+                viewable.findIndex((m) => m.id === viewing.id),
+              )
+        }
+        onIndexChange={(index) => setViewing(index === null ? null : viewable[index])}
+      />
 
       <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
         <AlertDialogContent>

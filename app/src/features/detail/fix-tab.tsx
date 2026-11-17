@@ -1,9 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import type { FixEdit } from "@/bindings/FixEdit";
+import type { ViewMode } from "@/bindings/ViewMode";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,19 +17,32 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { invalidateGoals } from "@/features/goals/goal-math";
-import { invalidateSegments } from "@/features/segments/segment-math";
-import { invalidateTraining } from "@/features/training/training-math";
-import { t } from "@/i18n";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { t, tk } from "@/i18n";
 import { api } from "@/lib/api";
 
-import { invalidateActivityTrack } from "./fix-math";
+import { useRecomputed } from "./fix-math";
 import { RouteFixEditor } from "./route-fix-editor";
+import { SampleFixEditor } from "./sample-fix-editor";
+import type { SampleEdit } from "./sample-fix-math";
+import { useGuard } from "./use-unsaved-guard";
 
-/** The route fix editor for an activity, with a reset to the file it was imported from. */
-export function FixTab({ activityId }: { activityId: number }) {
-  const queryClient = useQueryClient();
+type Part = "route" | "heartRate" | "steps";
+
+const PARTS: { part: Part; label: string }[] = [
+  { part: "route", label: tk("Route") },
+  { part: "heartRate", label: tk("Heart rate") },
+  { part: "steps", label: tk("Steps") },
+];
+
+/**
+ * The route, heart rate and steps fix editors for an activity, with a reset to the file it was
+ * imported from.
+ */
+export function FixTab({ activityId, view }: { activityId: number; view: ViewMode }) {
   const [confirming, setConfirming] = useState(false);
+  const [part, setPart] = useState<Part>("route");
+  const guard = useGuard();
   const {
     data: source,
     dataUpdatedAt,
@@ -39,16 +53,15 @@ export function FixTab({ activityId }: { activityId: number }) {
     queryFn: () => api.activityFixSource(activityId),
   });
 
-  const recomputed = (message: string) => {
-    invalidateActivityTrack(queryClient, activityId);
-    invalidateSegments(queryClient);
-    invalidateGoals(queryClient);
-    invalidateTraining(queryClient);
-    toast.success(message);
-  };
+  const recomputed = useRecomputed(activityId);
   const save = useMutation({
     mutationFn: (edits: FixEdit[]) => api.applyActivityFix(activityId, edits),
     onSuccess: () => recomputed(t("Route fixed, activity recomputed")),
+    onError: (e) => toast.error(t("Could not save: {{error}}", { error: String(e) })),
+  });
+  const saveSamples = useMutation({
+    mutationFn: (edits: SampleEdit[]) => api.applySampleFix(activityId, edits),
+    onSuccess: () => recomputed(t("Values fixed, activity recomputed")),
     onError: (e) => toast.error(t("Could not save: {{error}}", { error: String(e) })),
   });
   const revert = useMutation({
@@ -65,35 +78,54 @@ export function FixTab({ activityId }: { activityId: number }) {
       </p>
     );
   }
+  const reset = source.hasOriginal && (
+    <Button variant="outline" onClick={() => setConfirming(true)} disabled={revert.isPending}>
+      <RotateCcw />
+      {t("Reset to original")}
+    </Button>
+  );
+  // Rides have no steps.
+  const parts = PARTS.filter(({ part }) => part !== "steps" || view !== "Cycling");
   return (
-    <>
-      <RouteFixEditor
-        // A fresh editor once the saved fix comes back from the backend.
-        key={dataUpdatedAt}
-        source={source}
-        saving={save.isPending}
-        onSave={(edits) => save.mutate(edits)}
-        hideMap={confirming}
-        extraActions={
-          source.hasOriginal && (
-            <Button
-              variant="outline"
-              onClick={() => setConfirming(true)}
-              disabled={revert.isPending}
-            >
-              <RotateCcw />
-              {t("Reset to original")}
-            </Button>
-          )
-        }
-      />
+    <div className="flex h-full min-h-0 flex-col gap-3">
+      <Tabs value={part} onValueChange={(value) => guard(() => setPart(value as Part))}>
+        <TabsList>
+          {parts.map(({ part, label }) => (
+            <TabsTrigger key={part} value={part}>
+              {t(label)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+      <div className="min-h-0 flex-1">
+        {part === "route" ? (
+          <RouteFixEditor
+            // A fresh editor once the saved fix comes back from the backend.
+            key={dataUpdatedAt}
+            source={source}
+            saving={save.isPending}
+            onSave={(edits) => save.mutateAsync(edits)}
+            hideMap={confirming}
+            extraActions={reset}
+          />
+        ) : (
+          <SampleFixEditor
+            key={`${part}-${dataUpdatedAt}`}
+            source={source}
+            channel={part}
+            saving={saveSamples.isPending}
+            onSave={(edits) => saveSamples.mutateAsync(edits)}
+            extraActions={reset}
+          />
+        )}
+      </div>
       <AlertDialog open={confirming} onOpenChange={setConfirming}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("Reset to the original file?")}</AlertDialogTitle>
             <AlertDialogDescription>
               {t(
-                "All route fixes are dropped and the activity is recomputed from the file as it was imported.",
+                "All fixes of route, heart rate and steps are dropped and the activity is recomputed from the file as it was imported.",
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -105,6 +137,6 @@ export function FixTab({ activityId }: { activityId: number }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

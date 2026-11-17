@@ -6,7 +6,11 @@ import type { ViewMode } from "./ViewMode";
  * Everything the detail window shows about one activity: the `activities` row, the metrics
  * from its per-type table and the assigned shoe or bike.
  */
-export type ActivityDetail = { id: number, viewMode: ViewMode, date: number | null, title: string | null, comment: string | null, activityType: string | null, typeDetail: string | null, duration: number | null, distance: number | null, elevationGain: number | null, calories: number | null, fileId: string | null, 
+export type ActivityDetail = { id: number, viewMode: ViewMode, date: number | null, title: string | null, comment: string | null, 
+/**
+ * Place name of the start, once looked up.
+ */
+location: string | null, activityType: string | null, typeDetail: string | null, duration: number | null, distance: number | null, elevationGain: number | null, calories: number | null, fileId: string | null, 
 /**
  * Imported but not yet reviewed.
  */
@@ -16,7 +20,11 @@ isNew: boolean, edited: boolean,
  * so older activities only show their review through these). The detail window opens on
  * the edit page until this is true.
  */
-reviewed: boolean, avgSpeed: number | null, avgPace: string | null, fastestPace: string | null, slowestPace: string | null, avgHeartRate: number | null, avgPower: number | null, avgSteps: number | null, totalSteps: number | null, pause: string | null, 
+reviewed: boolean, avgSpeed: number | null, avgPace: string | null, 
+/**
+ * Grade-adjusted pace, "MM:SS" like `avg_pace`; `None` for rides.
+ */
+avgGap: string | null, fastestPace: string | null, slowestPace: string | null, avgHeartRate: number | null, avgPower: number | null, avgSteps: number | null, totalSteps: number | null, pause: string | null, 
 /**
  * Shoe (runs, walks) or bike (rides).
  */

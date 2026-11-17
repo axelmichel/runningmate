@@ -12,6 +12,7 @@ const point = (distance: number, latitude: number, longitude: number): TrackPoin
   elevation: 0,
   heartRate: null,
   pace: null,
+  gap: null,
   cadence: null,
 });
 

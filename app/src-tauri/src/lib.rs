@@ -8,6 +8,7 @@ mod garmin;
 mod importer;
 mod media_files;
 mod menu;
+mod nominatim;
 mod open_meteo;
 mod osm_routing;
 mod paths;
@@ -42,6 +43,8 @@ pub fn run() {
             let handle = app.handle().clone();
             tauri::async_runtime::spawn_blocking(move || {
                 commands::import::apply_data_fixes(&handle);
+                // Place names still missing, e.g. of activities from before the lookup.
+                commands::locations::locate_later(&handle);
             });
             app.manage(commands::garmin::PendingGarminSignIn::default());
             app.manage(commands::import::ImportCancel::default());
@@ -69,6 +72,7 @@ pub fn run() {
             commands::activities::activity_type_details,
             commands::activities::list_media,
             commands::activities::recent_photos,
+            commands::activities::gallery_media,
             commands::activities::add_media,
             commands::activities::add_media_from_photos,
             commands::activities::photos_access,
@@ -84,6 +88,7 @@ pub fn run() {
             commands::users::save_user,
             commands::users::save_heart_rate_zones,
             commands::users::suggested_heart_rate_zones,
+            commands::users::preview_heart_rate_zones,
             commands::users::list_equipment,
             commands::users::add_equipment,
             commands::users::set_equipment_in_use,
@@ -113,6 +118,7 @@ pub fn run() {
             commands::import::sync_folder,
             commands::repair::activity_fix_source,
             commands::repair::apply_activity_fix,
+            commands::repair::apply_sample_fix,
             commands::repair::revert_activity_fix,
             commands::repair::pending_routes,
             commands::repair::pending_fix_source,

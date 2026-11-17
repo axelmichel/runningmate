@@ -16,6 +16,9 @@ pub fn save_settings(app: tauri::AppHandle, settings: SystemSettings) -> AppResu
     settings::save(&settings)?;
     // A menu that can't be rebuilt keeps its old language; the settings are still saved.
     let _ = menu::set_language(&app, &settings.language);
+    if settings.location_lookup {
+        super::locations::locate_later(&app);
+    }
     Ok(settings)
 }
 

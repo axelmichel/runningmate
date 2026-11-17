@@ -48,7 +48,9 @@ export function AiSummaryCard({ activityId }: { activityId: number }) {
       <CardContent className="grid gap-2">
         {summary ? (
           <>
-            <p className="text-sm whitespace-pre-wrap">{summary.text}</p>
+            <p data-private className="text-sm whitespace-pre-wrap">
+              {summary.text}
+            </p>
             <p className="text-xs text-muted-foreground">
               {t("Written by {{model}} on this computer. AI can be wrong.", {
                 model: summary.model,
