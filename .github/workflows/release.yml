@@ -1,0 +1,83 @@
+name: Release - installers
+
+# Builds the installers on macOS (Apple silicon and Intel), Windows and Linux and attaches them
+# to the GitHub release of the tag: pushing a tag starting with "v" builds that tag; "Run
+# workflow" builds a tag you type in (e.g. v.1.0) and adds the installers to its existing
+# release. A tag without a release gets a draft release to fill in and publish.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to build and attach the installers to (e.g. v.1.0)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  installers:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS (Apple silicon)
+            platform: macos-latest
+            target: aarch64-apple-darwin
+          - name: macOS (Intel)
+            platform: macos-latest
+            target: x86_64-apple-darwin
+          - name: Windows
+            platform: windows-latest
+            target: ""
+          - name: Linux
+            platform: ubuntu-22.04
+            target: ""
+    runs-on: ${{ matrix.platform }}
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - name: Install Tauri system dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+          key: ${{ matrix.target }}
+      - name: Install frontend dependencies
+        working-directory: app
+        run: pnpm install --frozen-lockfile
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: app
+          tagName: ${{ env.TAG }}
+          releaseName: RunningMate ${{ env.TAG }}
+          releaseBody: |
+            Installers for macOS (Apple silicon and Intel), Windows and Linux are attached below.
+            The app isn't code-signed yet: confirm opening it the first time.
+            Documentation: https://axelmichel.github.io/runningmate/
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
