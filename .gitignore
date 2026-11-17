@@ -9,3 +9,6 @@ site/
 files/
 
 # The app has its own ignores in app/.gitignore and app/src-tauri/.gitignore.
+
+# Raw screenshots; only the ones the docs use go to docs/images/screens
+/screenshots/
