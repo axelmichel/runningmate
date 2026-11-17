@@ -1,0 +1,1513 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../main-window/">
+      
+      
+        <link rel="next" href="../health/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Detail View - RunningMate Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#detail-window" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="RunningMate Docs" class="md-header__button md-logo" aria-label="RunningMate Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            RunningMate Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Detail View
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="RunningMate Docs" class="md-nav__button md-logo" aria-label="RunningMate Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    RunningMate Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    App
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    App
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sync
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dashboard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dashboard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../main-window/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Activities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detail View
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detail View
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        General
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="General">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#photos-and-videos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Photos and videos
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#splits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Splits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Map
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#segments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Segments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Statistics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#effect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Effect
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#heart-rate-zones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heart rate zones
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#social-share" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Social share
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#edit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fix-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix data
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fix data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#route" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Route
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heart-rate-and-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heart rate and steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../health/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../goals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Goals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../heat-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Heat Map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gallery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compare/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compare
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Metrics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metrics/activity-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Activity Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metrics/heart-rate-zones/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Heart Rate Zones
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metrics/pace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metrics/trainings-effect/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trainings Effect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metrics/fitness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fitness and Form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        General
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="General">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#photos-and-videos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Photos and videos
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#splits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Splits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Map
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#segments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Segments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Statistics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#effect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Effect
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#heart-rate-zones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heart rate zones
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#social-share" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Social share
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#edit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fix-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix data
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fix data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#route" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Route
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heart-rate-and-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heart rate and steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="detail-window">Detail Window</h1>
+<p>The detail window shows everything about one activity. Open it by double-clicking an activity in the list, with
+<strong>View details</strong> in the activity's <strong>⋮</strong> menu, with <strong>Open details</strong> in the activity panel, or by clicking an activity on
+the dashboard, in the gallery, on the goals or training pages or in a segment's ranking.</p>
+<p>It opens on <strong>General</strong>. An activity you haven't reviewed yet (no edit, comment, photo or video) opens on <strong>Edit</strong>
+instead, so you can give it a title and a comment right away. The page you pick stays selected when you move to another
+activity.</p>
+<p>The header shows the title, date and type, and the place the activity started (see
+<a href="../settings/#general">place names</a>), and these buttons:</p>
+<ul>
+<li><strong>Toggle navigation</strong> shows or hides the page names on the left; hidden, only their icons remain. The choice is kept.</li>
+<li><strong>Previous activity</strong> and <strong>Next activity</strong> move through the activities in the order of the list you opened the
+  window from (only when you opened it from a list).</li>
+<li><strong>Maximize</strong> fills the app window; <strong>Restore size</strong> makes it smaller again. The choice is kept.</li>
+<li><strong>Close</strong> closes the window.</li>
+</ul>
+<p>If a page has changes you haven't saved (the <strong>Edit</strong> page, split corrections or fixes on <strong>Fix data</strong>) and you leave
+it, move to another activity or close the window, the app asks <strong>Save your changes?</strong>: <strong>Save</strong> saves them and goes on,
+<strong>Discard</strong> drops them, <strong>Cancel</strong> stays.</p>
+<p><img alt="Detail window: General" src="../../images/screens/detail_01.png" /></p>
+<h2 id="general">General</h2>
+<p>On the left is the same panel as beside the activity list: duration, pace (for runs and walks also the
+<a href="../../metrics/pace/#grade-adjusted-pace-gap">grade-adjusted pace</a>), the route, distance and elevation, the
+Garmin Connect link, goals, training session and trophies, the weather and the best segments. Which boxes it shows is
+set per sport in the settings under <strong>Activity panel</strong>.</p>
+<p>On the right you'll find:</p>
+<ul>
+<li><strong>Summary</strong>, a short text comparing the activity with similar and recent ones, written by a local AI model. It only
+  shows when AI summaries are turned on in the settings under <strong>AI summary</strong>. Click <strong>Write summary</strong> (or <strong>Rewrite</strong>)
+  to have it written; this takes a moment. The note below it names the model.</li>
+<li><strong>Photos and videos</strong> of the activity (see <a href="#photos-and-videos">Photos and videos</a> below).</li>
+<li>Your comment.</li>
+<li>Further figures, where available: calories, average heart rate, average power, average speed, average pace, the
+  <a href="../../metrics/pace/">grade-adjusted pace</a> (GAP, not for rides), fastest and slowest pace, cadence and steps (not for
+  rides), pause time, and the shoes or bike.</li>
+</ul>
+<h3 id="photos-and-videos">Photos and videos</h3>
+<p>Add photos and videos with the buttons above the gallery:</p>
+<ul>
+<li><strong>From this activity…</strong> (macOS) opens <strong>Photos from this activity</strong>: the photos and videos in your Photos library taken
+  during the activity (from 10 minutes before the start to 10 minutes after the end). Tick the ones you want, or use
+  <strong>Select all</strong>, and click <strong>Add</strong>. Items already added are marked. The first time, the app asks for access to your
+  Photos library (<strong>Allow access…</strong>); nothing in it is changed or uploaded. If access was denied, <strong>Open System
+  Settings</strong> takes you to the place to allow it.</li>
+<li><strong>From Photos…</strong> (macOS) opens the system photo picker, to pick any photo or video.</li>
+<li><strong>From files…</strong> picks files from disk (PNG, JPG, HEIC, MP4, MOV, AVI). You can also drop files from Finder onto the
+  gallery.</li>
+</ul>
+<p>Photos from the Photos library are always copied. For files from disk the app asks whether to <strong>Copy into RunningMate</strong>
+(the file is safe in the app's media folder) or <strong>Link to originals</strong> (saves space, but breaks if the original is moved
+or deleted). Tick <strong>Remember my choice</strong> to stop being asked; you can change it in the settings under <strong>General</strong>
+(<strong>Adding photos and videos from files</strong>). Linked files show a small link symbol; a file that can no longer be found
+shows <strong>File missing</strong>. Copied photos are scaled down to the <a href="../settings/#photo-size">photo size</a> set under
+<strong>Storage</strong> in the settings; linked files are never changed.</p>
+<p>Click a photo or video to see it in full. Move with the arrows on screen or the arrow keys, or click a thumbnail in the
+strip below. <strong>Slideshow</strong> shows each photo for a few seconds and plays videos to their end; the space bar starts and
+stops it. To remove a file, hover over it and click <strong>×</strong>: a copied file is deleted from the media folder, for a linked
+one only the link is removed.</p>
+<p><img alt="Detail window: Splits" src="../../images/screens/detail_05.png" /></p>
+<h2 id="splits">Splits</h2>
+<p>This page lists the splits of the activity: one per kilometre, or per 5 kilometres for rides. For each split you'll see
+the distance, time, pace, <strong>GAP</strong> (the <a href="../../metrics/pace/#gap-of-a-split">grade-adjusted pace</a>, not for rides),
+speed, heart rate, power, cadence (not for rides) and elevation gain, where recorded.</p>
+<p>Click <strong>Correct heart rate and steps</strong> (only <strong>Correct heart rate</strong> for rides) to type in the average heart rate or steps
+per minute a split should have. On <strong>Save and recompute</strong>, the recorded values of that split are shifted so its average
+matches, and the activity is recomputed: the charts, zones, training effect and the other splits follow. The change is
+written into the stored activity file, so it also holds when the activity is processed again. <strong>Reset to original</strong> on
+the <strong>Fix data</strong> page undoes it.</p>
+<p><img alt="Detail window: Map" src="../../images/screens/detail_02.png" /></p>
+<h2 id="map">Map</h2>
+<p>The map shows the track of the activity, with a light or dark map following the app's appearance. A dot marks the
+start and another the finish.</p>
+<p>The buttons above the map:</p>
+<ul>
+<li><strong>Track</strong>, <strong>Pace</strong> and <strong>Heart rate</strong> colour the track: in one colour, or from slow to fast or low to high heart
+  rate, with a scale beside the buttons. Pace and heart rate are only available when they were recorded.</li>
+<li><strong>Km markers</strong> (<strong>5 km markers</strong> for rides) shows or hides numbered markers at each kilometre.</li>
+<li><strong>Splits</strong> shows or hides a list of the splits beside the map, with time and speed; click one to put a position dot
+  where it ends (the map moves there if needed, and the charts mark it).</li>
+<li><strong>Charts</strong> shows elevation, heart rate, speed and, for runs with cadence data, steps per minute over the distance below
+  the map (hidden at first). For runs and walks the speed chart has the grade-adjusted speed as a second, dashed
+  line. Moving the mouse over them moves the position dot along the track.</li>
+</ul>
+<p>The app remembers which of these you turned on.</p>
+<h2 id="segments">Segments</h2>
+<p><img alt="Detail window: Segments" src="../../images/screens/detail_07.png" /></p>
+<p>Lists the <a href="../segments/">segments</a> this activity passes, each with its distance, grade and climb, the time, pace (speed
+for rides) and its place among all tries, e.g. "2 of 7". A gold, silver or bronze trophy marks the three fastest places.
+Click a segment to highlight it on the map, or click <strong>Open segment</strong> to see its full ranking, where this activity's
+passes are marked.</p>
+<p>Arrows along the track show the direction you went, and the numbered markers the kilometres (5 km for rides), so you can
+tell whether a stretch went up or down. Click <strong>New segment</strong> to mark one: click on the track where it starts, then where
+it ends. Where the track passes the same spot more than once, the start is the first pass and the end the next pass after
+the start. Use the slider to fine-tune both ends, check distance, average grade, elevation gain and the elevation
+profile, give it a title and click <strong>Save segment</strong>. A segment must be at least 100 m long. <strong>Stop marking</strong> or
+<strong>Cancel</strong> leaves without saving. The app then looks for passes over the new segment in all your activities of the same
+sport, in the background.</p>
+<h2 id="statistics">Statistics</h2>
+<p><img alt="Detail window: Statistics" src="../../images/screens/detail_06.png" /></p>
+<p>Charts over the distance of the activity: <strong>Elevation</strong>, <strong>Heart rate</strong>, <strong>Pace</strong> (faster at the top), for runs and
+walks <strong>Grade-adjusted pace (GAP)</strong> (the <a href="../../metrics/pace/#grade-adjusted-pace-gap">pace on the flat for the same effort</a>,
+with the pace faint behind it, so you see where climbs and descents made you slower or faster) and, for runs,
+<strong>Steps per minute</strong>. A chart only shows when its values were recorded. Hover over a chart to read the value at a point.
+See <a href="../../metrics/pace/">Pace</a> and <a href="../../metrics/activity-data/">Activity data</a> for how the values are worked out.</p>
+<p><img alt="Detail window: Effect" src="../../images/screens/detail_04.png" /></p>
+<h2 id="effect">Effect</h2>
+<ul>
+<li><strong>Training effect</strong> shows the <strong>aerobic</strong> and the <strong>anaerobic</strong> training effect of the activity, each from 0.0 to
+  5.0 on a scale of five steps with its meaning (from "No effect" to "Overreaching"), the <strong>peak EPOC</strong> in ml/kg and
+  the <strong>recovery time</strong>. Below, it lists the maximum and resting heart rate and the VO2max it was rated with and where
+  they come from, e.g. "estimated as 220 − age" when your profile has no maximum heart rate. Activities without heart
+  rate have no training effect. See <a href="../../metrics/trainings-effect/">Trainings Effect</a> for how it is calculated.</li>
+<li><strong>Effect score</strong>, beside it, rates the activity from 1 to 12 on twelve rising bars, compared with your training of the
+  same sport in the last 90 days, with its meaning (from "Recovery" to "Anaerobic") and the suggested rest. See
+  <a href="../../metrics/trainings-effect/#the-effect-score-112">the effect score</a>.</li>
+<li><strong>Heart rate by zone</strong> (runs and rides with heart-rate data) shows the heart rate over the time of the activity, the
+  line coloured by your heart-rate zones over light bands for each zone. The zones are set in the
+  <a href="../user-settings/">user settings</a>.</li>
+<li><strong>Fitness trend (90 days)</strong> shows fitness, fatigue and form over the 90 days up to the activity. See
+  <a href="../../metrics/fitness/">Fitness</a>.</li>
+</ul>
+<p><img alt="Detail window: Heart rate zones" src="../../images/screens/detail_03.png" /></p>
+<h2 id="heart-rate-zones">Heart rate zones</h2>
+<p><strong>Time in heart-rate zones</strong> shows, for each zone with its heart-rate range, the share and the time you spent in it
+during the activity. You set the zones in the <a href="../user-settings/">user settings</a>; without them this box asks you to.
+See <a href="../../metrics/heart-rate-zones/">Heart rate zones</a> for how they work.</p>
+<p><strong>Heart-rate trend (90 days, same activity type)</strong> plots the average heart rate of each activity of the same type over
+the 90 days up to this one, with a trend line, and dashed lines at the upper bounds of zones 1, 3 and 5 (<strong>Min</strong>,
+<strong>Ideal</strong>, <strong>Max</strong>).</p>
+<h2 id="social-share">Social share</h2>
+<p>Builds an image of the activity for social media. Pick a size: presets for an Instagram post (1:1) or portrait (4:5),
+a story (9:16), an X post (16:9) and a Facebook post, or any size of your own. Then pick a background: a gradient, a
+single colour, one of the activity's photos (or any image file), a light or dark map, or transparent. Photos and the
+map can be darkened so the text stays readable. Choose which facts to show (title, date, distance, duration, pace or
+speed, elevation, heart rate, calories) and the colours and sizes of the route and the text.</p>
+<p>Each fact is its own element: the route, the title, the date and every figure can be placed anywhere. Click an
+element to select it, Shift-click to add more; drag to move the selection, or nudge it with the arrow keys (Shift for
+bigger steps). On a map, the map moves with the route, so it stays on its streets. The bar above the preview lines up
+the selection: one element (or group) on the image's left edge, centre or right edge, top, middle or bottom; several
+on each other. <strong>Equal space</strong> spreads three or more evenly between the outer two, or one or two evenly across the
+image. <strong>Group</strong> keeps elements together: clicking one selects the whole group, and it moves, lines up and spreads as
+one. Turn on <strong>Grid</strong> to see a grid over the preview (not in the image): dragged elements put their nearest edge or
+centre on its lines; hold Option (⌥) while dragging to place them freely. <strong>Reset positions</strong> puts everything back.</p>
+<p><strong>Save image…</strong> writes a PNG; <strong>Share…</strong> opens the macOS share menu (Messages, Mail, AirDrop, Photos and any
+app that offers itself there). To post on Instagram, save the image and upload it from your phone or the website.
+The editor remembers your last settings for the next activity.</p>
+<h2 id="edit">Edit</h2>
+<p><img alt="Detail window: Edit" src="../../images/screens/detail_08.png" /></p>
+<p>Change the <strong>Title</strong>, the <strong>Comment</strong>, the <strong>Type</strong> (e.g. <strong>Trail</strong>, <strong>Interval</strong> or <strong>Long Run</strong> for runs, <strong>Hiking</strong> for walks, <strong>Gravel Biking</strong> for
+rides), the <strong>Start</strong> time, the <strong>Duration (h:mm:ss)</strong>, the <strong>Distance (km)</strong> and the <strong>Elevation (m)</strong>, and click
+<strong>Save</strong>. The window then goes back to <strong>General</strong>. Changing distance, duration or elevation here doesn't change the
+recorded track, so the splits, charts and segment times stay as they were; to correct the track itself, use
+<strong>Fix data</strong>.</p>
+<p>Beside the form, pick the <strong>Shoes</strong> (or <strong>Bike</strong> for rides) you used, or <strong>None</strong>. This applies right away and moves
+the distance from one item to the other. Retired items are only listed while they are assigned to this activity.</p>
+<p>Below the form you can add and remove photos and videos, as on the <a href="#photos-and-videos">General</a> page; these changes
+apply right away.</p>
+<p>To process an activity again from its file or to delete it, use <strong>Re-import from TCX</strong> or <strong>Delete…</strong> in the activity's
+<strong>⋮</strong> menu in the <a href="../main-window/">activity list</a>.</p>
+<h2 id="fix-data">Fix data</h2>
+<p>Corrects recording errors in the activity's track. Choose what to fix at the top: <strong>Route</strong>, <strong>Heart rate</strong> or
+<strong>Steps</strong> (not for rides). Fixes collect in the <strong>Fixes</strong> list, where you can remove them again; <strong>Recorded</strong> and
+<strong>After the fixes</strong> compare the distance (or the average heart rate or steps) before and after. <strong>Save and recompute</strong>
+writes the fixes into the stored activity file and recomputes the activity: distance, splits, charts, zones, training
+effect, segments and goals follow. The original file is kept, so <strong>Reset to original</strong> drops all fixes of route,
+heart rate and steps (and split corrections) and recomputes the activity from the file as it was imported.</p>
+<h3 id="route">Route</h3>
+<p><img alt="Detail window: fixing the route" src="../../images/screens/detail_09.png" /></p>
+<p>The map shows the track; <strong>Problems found</strong> lists <strong>GPS spike</strong> (positions far off the route, faster than the sport
+allows) and <strong>GPS dropout</strong> (stretches without a position, or a long jump in time and place), marked red on the map.</p>
+<ul>
+<li>Drag the track to move it: the stretch around the point you grab (about 250 m either side) follows.</li>
+<li>Click a problem, or <strong>Pick a stretch on the map</strong> and click where the stretch starts and where it ends. Then click the
+  map to draw the route of that stretch; drag the points to move them, <strong>Undo point</strong> takes the last one back. The
+  stretch's time span and the new length are shown. <strong>Use route</strong> adds it to the fixes, <strong>Cancel</strong> drops it.</li>
+</ul>
+<p>With <strong>Follow paths</strong> turned on, the drawn route follows OpenStreetMap paths between your points instead of straight
+lines. This sends the points you place to routing.openstreetmap.de; turn it off to keep everything on your computer. If
+no path can be found, straight lines are used.</p>
+<p>An activity recorded without GPS (<strong>No GPS</strong>) starts with drawing the whole route.</p>
+<h3 id="heart-rate-and-steps">Heart rate and steps</h3>
+<p><img alt="Detail window: heart rate after estimating a missing start from the pace" src="../../images/screens/detail_10.png" /></p>
+<p>A chart shows the recorded values (heart rate in bpm, or steps per minute) over the distance, with your changes on top.
+<strong>Problems found</strong> lists stretches that look wrong:</p>
+<ul>
+<li><strong>No values recorded</strong>: nothing at the start or the end, for example a chest strap that only connected after the
+  first kilometre.</li>
+<li><strong>Dropout</strong>: values missing for 10 s or more in between (for steps only while you were moving, since steps stop when
+  you stand still).</li>
+<li><strong>Implausible values</strong>: values far off the level both before and after them, by more than 20 bpm or 25 steps per
+  minute compared with the median of the 30 s on either side. A change of level, such as a climb, a walk break or
+  slowing down, isn't one; fewer steps while you also got slower aren't either. In the first minute only values that are
+  too high count, since starting low and warming up is normal, but a foot pod or strap reading far too high at the start
+  is caught.</li>
+<li><strong>Implausible start</strong>: a heart-rate strap reading high from the first seconds, then dropping suddenly and staying
+  lower.</li>
+</ul>
+<p>Click a problem or drag over the chart to select a stretch, also where nothing was recorded; you can fine-tune it in the
+<strong>From (km)</strong> and <strong>To (km)</strong> fields, and its average is shown. Then:</p>
+<ul>
+<li><strong>Estimate from the pace</strong> works out the values from how fast you went, which suits a longer stretch, such as a strap
+  that only connected after the first kilometre. How your heart rate (or step rate) follows your speed is learned from
+  the rest of the activity: a straight line through the recorded values against your speed over the minute before each
+  point, while moving. Over the stretch the heart rate climbs towards that level with a delay of about 45 s, as it does
+  when you start running; at the very start of the activity it begins at a low value, between 55 % and 75 % of the
+  level the recording settles at. Finally the estimate is bent so it meets the recorded values on both sides. It needs at
+  least two minutes of recorded values elsewhere in the activity.</li>
+<li><strong>Interpolate</strong> replaces the values with a straight line from the level before the stretch to the level after it,
+  each the median of the 30 s beside the stretch, so a single stray value next to it doesn't set the level. A stretch
+  at the start or end gets the level of its one side.</li>
+<li><strong>Set</strong> sets them all to the value you type in,</li>
+<li><strong>Shift</strong> moves them up or down by the value you type in.</li>
+</ul>
+<p>To correct the average of whole splits instead, use <strong>Correct heart rate and steps</strong> on the <a href="#splits">Splits</a> page.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1397 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../goals/">
+      
+      
+        <link rel="next" href="../heat-map/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Training - RunningMate Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#training" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="RunningMate Docs" class="md-header__button md-logo" aria-label="RunningMate Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            RunningMate Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Training
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="RunningMate Docs" class="md-nav__button md-logo" aria-label="RunningMate Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    RunningMate Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    App
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    App
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sync
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dashboard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dashboard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../main-window/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Activities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../detail-window/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detail View
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../health/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../goals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Goals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#making-a-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Making a plan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-plans-are-built" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How plans are built
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How plans are built">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-it-starts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where it starts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phases
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#weekly-volume" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Weekly volume
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sessions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#paces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paces
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#following-the-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Following the plan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#matching-runs-to-sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matching runs to sessions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ai-coach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI coach
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../heat-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Heat Map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gallery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compare/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compare
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Metrics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metrics/activity-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Activity Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metrics/heart-rate-zones/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Heart Rate Zones
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metrics/pace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metrics/trainings-effect/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trainings Effect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metrics/fitness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fitness and Form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#making-a-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Making a plan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-plans-are-built" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How plans are built
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How plans are built">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-it-starts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where it starts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phases
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#weekly-volume" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Weekly volume
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sessions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#paces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Paces
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#following-the-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Following the plan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#matching-runs-to-sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matching runs to sessions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ai-coach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI coach
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="training">Training</h1>
+<p>A training plan gets you to a target over a number of weeks: a race (5 km, 10 km, half marathon, marathon or any other
+distance, with an optional target time), getting in shape, or more fitness. The plan is built from fixed rules modelled
+on common running plans (Daniels, Pfitzinger, Higdon), starting from your runs of the last 6 months. Plans are for
+running only: rides and walks don't count.</p>
+<h2 id="making-a-plan">Making a plan</h2>
+<p>Open the <strong>Training</strong> page from the sidebar or with ⇧⌘T and click <strong>New training plan</strong>. The wizard has three steps.</p>
+<ol>
+<li><strong>Training for</strong>: <strong>A race</strong>, <strong>Get in shape</strong> (mostly easy runs and one faster run a week) or <strong>More fitness</strong>
+   (intervals and tempo runs). For a race, pick the <strong>Distance</strong>: 5 km, 10 km, <strong>Half marathon</strong>, <strong>Marathon</strong> or
+   <strong>Other distance</strong> (1 to 100 km). <strong>Target time (optional)</strong>, as H:MM:SS, sets the race pace; without it the pace
+   comes from your runs.</li>
+<li><strong>Start</strong>, <strong>Weeks</strong>, <strong>Training days</strong> and <strong>Long run</strong>: the first day (the next Monday unless you change it), the
+   number of weeks (4, 6, 8, <strong>3 months</strong>, 16, or any number from 1 to 52), the weekdays you can train and the day of
+   the long run, one of your training days. A race is on the long-run day of the last week. <strong>Name</strong> is optional; left
+   empty, the plan is named after its target, for example "10 km in 0:45:00".</li>
+<li>
+<p>Preview: <strong>Your last 6 months</strong> shows what the plan starts from (km a week lately, runs a week, longest run,
+   VO2max), then the number of sessions, the end date, your easy and threshold paces, and the plan week by week with
+   its phase, its km and a bar per session. Warnings show up above it:</p>
+<ul>
+<li>the plan is shorter than usual for the distance (4 weeks for up to 6 km, 6 for up to 12 km, 8 for up to 25 km,
+  12 beyond);</li>
+<li>you ran less than half of what the distance usually builds on (10, 15, 20 or 30 km a week); the plan starts
+  gently;</li>
+<li>there are too few runs to work out paces, so the sessions only have distances;</li>
+<li>the target time needs a VO2max more than 5 above your current one; training starts from where you are.</li>
+</ul>
+<p>Tick <strong>Also set a goal</strong> to create a matching goal on the <a href="../goals/">Goals</a> page: for a race, the race distance in
+one run by the race day (within the target time, if you gave one); otherwise the plan's average weekly km every
+week until the plan ends.</p>
+</li>
+</ol>
+<p>Click <strong>Create plan</strong> to save it.</p>
+<h2 id="how-plans-are-built">How plans are built</h2>
+<p>The plan is worked out from your runs by fixed rules, so the preview in the wizard is the plan you get. No AI is
+involved.</p>
+<h3 id="where-it-starts">Where it starts</h3>
+<ul>
+<li><strong>Volume</strong>: the km you ran per week over the last 8 weeks, or 80 % of your weekly km over the last 26 weeks when that
+  is more, and at least 10 km.</li>
+<li><strong>Longest run</strong>: the longest run of the last 8 weeks (of the last 26 when there was none), and at least 5 km.</li>
+<li><strong>VO2max</strong>: the higher of the estimate from your whole runs and the one from your fastest stretch of 3 km or more
+  (a best effort) in the last 26 weeks. Without either, the VO2max from your <a href="../user-settings/">profile</a> is used.
+  With a target time, training paces come from the lower of your current VO2max and the one the target time needs.</li>
+</ul>
+<h3 id="phases">Phases</h3>
+<ul>
+<li>A race plan ends with a <em>Taper</em>: one week for races up to 12 km, two for longer ones. The weeks before it are split
+  into <em>Base</em> (about 40 %), <em>Build</em> (about 40 %) and <em>Peak</em> (about 20 %).</li>
+<li>Get in shape and More fitness plans have three building weeks and an <em>Easier week</em>, again and again.</li>
+</ul>
+<h3 id="weekly-volume">Weekly volume</h3>
+<ul>
+<li>The km grow by at most 10 % a week, up to a peak: 1.5 times the starting volume (1.3 times for Get in shape), and
+  never more than 35 km a week for races up to 6 km, 45 km up to 12 km, 55 km up to 25 km and 70 km beyond.</li>
+<li>Every fourth week is easier, at 75 % of the week before. Building goes on from where it left off afterwards.</li>
+<li>The taper cuts the km: one taper week to 60 %; two taper weeks to 75 % and then 55 %.</li>
+</ul>
+<h3 id="sessions">Sessions</h3>
+<ul>
+<li><strong>Long run</strong>, at easy pace on the long-run day: about 30 % of the week's km (35 % for a half marathon, 42 % for a
+  marathon, 5 points more with three training days or fewer). It grows by at most 2 km a week over your longest run so
+  far and stops at 14 km for races up to 6 km, 17 km up to 12 km, 21 km up to 25 km, 32 km beyond, 16 km for Get in
+  shape and 18 km for More fitness. It is always the longest session of the week.</li>
+<li><strong>Hard sessions</strong> (<strong>Tempo run</strong> or <strong>Intervals</strong>): none with one training day, one with two or three days, two with
+  four or more. Base and taper weeks and all Get in shape weeks have at most one, easier weeks none. They go on the
+  days farthest from the long run, never the day before or after it or another hard session. Each has a warm-up and
+  cool-down of a quarter of the week's km (2 to 3.5 km), and its work stays within 20 % of the week's km and shorter
+  than the long run; repetitions are cut to fit.</li>
+<li><strong>Easy runs</strong> share the rest of the week's km, at least 3 km each; when there isn't enough for all training days,
+  some days stay free. The run on the day after the long run is a <strong>Recovery run</strong>, 80 % as long and a little slower.</li>
+<li><strong>Race week</strong>: up to three short recovery runs (3 to 6 km) before the race, not on the day before, then the
+  <strong>Race</strong> on the long-run day. Nothing after it.</li>
+</ul>
+<p>Hard sessions get longer through each phase:</p>
+<table>
+<thead>
+<tr>
+<th>Plan and week</th>
+<th>First hard session</th>
+<th>Second hard session</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Get in shape</td>
+<td>3 to 5 × 4 min at threshold pace</td>
+<td>–</td>
+</tr>
+<tr>
+<td>More fitness</td>
+<td>5 to 8 × 800 m at interval pace</td>
+<td>2 to 3 × 10 min at threshold pace</td>
+</tr>
+<tr>
+<td>Race, base</td>
+<td>2 to 3 × 8 to 10 min at threshold pace</td>
+<td>–</td>
+</tr>
+<tr>
+<td>Race, build</td>
+<td>3 to 4 × 10 min at threshold pace</td>
+<td>5 to 6 × 1 km at interval pace¹</td>
+</tr>
+<tr>
+<td>Race, peak</td>
+<td>4 to 5 × 1600 m at race pace¹</td>
+<td>20 min at threshold pace</td>
+</tr>
+<tr>
+<td>Race, taper</td>
+<td>4 × 1 km at race pace¹</td>
+<td>–</td>
+</tr>
+</tbody>
+</table>
+<p>¹ For races over 12 km: build 2 to 3 × 3 km at marathon pace, peak 2 to 3 × 4 km at race pace, taper 3 × 2 km at race
+pace. The rest between repetitions is 2 minutes, 3 for 1 km, 1600 m and 2 km repetitions.</p>
+<h3 id="paces">Paces</h3>
+<p>Paces come from your VO2max after Jack Daniels' tables, each a range in min/km:</p>
+<ul>
+<li><strong>Easy</strong>: 62 to 70 % of VO2max, for easy and long runs. Recovery runs go from 10 s/km faster to 20 s/km slower than
+  the slow end of easy pace.</li>
+<li><strong>Marathon pace</strong>: your predicted marathon pace, ±5 s/km.</li>
+<li><strong>Threshold</strong>: 86 to 89 % of VO2max, for tempo runs.</li>
+<li><strong>Interval</strong>: 96 to 99 % of VO2max.</li>
+<li><strong>Race pace</strong>: the target time divided by the distance, or else the time predicted from your VO2max, ±3 s/km.</li>
+</ul>
+<p>Without a VO2max and without a target time, sessions only have distances.</p>
+<h2 id="following-the-plan">Following the plan</h2>
+<p><img alt="Training plan" src="../../images/screens/training_01.png" /></p>
+<p>The Training page shows the selected plan with its state (<strong>Upcoming</strong>, <strong>Active</strong> or <strong>Finished</strong>), its target and
+dates, the badge of its matching goal, and <strong>Sessions with a run</strong>, <strong>Done as planned</strong>, <strong>Missed</strong>, the <strong>Distance</strong>
+done and planned, and your paces. A coloured strip shows the phases. With several plans, pick one from the row at the
+top; <strong>Show archived</strong> includes archived plans.</p>
+<p>Below come the plan's weeks as rows of seven days, with the phase and the km done and planned per week, the current
+week highlighted, and a card per session with what it asks for and, once done or past, how it went. Click a session to
+change its <strong>Kind</strong>, <strong>Date</strong>, <strong>Distance</strong>, <strong>Pace</strong> (fastest and slowest), and for tempo runs and intervals the
+<strong>Repetitions</strong>, <strong>Minutes each</strong> or <strong>Metres each</strong> and <strong>Rest (s)</strong>, or to add a <strong>Note</strong>. <strong>Skip</strong> marks it as
+skipped (<strong>Not skipped</strong> undoes it), and the bin deletes it. Hover a day and click <strong>+</strong> to add a session.</p>
+<p><strong>Adapt plan</strong> rebuilds the sessions from today on from your recent runs. It goes on with 1.1 times your weekly km of
+the last 3 weeks (at least 10 km), never with more than the plan had for this week, and from your current longest run
+and VO2max. Sessions before today stay, and so do sessions you changed, skipped, linked to a run or set to have no
+run. It isn't available once a plan is finished.</p>
+<p>From the plan's buttons you can also <strong>Rename</strong>, <strong>Archive</strong> (<strong>Restore</strong>) or delete a plan. Deleting removes the plan
+and its sessions; your runs and a matching goal stay.</p>
+<p>The dashboard shows the sessions of this week and next week in a row below the goals; click one to open the Training
+page. In the four-week calendar, days with a session get a ring: dashed in the session's colour while ahead, in the
+colour of how it went once done or past. Both move with the dashboard's date arrows.</p>
+<h2 id="matching-runs-to-sessions">Matching runs to sessions</h2>
+<p>Every run is matched to a session automatically: a run on the session's day first, otherwise one on the day before or
+after that no other session took; between two runs, the one closer to the planned distance. In the session window,
+under <strong>Run</strong>, you can link another run from the three days either side by hand, choose <strong>No run for this session</strong>,
+or go back with <strong>Match automatically</strong>. An activity that did a session shows a small calendar mark in the dashboard
+feed and the activity panel, in the colour of how it went; hover it for the plan, the kind of session and the result.</p>
+<p>Each session gets a verdict:</p>
+<ul>
+<li><strong>Done as planned</strong>: at least 80 % of the planned distance, and not harder or easier than planned. A race counts as
+  done from 97 % of its distance, as GPS measures a little short.</li>
+<li><strong>Harder than planned</strong>: an easy, recovery or long run more than 10 s/km faster than easy pace, an easy or recovery
+  run more than 30 % longer than planned, or an average heart rate above zone 2 (once your heart-rate zones are saved
+  in the profile).</li>
+<li><strong>Easier than planned</strong>: the fastest kilometres of a tempo or interval run (as many as its work) more than 15 s/km
+  slower than the slow end of its pace.</li>
+<li><strong>Partly done</strong>: less than 80 % of the planned distance.</li>
+<li><strong>Missed</strong>: a past session without a run that wasn't skipped.</li>
+<li><strong>Skipped</strong>: a session you skipped.</li>
+</ul>
+<p>The pace of a run is its moving pace, without pauses. Matching is worked out from your runs each time, so importing,
+editing or deleting a run updates it right away.</p>
+<h2 id="ai-coach">AI coach</h2>
+<p>With AI turned on in the settings (a local Ollama model), the Training page has a <strong>This week</strong> note: <strong>Explain</strong> has
+the model explain the current week of the plan. In the session window, once a run did the session, <strong>Comment</strong> has it
+comment on how the run went. <strong>Rewrite</strong> writes a note again. Notes are kept and marked with the model that wrote
+them. The plan doesn't need it: without a model these notes are just not shown.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      
+    
+  </body>
+</html>

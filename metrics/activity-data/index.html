@@ -1,0 +1,1531 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../../ui/user-settings/">
+      
+      
+        <link rel="next" href="../heart-rate-zones/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Activity Data - RunningMate Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#activity-data" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="RunningMate Docs" class="md-header__button md-logo" aria-label="RunningMate Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            RunningMate Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Activity Data
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="RunningMate Docs" class="md-nav__button md-logo" aria-label="RunningMate Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    RunningMate Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    App
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    App
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ui/sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sync
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ui/dashboard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dashboard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ui/main-window/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Activities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ui/detail-window/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detail View
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ui/health/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ui/segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ui/goals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Goals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ui/training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ui/heat-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Heat Map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ui/gallery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gallery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ui/compare/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compare
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ui/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ui/user-settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Metrics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Activity Data
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Activity Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#reading-the-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading the file
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reading the file">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#duplicates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Duplicates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clock-jumps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clock jumps
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#duration-and-pauses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Duration and pauses
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#distance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Distance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elevation-gain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Elevation gain
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#speed-and-pace-per-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Speed and pace per point
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#power" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Power
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#calories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calories
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#heart-rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heart rate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steps-and-cadence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps and cadence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#splits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Splits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-segments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best segments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#weather" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Weather
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-fixes-at-startup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data fixes at startup
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../heart-rate-zones/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Heart Rate Zones
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trainings-effect/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trainings Effect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fitness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fitness and Form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#reading-the-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading the file
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reading the file">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#duplicates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Duplicates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clock-jumps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clock jumps
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#duration-and-pauses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Duration and pauses
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#distance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Distance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elevation-gain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Elevation gain
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#speed-and-pace-per-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Speed and pace per point
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#power" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Power
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#calories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calories
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#heart-rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heart rate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steps-and-cadence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps and cadence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#splits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Splits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-segments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best segments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#weather" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Weather
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-fixes-at-startup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data fixes at startup
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="activity-data">Activity data</h1>
+<p>This page explains how a file you import becomes an activity: which values RunningMate reads from the file, which it
+computes, and with which formulas. Everything here happens once on import and again whenever an activity is
+recomputed (after a route fix, a reset to the original, or one of the data fixes described at the end).</p>
+<h2 id="reading-the-file">Reading the file</h2>
+<p>RunningMate reads <strong>TCX</strong> and <strong>GPX</strong> files.</p>
+<ul>
+<li><strong>TCX</strong>: every <code>&lt;Trackpoint&gt;</code> with a time is read, with its position, altitude, heart rate, cadence (<code>RunCadence</code>)
+  and power (<code>Watts</code>). Calculations only use trackpoints that have a position <em>and</em> an altitude. Points without
+  them stay in the file, for example as anchors for the route fix editor.</li>
+<li><strong>GPX</strong> (1.0 and 1.1, e.g. from Garmin, Strava or Komoot): every <code>&lt;trkpt&gt;</code> with a time is read from all tracks. A
+  point without <code>&lt;ele&gt;</code> takes the altitude of the point before it (0 m before the first). Heart rate and cadence come
+  from Garmin's track point extension (<code>hr</code>, <code>cad</code>), power from a <code>power</code> element. The GPX is converted to TCX and
+  archived as TCX, with the original GPX kept next to it. A GPX without times is a planned route, not a recording,
+  and is rejected.</li>
+</ul>
+<p>The sport comes from the TCX <code>Sport</code> attribute, or from the GPX <code>&lt;type&gt;</code>, which apps fill freely: anything containing
+"run", "jog" or "lauf" becomes a run ("trail" a trail run), "cycl", "bik", "ride", "rad" or "velo" a ride, "walk",
+"hik", "wander" or "trek" a walk. Strava's old numbers work too (1 ride, 9 run, 10 walk, 11 hike). A GPX without a
+type counts as a run. A TCX with the sport "Other" counts as a walk.</p>
+<p>A file that has times but no GPS at all (a treadmill run, a watch with GPS switched off) isn't imported straight
+away. It waits until you draw its route in the route fix editor.</p>
+<h3 id="duplicates">Duplicates</h3>
+<p>A file is skipped if a file with the same name (without <code>.tcx</code> or <code>.gpx</code>) was imported before, so a run exported in
+both formats is only imported once. It is also skipped if an activity on the same day has about the same distance:
+within 1 %, and at least within 50 m. That catches the same run recorded by two devices or apps.</p>
+<h3 id="clock-jumps">Clock jumps</h3>
+<p>Some devices write wrong times, for example a run whose first trackpoints are dated correctly and all later ones two
+weeks too late. A gap of more than <strong>12 hours</strong> between two trackpoints is treated as such a clock jump, not a pause:
+every time after it moves back so that it follows the point before by one second, keeping the spacing of the times
+after it. The activity then starts on the right day.</p>
+<h2 id="duration-and-pauses">Duration and pauses</h2>
+<p>The <strong>duration</strong> is the elapsed time from the first to the last trackpoint, pauses included.</p>
+<p>A <strong>pause</strong> is any gap of more than <strong>10 seconds</strong> between two consecutive trackpoints. Devices with auto-pause stop
+writing trackpoints while you stand still, which leaves such gaps. The activity's pause time is the sum of all of them.
+Standing still while the device keeps recording every second is not a pause.</p>
+<p><strong>Moving time</strong> is the duration minus the pause time. It isn't shown on the activity itself, but the cardio fitness
+estimate (see <a href="../fitness/">Fitness and form</a>) and the training plan use it.</p>
+<h2 id="distance">Distance</h2>
+<p>The distance adds up the straight lines between consecutive trackpoints. For the activity's total the positions are
+first projected onto a flat map (UTM, in the zone of the track's mean longitude); the splits and the per-point speed
+use the distance on the earth's ellipsoid (WGS84) instead. Over an activity both agree to within a few metres.</p>
+<h2 id="elevation-gain">Elevation gain</h2>
+<p>The elevation gain is the sum of all rises between consecutive trackpoints, in metres. Descents don't subtract
+anything. The altitudes are used as recorded, without smoothing, so a noisy barometer or GPS altitude adds a little
+gain.</p>
+<h2 id="speed-and-pace-per-point">Speed and pace per point</h2>
+<p>For every trackpoint RunningMate computes a speed and a pace from the distance and time to the point before:</p>
+<ul>
+<li>When more than 80 % of the gaps between trackpoints are exactly one second, the time gaps are smoothed over five
+  points first, so speed and pace don't jump with every GPS fix. Pauses, steps and calories always use the real
+  gaps.</li>
+<li>Where you stood still (no distance between two points), the distance is filled in from the neighbouring points, so
+  a stop doesn't produce an extreme pace.</li>
+<li>A pace outside the range a person can manage for the activity type is left out:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Activity</th>
+<th>Pace kept</th>
+<th>Minimum step</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run</td>
+<td>3:00–12:00 min/km</td>
+<td>0.5 m</td>
+</tr>
+<tr>
+<td>Ride</td>
+<td>0:30–6:00 min/km (10–120 km/h)</td>
+<td>5 m</td>
+</tr>
+<tr>
+<td>Walk</td>
+<td>8:00–25:00 min/km</td>
+<td>0.2 m</td>
+</tr>
+</tbody>
+</table>
+<p>Steps shorter than the minimum get no pace. How these values add up to the averages you see is described under
+<a href="../pace/">Pace</a>.</p>
+<h2 id="power">Power</h2>
+<p>If the file has power (a power meter or a running power pod), the measured watts are used. Otherwise RunningMate
+estimates them from the speed <script type="math/tex">v</script> (m/s) and the climb rate <script type="math/tex">c</script> (metres climbed per second) of each point, using
+your body weight <script type="math/tex">m</script> from the user settings (70 kg if none is set).</p>
+<p><strong>Runs and walks</strong> use the energy above resting from the ACSM metabolic equations (see Calories below), a quarter of
+which becomes mechanical power:</p>
+<p>
+<script type="math/tex"> P = m \times (h \times v + k \times c) \times 0.005 \times 4184 \times 0.25 </script>
+</p>
+<p>with <script type="math/tex">h = 0.2</script>, <script type="math/tex">k = 0.9</script> for running and <script type="math/tex">h = 0.1</script>, <script type="math/tex">k = 1.8</script> for walking. That gives roughly 1 W per kg
+per m/s, which is what running power meters show. A 68 kg runner at 2.36 m/s (6:47 min/km) on the flat comes out at
+about 168 W.</p>
+<p><strong>Rides</strong> use rolling resistance and air drag, with an 8 kg bike, a rolling resistance coefficient of 0.004, air
+density 1.225 kg/m³ and a drag area of 0.27 m²:</p>
+<p>
+<script type="math/tex"> P = 0.004 \times (m + 8) \times 9.81 \times v + \frac{1}{2} \times 1.225 \times 0.27 \times v^3 </script>
+</p>
+<p>The ride estimate has no climbing term, so it underestimates the power on a climb. The average power of the activity
+is the mean of the per-point values.</p>
+<h2 id="calories">Calories</h2>
+<p><strong>Runs and walks</strong> use the ACSM metabolic equations (American College of Sports Medicine). They give the oxygen you
+use, in ml per kg per minute, from the speed and the grade:</p>
+<p>
+<script type="math/tex"> VO_2 = 3.5 + h \times \text{speed} + k \times \text{speed} \times \text{grade} </script>
+</p>
+<p>with the same <script type="math/tex">h</script> and <script type="math/tex">k</script> as above (speed in metres per minute). Summed over the trackpoints, the speed term
+becomes the distance covered and the grade term the metres climbed. Downhill counts as flat. Per point:</p>
+<p>
+<script type="math/tex"> \text{kcal} = m \times (h \times \text{metres} + k \times \text{metres climbed} + 3.5 \times \text{minutes}) \times 0.005 </script>
+</p>
+<p>using 5 kcal per litre of oxygen. Standing still only adds the resting term, and measured watts don't change what a
+run costs.</p>
+<p><strong>Example:</strong> 68 kg, 1 km on the flat in 6 minutes: <script type="math/tex"> 68 \times (0.2 \times 1000 + 3.5 \times 6) \times 0.005 \approx
+75 </script> kcal.</p>
+<p><strong>Rides</strong> use the power (measured or estimated), assuming 25 % of the energy you burn reaches the pedals:</p>
+<p>
+<script type="math/tex"> \text{kcal} = \frac{P \times \text{seconds}}{0.25 \times 4184} </script>
+</p>
+<p>A gap of more than 10 seconds (a pause) adds nothing. At a steady 150 W, an hour comes to about 516 kcal.</p>
+<h2 id="heart-rate">Heart rate</h2>
+<p>The average heart rate is the mean over all trackpoints that have one. Time in heart-rate zones is described under
+<a href="../heart-rate-zones/">Heart rate zones</a>.</p>
+<h2 id="steps-and-cadence">Steps and cadence</h2>
+<p>For runs and walks, TCX cadence counts one foot, so RunningMate doubles it to steps per minute.</p>
+<ul>
+<li><strong>Cadence</strong> (spm) is the mean of the doubled cadence over the trackpoints that have one.</li>
+<li><strong>Steps</strong> adds up cadence × 2 × the time to the previous point. Gaps of more than 10 seconds (pauses) are left out,
+  so a pause isn't walked through at the cadence of the point after it.</li>
+</ul>
+<p>Rides have no steps.</p>
+<h2 id="splits">Splits</h2>
+<p>The activity is cut into splits of <strong>1 km</strong> (runs and walks) or <strong>5 km</strong> (rides). A split ends at the first trackpoint
+where its own distance reaches the length, so a full split is never shorter than 1 km or 5 km (it can be a few metres
+longer). The next split starts at that trackpoint. Whatever is left at the end becomes a shorter last split.</p>
+<p>For each split RunningMate stores:</p>
+<ul>
+<li>the <strong>time</strong>, from its first to its last trackpoint, pauses included;</li>
+<li>the <strong>pace</strong>: that time divided by the split's distance;</li>
+<li>the <strong>speed</strong>, heart rate, power and cadence as the mean of the split's trackpoints;</li>
+<li>the <strong>elevation gain</strong>, the sum of the rises within the split;</li>
+<li>the position of its first trackpoint.</li>
+</ul>
+<p>Splits are also the basis of the fitness curve, and of the training effect and the time in zones without a track file.</p>
+<h2 id="best-segments">Best segments</h2>
+<p>For every activity RunningMate looks for the fastest stretch over fixed distances:</p>
+<table>
+<thead>
+<tr>
+<th>Activity</th>
+<th>Distances (km)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run</td>
+<td>1, 5, 10, 21, 42</td>
+</tr>
+<tr>
+<td>Walk</td>
+<td>1, 5, 10, 15, 20, 30, 50</td>
+</tr>
+<tr>
+<td>Ride</td>
+<td>5, 25, 50, 75, 100, 150, 200</td>
+</tr>
+</tbody>
+</table>
+<p>A stretch is a run of consecutive splits, starting at any split and ending as soon as the splits cover the distance.
+Its pace is the splits' total time over their total distance, so a short last split counts by its length. Because
+stretches are made of whole splits, the best 1 km of a run is its fastest 1 km split, not the fastest kilometre
+anywhere on the track. A stretch can't run over a split without time (a clock that ran backwards).</p>
+<p>Records nobody can run are left out of the lists: a best segment faster than the fastest plausible pace of its
+activity type (3:00 min/km for runs, 0:30 min/km for rides, 8:00 min/km for walks) isn't shown. That keeps out, for
+example, a ride accidentally recorded as a run.</p>
+<h2 id="weather">Weather</h2>
+<p>After the import, RunningMate looks up the weather of the day at the start of the middle split from
+<a href="https://open-meteo.com">Open-Meteo</a>: the day's maximum and minimum temperature, precipitation, maximum wind speed and
+the weather code (sun, clouds, rain …). These are daily values, not the weather at the hour of the activity. Dates
+within the last 60 days use Open-Meteo's forecast service (which covers recent days), older dates its historical
+archive. The lookup is tried three times; if it still fails, or the day has no data yet, the activity has no weather.</p>
+<h2 id="data-fixes-at-startup">Data fixes at startup</h2>
+<p>Some values were computed wrongly by earlier versions. On startup RunningMate corrects stored activities once per
+database, recomputing them from their archived files:</p>
+<ol>
+<li><strong>Clock jumps</strong>: activities whose file has a clock jump are imported again, so they move to the right day. A title
+   generated from the wrong start is generated again, the AI summary is deleted and the weather is looked up again.
+   Activities you have edited are left alone.</li>
+<li><strong>Calories and power</strong> are recomputed with the ACSM estimates described above.</li>
+<li><strong>Pauses and splits</strong>: calories, total steps, the splits and the best segments are recomputed with the pause
+   handling and split cuts described above.</li>
+<li><strong>Best segments</strong> are recomputed so that none spans a split whose clock ran backwards.</li>
+<li><strong>Grade-adjusted pace</strong> is computed for runs and walks imported before it existed: the activity's GAP and the GAP
+   of each split (see <a href="../pace/">Pace</a>).</li>
+</ol>
+<p>Fixes 2 to 5 only change the values named; your title, comment, distance, duration and other edits stay as they are.
+Activities whose archived file is missing are skipped.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      
+    
+  </body>
+</html>
