@@ -11,7 +11,11 @@ import { ActivitiesPage } from "@/features/activities/activities-page";
 import { VIEW_MODES, type ViewMode } from "@/features/activities/view-mode";
 import { lastConnector, type Connector } from "@/features/connectors/connector";
 import { ConnectorsDialog } from "@/features/connectors/connectors-dialog";
+import { OpenCompareContext } from "@/features/compare/compare-context";
+import { parseSelection, type CompareSelection } from "@/features/compare/compare-math";
+import { ComparePage } from "@/features/compare/compare-page";
 import { DashboardPage } from "@/features/dashboard/dashboard-page";
+import { GalleryPage } from "@/features/gallery/gallery-page";
 import { GoalsPage } from "@/features/goals/goals-page";
 import { HealthPage } from "@/features/health/health-page";
 import { RouteHeatmapPage } from "@/features/route-heatmap/route-heatmap-page";
@@ -25,8 +29,18 @@ import { setLanguage, t } from "@/i18n";
 import { api } from "@/lib/api";
 
 const DETAILS_STORAGE_KEY = "runningmate-details-panel";
+const COMPARE_STORAGE_KEY = "runningmate-compare";
 
-type Page = "dashboard" | "activities" | "health" | "segments" | "goals" | "training" | "heatmap";
+type Page =
+  | "dashboard"
+  | "activities"
+  | "health"
+  | "segments"
+  | "goals"
+  | "training"
+  | "heatmap"
+  | "gallery"
+  | "compare";
 
 function App() {
   const queryClient = useQueryClient();
@@ -40,10 +54,23 @@ function App() {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [userSettingsOpen, setUserSettingsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Lives here so the segment window can open the Compare page with its passes.
+  const [comparison, setComparison] = useState<CompareSelection>(() =>
+    parseSelection(localStorage.getItem(COMPARE_STORAGE_KEY)),
+  );
   const { setTheme } = useTheme();
   // Re-renders the whole app when the language changes (see src/i18n).
   useTranslation();
   const { data: info } = useQuery({ queryKey: ["appInfo"], queryFn: api.appInfo });
+
+  const changeComparison = (next: CompareSelection) => {
+    localStorage.setItem(COMPARE_STORAGE_KEY, JSON.stringify(next));
+    setComparison(next);
+  };
+  const openComparison = (next: CompareSelection) => {
+    changeComparison(next);
+    setPage("compare");
+  };
 
   const toggleDetails = () =>
     setDetailsOpen((open) => {
@@ -77,6 +104,8 @@ function App() {
       if (payload === "goals") setPage("goals");
       if (payload === "training") setPage("training");
       if (payload === "heatmap") setPage("heatmap");
+      if (payload === "gallery") setPage("gallery");
+      if (payload === "compare") setPage("compare");
       if (payload === "settings") setSettingsOpen(true);
       if (payload === "user") setUserSettingsOpen(true);
     });
@@ -92,6 +121,23 @@ function App() {
       queryClient.invalidateQueries({ queryKey: ["aiSummary", payload] });
     });
     return () => {
+      unlisten.then((stop) => stop());
+    };
+  }, [queryClient]);
+
+  // Place names are looked up in the background, up to one a second while older activities
+  // are caught up on, so the list is refreshed at most every few seconds.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const unlisten = listen<number>("activity://located", ({ payload }) => {
+      queryClient.invalidateQueries({ queryKey: ["activity", payload] });
+      timer ??= setTimeout(() => {
+        timer = undefined;
+        queryClient.invalidateQueries({ queryKey: ["activities"] });
+      }, 3000);
+    });
+    return () => {
+      clearTimeout(timer);
       unlisten.then((stop) => stop());
     };
   }, [queryClient]);
@@ -118,65 +164,79 @@ function App() {
               ? t("Training")
               : page === "heatmap"
                 ? t("Heat map")
-                : t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
+                : page === "gallery"
+                  ? t("Gallery")
+                  : page === "compare"
+                    ? t("Compare")
+                    : t(VIEW_MODES.find((v) => v.mode === viewMode)?.label ?? viewMode);
 
   return (
-    <SidebarProvider>
-      <TitleBar
-        title={title}
-        detailsOpen={detailsOpen}
-        onDetailsToggle={activities ? toggleDetails : undefined}
-      />
-      <AppSidebar
-        page={page}
-        viewMode={viewMode}
-        onViewModeChange={(mode) => {
-          setViewMode(mode);
-          setPage("activities");
-        }}
-        onPageChange={setPage}
-        searchOpen={searchOpen && activities}
-        onSearchToggle={() => {
-          setSearchOpen((open) => !activities || !open);
-          setPage("activities");
-        }}
-        onSync={() => setConnector(lastConnector())}
-        onUserSettings={() => setUserSettingsOpen(true)}
-        onSettings={() => setSettingsOpen(true)}
-      />
-      <SidebarInset className="h-svh min-w-0 overflow-hidden pt-(--titlebar-height)">
-        {page === "dashboard" ? (
-          <DashboardPage
-            dataDir={info?.dataDir}
-            onHealth={() => setPage("health")}
-            onGoals={() => setPage("goals")}
-            onTraining={() => setPage("training")}
-          />
-        ) : page === "health" ? (
-          <HealthPage />
-        ) : page === "segments" ? (
-          <SegmentsPage dataDir={info?.dataDir} />
-        ) : page === "goals" ? (
-          <GoalsPage dataDir={info?.dataDir} />
-        ) : page === "training" ? (
-          <TrainingPage dataDir={info?.dataDir} />
-        ) : page === "heatmap" ? (
-          <RouteHeatmapPage />
-        ) : (
-          <ActivitiesPage
-            view={viewMode}
-            searchOpen={searchOpen}
-            onSearchOpenChange={setSearchOpen}
-            detailsOpen={detailsOpen}
-            dataDir={info?.dataDir}
-          />
-        )}
-      </SidebarInset>
-      <ConnectorsDialog connector={connector} onConnectorChange={setConnector} />
-      <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
-      <UserSettingsDialog open={userSettingsOpen} onOpenChange={setUserSettingsOpen} />
-      <SystemSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-    </SidebarProvider>
+    <OpenCompareContext.Provider value={openComparison}>
+      <SidebarProvider>
+        <TitleBar
+          title={title}
+          detailsOpen={detailsOpen}
+          onDetailsToggle={activities ? toggleDetails : undefined}
+        />
+        <AppSidebar
+          page={page}
+          viewMode={viewMode}
+          onViewModeChange={(mode) => {
+            setViewMode(mode);
+            setPage("activities");
+          }}
+          onPageChange={setPage}
+          searchOpen={searchOpen && activities}
+          onSearchToggle={() => {
+            setSearchOpen((open) => !activities || !open);
+            setPage("activities");
+          }}
+          onSync={() => setConnector(lastConnector())}
+          onUserSettings={() => setUserSettingsOpen(true)}
+          onSettings={() => setSettingsOpen(true)}
+        />
+        <SidebarInset className="h-svh min-w-0 overflow-hidden pt-(--titlebar-height)">
+          {page === "dashboard" ? (
+            <DashboardPage
+              dataDir={info?.dataDir}
+              onHealth={() => setPage("health")}
+              onGoals={() => setPage("goals")}
+              onTraining={() => setPage("training")}
+            />
+          ) : page === "health" ? (
+            <HealthPage />
+          ) : page === "segments" ? (
+            <SegmentsPage dataDir={info?.dataDir} />
+          ) : page === "goals" ? (
+            <GoalsPage dataDir={info?.dataDir} />
+          ) : page === "training" ? (
+            <TrainingPage dataDir={info?.dataDir} />
+          ) : page === "heatmap" ? (
+            <RouteHeatmapPage />
+          ) : page === "gallery" ? (
+            <GalleryPage dataDir={info?.dataDir} />
+          ) : page === "compare" ? (
+            <ComparePage
+              selection={comparison}
+              onSelectionChange={changeComparison}
+              dataDir={info?.dataDir}
+            />
+          ) : (
+            <ActivitiesPage
+              view={viewMode}
+              searchOpen={searchOpen}
+              onSearchOpenChange={setSearchOpen}
+              detailsOpen={detailsOpen}
+              dataDir={info?.dataDir}
+            />
+          )}
+        </SidebarInset>
+        <ConnectorsDialog connector={connector} onConnectorChange={setConnector} />
+        <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+        <UserSettingsDialog open={userSettingsOpen} onOpenChange={setUserSettingsOpen} />
+        <SystemSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      </SidebarProvider>
+    </OpenCompareContext.Provider>
   );
 }
 

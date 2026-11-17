@@ -41,6 +41,8 @@ struct Labels {
     goals: &'static str,
     training: &'static str,
     heatmap: &'static str,
+    gallery: &'static str,
+    compare: &'static str,
     fullscreen: &'static str,
     window: &'static str,
     minimize: &'static str,
@@ -76,6 +78,8 @@ const EN: Labels = Labels {
     goals: "Goals",
     training: "Training",
     heatmap: "Heat Map",
+    gallery: "Gallery",
+    compare: "Compare",
     fullscreen: "Enter Full Screen",
     window: "Window",
     minimize: "Minimize",
@@ -111,6 +115,8 @@ const DE: Labels = Labels {
     goals: "Ziele",
     training: "Training",
     heatmap: "Heatmap",
+    gallery: "Galerie",
+    compare: "Vergleichen",
     fullscreen: "Vollbildmodus",
     window: "Fenster",
     minimize: "Im Dock ablegen",
@@ -144,6 +150,8 @@ fn build<R: Runtime, M: Manager<R>>(manager: &M, language: &str) -> tauri::Resul
     let goals = item("goals", l.goals, Some("CmdOrCtrl+Shift+O"))?;
     let training = item("training", l.training, Some("CmdOrCtrl+Shift+T"))?;
     let heatmap = item("heatmap", l.heatmap, Some("CmdOrCtrl+Shift+M"))?;
+    let gallery = item("gallery", l.gallery, Some("CmdOrCtrl+Shift+P"))?;
+    let compare = item("compare", l.compare, Some("CmdOrCtrl+Shift+C"))?;
     let help = item("help", l.help_item, Some("F1"))?;
 
     let app_menu = SubmenuBuilder::new(manager, "RunningMate")
@@ -184,6 +192,8 @@ fn build<R: Runtime, M: Manager<R>>(manager: &M, language: &str) -> tauri::Resul
         .item(&goals)
         .item(&training)
         .item(&heatmap)
+        .item(&gallery)
+        .item(&compare)
         .separator()
         .fullscreen_with_text(l.fullscreen)
         .build()?;
@@ -217,7 +227,7 @@ fn handle<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
             let _ = app.opener().open_url(HELP_URL, None::<&str>);
         }
         id @ ("about" | "sync" | "search" | "dashboard" | "health" | "segments" | "goals"
-        | "training" | "heatmap" | "settings" | "user") => {
+        | "training" | "heatmap" | "gallery" | "compare" | "settings" | "user") => {
             let _ = app.emit(MENU_EVENT, id);
         }
         _ => {}

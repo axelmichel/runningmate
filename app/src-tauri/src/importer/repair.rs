@@ -1,6 +1,8 @@
 //! Route fix editor: finds GPS spikes and dropouts in an activity's samples and replaces the
 //! positions of a stretch with a route drawn by hand. The repaired track is archived as TCX and
-//! the activity recomputed from it; the original archive is kept for a revert.
+//! the activity recomputed from it; the original archive is kept for a revert. Heart rate and
+//! cadence of a stretch can be corrected the same way, e.g. a chest strap that read the cadence
+//! for the first kilometre.
 
 use chrono::{DateTime, TimeDelta, Utc};
 use geographiclib_rs::{Geodesic, InverseGeodesic};
@@ -24,6 +26,8 @@ pub struct FixSample {
     pub lon: Option<f64>,
     pub elevation: Option<f64>,
     pub heart_rate: Option<f64>,
+    /// Steps per minute (both feet), as shown in the charts.
+    pub steps: Option<f64>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
@@ -79,6 +83,47 @@ pub struct FixEdit {
     pub path: Vec<(f64, f64)>,
 }
 
+/// The value of samples a [`SampleEdit`] changes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum SampleChannel {
+    /// Beats per minute.
+    HeartRate,
+    /// Steps per minute (both feet); stored as the cadence of one foot.
+    Steps,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize, TS)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[ts(export)]
+pub enum SampleOp {
+    /// A straight line in time between the values just before and after the stretch; the one
+    /// value there is when the stretch starts or ends the activity.
+    Interpolate,
+    /// Every sample gets `value`, also those without one.
+    Set { value: f64 },
+    /// `value` is added to every sample that has one.
+    Offset { value: f64 },
+    /// One value per sample of the stretch, in order, as the editor estimated them (e.g. the heart
+    /// rate from the pace); 0 leaves a sample without one.
+    Values { values: Vec<f64> },
+}
+
+/// A correction of the heart rate or steps of the samples from `from` to `to` (Unix
+/// milliseconds, both included).
+#[derive(Debug, Clone, PartialEq, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SampleEdit {
+    pub channel: SampleChannel,
+    #[ts(type = "number")]
+    pub from: i64,
+    #[ts(type = "number")]
+    pub to: i64,
+    pub op: SampleOp,
+}
+
 /// A step faster than this many times the fastest pace of the sport is a GPS spike.
 const SPIKE_FACTOR: f64 = 1.5;
 /// Fast steps closer together than this belong to one spike (the jump out and back).
@@ -106,6 +151,7 @@ pub fn source(activity: &TcxActivity, has_original: bool) -> FixSource {
                 lon: s.position.map(|p| p.1),
                 elevation: s.elevation,
                 heart_rate: s.heart_rate,
+                steps: s.cadence.map(|c| c * 2.0),
             })
             .collect(),
         issues: issues(activity),
@@ -347,6 +393,125 @@ pub fn apply(activity: &TcxActivity, edits: &[FixEdit]) -> AppResult<TcxActivity
     Ok(fixed)
 }
 
+fn channel_value(sample: &mut RawSample, channel: SampleChannel) -> &mut Option<f64> {
+    match channel {
+        SampleChannel::HeartRate => &mut sample.heart_rate,
+        SampleChannel::Steps => &mut sample.cadence,
+    }
+}
+
+/// Stored value for `value` given in the channel's unit.
+fn stored(channel: SampleChannel, value: f64) -> f64 {
+    match channel {
+        SampleChannel::HeartRate => value,
+        SampleChannel::Steps => value / 2.0,
+    }
+}
+
+/// Interpolation leans on the median of the values this long beyond a stretch.
+const ANCHOR: TimeDelta = TimeDelta::seconds(30);
+
+/// What an interpolation starts (or, `forward`, ends) at beside the stretch whose edge sample is
+/// `edge`: the median of the values within [`ANCHOR`] of the nearest one, so a single stray value
+/// next to the stretch doesn't set the level. 0 is what a strap or pod sends without contact,
+/// not a value to lean on. The editor's preview does the same.
+fn anchor(
+    samples: &mut [RawSample],
+    channel: SampleChannel,
+    edge: usize,
+    forward: bool,
+) -> Option<(DateTime<Utc>, f64)> {
+    let mut beyond: Vec<&mut RawSample> = if forward {
+        samples[edge + 1..].iter_mut().collect()
+    } else {
+        samples[..edge].iter_mut().rev().collect()
+    };
+    let mut values = beyond
+        .iter_mut()
+        .filter_map(|s| Some((s.time, channel_value(s, channel).filter(|v| *v > 0.0)?)));
+    let (time, first) = values.next()?;
+    let mut near: Vec<f64> = std::iter::once(first)
+        .chain(
+            values
+                .take_while(|(t, _)| (*t - time).abs() <= ANCHOR)
+                .map(|(_, v)| v),
+        )
+        .collect();
+    near.sort_by(f64::total_cmp);
+    let mid = near.len() / 2;
+    let median = if near.len() % 2 == 1 {
+        near[mid]
+    } else {
+        (near[mid - 1] + near[mid]) / 2.0
+    };
+    Some((time, median))
+}
+
+fn apply_sample_edit(samples: &mut [RawSample], edit: &SampleEdit) -> AppResult<()> {
+    let inside = |s: &RawSample| (edit.from..=edit.to).contains(&s.time.timestamp_millis());
+    let Some(first) = samples.iter().position(inside) else {
+        return Err(AppError::Invalid("no samples in the stretch".into()));
+    };
+    let last = samples.iter().rposition(inside).unwrap_or(first);
+    let channel = edit.channel;
+    match &edit.op {
+        &SampleOp::Interpolate => {
+            let before = anchor(samples, channel, first, false);
+            let after = anchor(samples, channel, last, true);
+            let value_at = |time: DateTime<Utc>| match (before, after) {
+                (Some((t0, v0)), Some((t1, v1))) => Some(lerp(v0, v1, time_fraction(time, t0, t1))),
+                (Some((_, v)), None) | (None, Some((_, v))) => Some(v),
+                (None, None) => None,
+            };
+            if before.is_none() && after.is_none() {
+                return Err(AppError::Invalid("no values around the stretch".into()));
+            }
+            for sample in &mut samples[first..=last] {
+                let value = value_at(sample.time);
+                *channel_value(sample, channel) = value;
+            }
+        }
+        SampleOp::Values { values } => {
+            if values.len() != last - first + 1 {
+                return Err(AppError::Invalid(format!(
+                    "{} values for {} samples",
+                    values.len(),
+                    last - first + 1
+                )));
+            }
+            for (sample, &value) in samples[first..=last].iter_mut().zip(values) {
+                *channel_value(sample, channel) = (value > 0.0).then(|| stored(channel, value));
+            }
+        }
+        &SampleOp::Set { value } => {
+            let value = (value > 0.0).then(|| stored(channel, value));
+            for sample in &mut samples[first..=last] {
+                *channel_value(sample, channel) = value;
+            }
+        }
+        &SampleOp::Offset { value } => {
+            let offset = stored(channel, value);
+            for sample in &mut samples[first..=last] {
+                let current = channel_value(sample, channel);
+                *current = current.map(|v| (v + offset).max(0.0));
+            }
+        }
+    }
+    Ok(())
+}
+
+/// The activity with the heart rate and steps corrections applied, in order.
+pub fn apply_samples(activity: &TcxActivity, edits: &[SampleEdit]) -> AppResult<TcxActivity> {
+    if edits.is_empty() {
+        return Err(AppError::Invalid("nothing to fix".into()));
+    }
+    let mut samples = activity.samples.clone();
+    for edit in edits {
+        apply_sample_edit(&mut samples, edit)?;
+    }
+    Ok(TcxActivity::from_samples(activity.sport.clone(), samples))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -571,5 +736,126 @@ mod tests {
             path: vec![(48.0, 2.0), (48.1, 2.0)],
         };
         assert!(apply(&activity, &[edit]).is_err());
+    }
+
+    fn heart_rates(activity: &TcxActivity) -> Vec<Option<f64>> {
+        activity.samples.iter().map(|s| s.heart_rate).collect()
+    }
+
+    fn edit(from: i64, to: i64, channel: SampleChannel, op: SampleOp) -> SampleEdit {
+        let ms = |second: i64| (1_746_522_000 + second) * 1000;
+        SampleEdit {
+            channel,
+            from: ms(from),
+            to: ms(to),
+            op,
+        }
+    }
+
+    #[test]
+    fn interpolates_heart_rate_between_the_values_around_a_stretch() {
+        let mut samples = straight(4);
+        for (sample, hr) in samples.iter_mut().zip([100.0, 190.0, 0.0, 185.0, 140.0]) {
+            sample.heart_rate = Some(hr);
+        }
+        let fixed = apply_samples(
+            &run(samples),
+            &[edit(1, 3, SampleChannel::HeartRate, SampleOp::Interpolate)],
+        )
+        .unwrap();
+        assert_eq!(
+            heart_rates(&fixed),
+            [
+                Some(100.0),
+                Some(110.0),
+                Some(120.0),
+                Some(130.0),
+                Some(140.0)
+            ]
+        );
+    }
+
+    #[test]
+    fn a_stretch_at_the_start_takes_the_first_good_value() {
+        let mut samples = straight(3);
+        for (sample, hr) in samples.iter_mut().zip([175.0, 178.0, 0.0, 142.0]) {
+            sample.heart_rate = Some(hr);
+        }
+        let fixed = apply_samples(
+            &run(samples),
+            &[edit(0, 2, SampleChannel::HeartRate, SampleOp::Interpolate)],
+        )
+        .unwrap();
+        assert_eq!(heart_rates(&fixed), [Some(142.0); 4]);
+    }
+
+    #[test]
+    fn sets_and_shifts_steps_per_minute() {
+        let mut samples = straight(3);
+        samples[3].cadence = Some(80.0);
+        let fixed = apply_samples(
+            &run(samples),
+            &[
+                edit(0, 2, SampleChannel::Steps, SampleOp::Set { value: 170.0 }),
+                edit(
+                    1,
+                    3,
+                    SampleChannel::Steps,
+                    SampleOp::Offset { value: -10.0 },
+                ),
+            ],
+        )
+        .unwrap();
+        let cadence: Vec<_> = fixed.samples.iter().map(|s| s.cadence).collect();
+        assert_eq!(cadence, [Some(85.0), Some(80.0), Some(80.0), Some(75.0)]);
+        let source = source(&fixed, false);
+        assert_eq!(source.samples[0].steps, Some(170.0));
+    }
+
+    #[test]
+    fn refuses_sample_edits_without_anything_to_change() {
+        let activity = run(straight(3));
+        assert!(apply_samples(&activity, &[]).is_err());
+        let outside = edit(10, 20, SampleChannel::HeartRate, SampleOp::Interpolate);
+        assert!(apply_samples(&activity, &[outside]).is_err());
+        let mut samples = straight(2);
+        for sample in &mut samples {
+            sample.heart_rate = None;
+        }
+        let nothing = edit(1, 1, SampleChannel::HeartRate, SampleOp::Interpolate);
+        assert!(apply_samples(&run(samples), &[nothing]).is_err());
+    }
+
+    #[test]
+    fn interpolation_leans_on_the_level_beside_a_stretch_not_one_stray_value() {
+        // Steps per foot: a pod starting at 140 and 111 before settling at 85.
+        let mut samples = straight(40);
+        for (i, sample) in samples.iter_mut().enumerate() {
+            sample.cadence = Some(match i {
+                0..=2 => 140.0,
+                3..=5 => 111.0,
+                _ => 85.0,
+            });
+        }
+        let fixed = apply_samples(
+            &run(samples),
+            &[edit(0, 2, SampleChannel::Steps, SampleOp::Interpolate)],
+        )
+        .unwrap();
+        // The median of the 30 s after the stretch, not the 111 right next to it.
+        assert_eq!(fixed.samples[0].cadence, Some(85.0));
+    }
+
+    #[test]
+    fn writes_estimated_values_as_given() {
+        let edit_values = |values: Vec<f64>| SampleEdit {
+            op: SampleOp::Values { values },
+            ..edit(0, 1, SampleChannel::Steps, SampleOp::Interpolate)
+        };
+        let fixed = apply_samples(&run(straight(2)), &[edit_values(vec![170.0, 0.0])]).unwrap();
+        let cadence: Vec<_> = fixed.samples.iter().map(|s| s.cadence).collect();
+        assert_eq!(cadence, [Some(85.0), None, None]);
+        // One value per sample of the stretch, or nothing is written.
+        assert!(apply_samples(&run(straight(2)), &[edit_values(vec![170.0])]).is_err());
     }
 }

@@ -634,4 +634,29 @@ SET elevation_gain = (
     polyline TEXT NOT NULL
 )"#],
     ),
+    // How the heart-rate zones are set: "custom" (zone1–zone5), "percentMax" or "karvonen".
+    (
+        64,
+        &[r#"ALTER TABLE users ADD COLUMN zone_method TEXT NOT NULL DEFAULT 'custom'"#],
+    ),
+    // Grade-adjusted pace of runs and walks ("MM:SS", like avg_pace) and of each split
+    // (min/km, like seg_avg_pace).
+    (
+        65,
+        &[
+            r#"ALTER TABLE runs ADD COLUMN avg_gap TEXT"#,
+            r#"ALTER TABLE walking ADD COLUMN avg_gap TEXT"#,
+            r#"ALTER TABLE activity_details ADD COLUMN seg_avg_gap REAL"#,
+        ],
+    ),
+    // Place name of the start from Nominatim, and the point that was looked up (set even
+    // when no name was found, so each activity is looked up once).
+    (
+        66,
+        &[
+            r#"ALTER TABLE activities ADD COLUMN location TEXT"#,
+            r#"ALTER TABLE activities ADD COLUMN location_latitude REAL"#,
+            r#"ALTER TABLE activities ADD COLUMN location_longitude REAL"#,
+        ],
+    ),
 ];

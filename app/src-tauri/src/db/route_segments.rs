@@ -47,6 +47,9 @@ pub struct RankedEffort {
     /// s.
     pub elapsed: f64,
     pub avg_heart_rate: Option<f64>,
+    /// Position of the pass within its activity, km.
+    pub start_km: f64,
+    pub end_km: f64,
     /// 1 for the fastest; equal times share a rank.
     #[ts(type = "number")]
     pub rank: i64,
@@ -158,6 +161,8 @@ fn ranked_from_row(row: &Row) -> rusqlite::Result<RankedEffort> {
         date: row.get("date")?,
         elapsed: row.get("elapsed")?,
         avg_heart_rate: row.get("avg_heart_rate")?,
+        start_km: row.get("start_km")?,
+        end_km: row.get("end_km")?,
         rank: row.get("rank")?,
     })
 }
@@ -629,6 +634,8 @@ mod tests {
             date,
             elapsed: rank as f64 * 10.0,
             avg_heart_rate: None,
+            start_km: 0.0,
+            end_km: 1.0,
             rank,
         };
         let (db, runs, id) = seeded(1);

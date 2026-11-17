@@ -15,7 +15,7 @@ fitnessPeak: FitnessDay | null, heartRate: Array<HealthHeartPoint>,
  */
 references: [number, number, number] | null, 
 /**
- * Time in heart-rate zones from the per-km segments; `None` until zones are saved.
+ * Time in heart-rate zones from the per-km segments; `None` while the user's zone method has no zones.
  */
 zones: Array<ZoneTime> | null, 
 /**

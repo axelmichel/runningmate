@@ -26,7 +26,11 @@ export function GeneralTab({ activity, dataDir }: { activity: ActivityDetail; da
       <div className="grid content-start gap-6">
         <AiSummaryCard activityId={activity.id} />
         <MediaGallery activityId={activity.id} />
-        {activity.comment && <p className="text-sm whitespace-pre-wrap">{activity.comment}</p>}
+        {activity.comment && (
+          <p data-private className="text-sm whitespace-pre-wrap">
+            {activity.comment}
+          </p>
+        )}
         <div>
           <Fact
             label={t("Calories")}
@@ -44,6 +48,13 @@ export function GeneralTab({ activity, dataDir }: { activity: ActivityDetail; da
             label={t("Average speed")}
             value={activity.avgSpeed ? `${formatNumber(activity.avgSpeed, 1)} km/h` : null}
           />
+          <Fact label={t("Average pace")} value={`${formatMinSec(activity.avgPace)} /km`} />
+          {steps && activity.avgGap && (
+            <Fact
+              label={t("Grade-adjusted pace (GAP)")}
+              value={`${formatMinSec(activity.avgGap)} /km`}
+            />
+          )}
           <Fact label={t("Fastest pace")} value={`${formatMinSec(activity.fastestPace)} /km`} />
           <Fact label={t("Slowest pace")} value={`${formatMinSec(activity.slowestPace)} /km`} />
           {steps && (

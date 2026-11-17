@@ -313,7 +313,9 @@ function EffortList({
         >
           <RankTrophy rank={e.rank} />
           <div className="min-w-0 flex-1">
-            <div className="truncate font-medium">{e.title}</div>
+            <div data-private className="truncate font-medium">
+              {e.title}
+            </div>
             <div className="text-xs text-muted-foreground">
               {formatSegmentDistance(e.distance)} · {formatGrade(e.avgGrade)} ·{" "}
               {formatNumber(e.elevationGain)} m

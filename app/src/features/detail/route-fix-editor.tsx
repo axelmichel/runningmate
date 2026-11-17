@@ -34,6 +34,7 @@ import {
   stretchAround,
   toEdit,
 } from "./fix-math";
+import { useGuardAsking, useUnsavedChanges } from "./use-unsaved-guard";
 
 const TRACK_COLOR = "#9aa3ad";
 const ISSUE_COLOR = "#e13342";
@@ -257,7 +258,8 @@ export function RouteFixEditor({
 }: {
   source: FixSource;
   saving: boolean;
-  onSave: (edits: FixEdit[]) => void;
+  /** Saves the fixes; a promise that fails when they couldn't be saved. */
+  onSave: (edits: FixEdit[]) => Promise<unknown> | void;
   /** Further buttons below Save, such as resetting to the original. */
   extraActions?: React.ReactNode;
   /** Hides the map while a dialog is open above it (WebKit paints tiles above dialogs). */
@@ -338,6 +340,18 @@ export function RouteFixEditor({
     setDraft(null);
     setPicking(false);
   };
+  // A route drawn but not added yet counts as a change too, and is saved along with the rest.
+  const ready = draft?.end != null && draft.vertices.length > 0 && draftPath.length >= 2;
+  const save = (withDraft: boolean) =>
+    Promise.resolve(
+      onSave(
+        withDraft && ready
+          ? [...edits, toEdit(samples, draft.start, draft.end!, draftPath)]
+          : edits,
+      ),
+    );
+  useUnsavedChanges(edits.length > 0 || ready, () => save(true));
+  const asking = useGuardAsking();
 
   return (
     <div className="flex h-full min-h-0 gap-4">
@@ -345,7 +359,7 @@ export function RouteFixEditor({
         className={cn(
           "relative isolate min-h-72 flex-1 overflow-hidden rounded-lg border",
           (picking || draft?.end != null) && "[&_.leaflet-container]:cursor-crosshair",
-          hideMap && "[&_.leaflet-container]:invisible",
+          (hideMap || asking) && "[&_.leaflet-container]:invisible",
         )}
       >
         <MapContainer
@@ -573,7 +587,10 @@ export function RouteFixEditor({
             <dt className="text-muted-foreground">{t("After the fixes")}</dt>
             <dd className="text-right font-semibold">{formatNumber(after / 1000, 2)} km</dd>
           </dl>
-          <Button onClick={() => onSave(edits)} disabled={edits.length === 0 || saving}>
+          <Button
+            onClick={() => void save(false).catch(() => {})}
+            disabled={edits.length === 0 || saving}
+          >
             {saving ? t("Saving…") : t("Save and recompute")}
           </Button>
           {extraActions}

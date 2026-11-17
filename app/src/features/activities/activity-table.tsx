@@ -3,6 +3,7 @@ import {
   ArrowUp,
   ChevronLeft,
   ChevronRight,
+  Columns3,
   EllipsisVertical,
   Eye,
   RotateCcw,
@@ -29,8 +30,10 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -45,9 +48,32 @@ import {
 import { t } from "@/i18n";
 import { cn } from "@/lib/utils";
 
-import { columnsFor } from "./columns";
+import { OPTIONAL_COLUMNS, columnsFor, type OptionalColumn } from "./columns";
 
 export type Sort = { field: SortField; direction: SortDirection };
+
+const COLUMNS_STORAGE_KEY = "runningmate-table-columns";
+
+/** Optional columns switched on, kept in localStorage. */
+function useOptionalColumns() {
+  const [shown, setShown] = useState<OptionalColumn[]>(() => {
+    try {
+      const stored: unknown = JSON.parse(localStorage.getItem(COLUMNS_STORAGE_KEY) ?? "[]");
+      return OPTIONAL_COLUMNS.map((c) => c.key).filter(
+        (key) => Array.isArray(stored) && stored.includes(key),
+      );
+    } catch {
+      return [];
+    }
+  });
+  const toggle = (key: OptionalColumn, on: boolean) =>
+    setShown((current) => {
+      const next = on ? [...current, key] : current.filter((k) => k !== key);
+      localStorage.setItem(COLUMNS_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  return [shown, toggle] as const;
+}
 
 /** Data columns pinned on the left while the table scrolls sideways. */
 const PINNED_COLUMNS = 2;
@@ -112,7 +138,8 @@ export function ActivityTable({
   onUploadGarmin,
 }: ActivityTableProps) {
   const [pendingDelete, setPendingDelete] = useState<ActivityRow | null>(null);
-  const columns = columnsFor(view);
+  const [optionalColumns, toggleColumn] = useOptionalColumns();
+  const columns = columnsFor(view, optionalColumns);
   // One entry per data column.
   const pins = pinsFor(columns.map((column) => column.width));
   const pinClass = (pin: Pin | undefined, base: string) =>
@@ -125,7 +152,10 @@ export function ActivityTable({
     onSortChange(
       sort.field === field
         ? { field, direction: sort.direction === "asc" ? "desc" : "asc" }
-        : { field, direction: field === "title" || field === "type" ? "asc" : "desc" },
+        : {
+            field,
+            direction: ["title", "location", "type"].includes(field) ? "asc" : "desc",
+          },
     );
 
   return (
@@ -170,7 +200,32 @@ export function ActivityTable({
                   </button>
                 </TableHead>
               ))}
-              <TableHead className="w-10" />
+              <TableHead className="w-10">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={t("Columns")}
+                      title={t("Columns")}
+                    >
+                      <Columns3 />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>{t("Columns")}</DropdownMenuLabel>
+                    {OPTIONAL_COLUMNS.map(({ key, label }) => (
+                      <DropdownMenuCheckboxItem
+                        key={key}
+                        checked={optionalColumns.includes(key)}
+                        onCheckedChange={(checked) => toggleColumn(key, checked === true)}
+                      >
+                        {t(label)}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -287,7 +342,7 @@ export function ActivityTable({
             <AlertDialogTitle>{t("Delete activity?")}</AlertDialogTitle>
             <AlertDialogDescription>
               {t(
-                "“{{title}}” and its segments, weather and best performances will be removed. Photos and videos stay in the media folder.",
+                "“{{title}}” is removed with everything that belongs to it: its file, splits, weather, best performances, segment passes and summary, and the photos and videos copied into RunningMate. Linked originals stay where they are. This can't be undone.",
                 { title: pendingDelete?.title },
               )}
             </AlertDialogDescription>

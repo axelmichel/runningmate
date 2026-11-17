@@ -8,6 +8,7 @@ pub mod app;
 pub mod garmin;
 pub mod goals;
 pub mod import;
+pub mod locations;
 pub mod repair;
 pub mod segments;
 pub mod settings;

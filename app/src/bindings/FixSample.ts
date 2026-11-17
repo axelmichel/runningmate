@@ -7,4 +7,8 @@ export type FixSample = {
 /**
  * Unix time in milliseconds.
  */
-time: number, lat: number | null, lon: number | null, elevation: number | null, heartRate: number | null, };
+time: number, lat: number | null, lon: number | null, elevation: number | null, heartRate: number | null, 
+/**
+ * Steps per minute (both feet), as shown in the charts.
+ */
+steps: number | null, };

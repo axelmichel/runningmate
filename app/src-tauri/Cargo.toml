@@ -40,6 +40,7 @@ regex = "1.13.1"
 url = "2.5.8"
 keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
 tiny-skia = "0.12.0"
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png"] }
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
 [profile.release]
@@ -48,6 +49,20 @@ lto = true
 opt-level = 3
 panic = "abort"
 strip = true
+
+# Scaling and encoding photos is far too slow unoptimised, so these are optimised in debug
+# builds (the dev app and `cargo test`) too.
+[profile.dev.package.image]
+opt-level = 3
+
+[profile.dev.package.zune-jpeg]
+opt-level = 3
+
+[profile.dev.package.png]
+opt-level = 3
+
+[profile.dev.package.fdeflate]
+opt-level = 3
 
 [dev-dependencies]
 tempfile = "3.27.0"

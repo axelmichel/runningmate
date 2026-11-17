@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { HardDrive, Loader2, SlidersHorizontal, Sparkles } from "lucide-react";
+import { HardDrive, Loader2, PanelRight, SlidersHorizontal, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import { mediaMode, setMediaMode, type MediaMode } from "@/features/detail/media-mode";
@@ -27,17 +27,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { PANEL_BOXES, PANEL_SPORTS, hiddenBoxes, withBox } from "@/features/activities/panel-boxes";
+import { VIEW_MODES } from "@/features/activities/view-mode";
 import { useTheme, type Theme } from "@/hooks/use-theme";
 import { setLanguage, t, tk } from "@/i18n";
 import { api } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
 
+import { PhotoSizeSetting, ShrinkPhotos } from "./photo-size";
 import { formatBytes } from "./validation";
 
-type Page = "general" | "ai" | "storage";
+type Page = "general" | "panel" | "ai" | "storage";
 
 const ITEMS: (NavItem & { value: Page })[] = [
   { value: "general", label: tk("General"), icon: SlidersHorizontal },
+  { value: "panel", label: tk("Activity panel"), icon: PanelRight },
   { value: "ai", label: tk("AI summary"), icon: Sparkles },
   { value: "storage", label: tk("Storage"), icon: HardDrive },
 ];
@@ -104,10 +108,15 @@ function useSettings() {
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: api.getSettings });
   const save = useMutation({
     scope: { id: "settings" },
-    mutationFn: (change: Partial<SystemSettings>) => {
+    mutationFn: (
+      change: Partial<SystemSettings> | ((current: SystemSettings) => Partial<SystemSettings>),
+    ) => {
       const current = queryClient.getQueryData<SystemSettings>(["settings"]);
       if (!current) throw new Error("settings not loaded");
-      return api.saveSettings({ ...current, ...change });
+      return api.saveSettings({
+        ...current,
+        ...(typeof change === "function" ? change(current) : change),
+      });
     },
     onSuccess: (saved) => {
       queryClient.setQueryData(["settings"], saved);
@@ -160,6 +169,80 @@ function GeneralPage() {
         </RadioGroup>
       </div>
       <MediaModeSetting />
+      <div className="grid gap-2">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="location-lookup"
+            checked={settings.location_lookup}
+            onCheckedChange={(checked) => save.mutate({ location_lookup: checked === true })}
+          />
+          <Label htmlFor="location-lookup">{t("Look up place names")}</Label>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {t(
+            "Names the town and part of town an activity starts in, for the list and the search. Sends the start's coordinates to nominatim.openstreetmap.org, one activity a second, each only once.",
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** Which boxes the panel beside the activity list and in the detail window shows, per sport. */
+function PanelPage() {
+  const { settings, save } = useSettings();
+  if (!settings) return null;
+  const sports = PANEL_SPORTS.map((sport) => VIEW_MODES.find((v) => v.mode === sport)!);
+
+  return (
+    <div className="grid max-w-xl gap-4">
+      <p className="text-sm text-muted-foreground">
+        {t("Boxes shown beside the activity list and in the detail window.")}
+      </p>
+      {/* A grid rather than a table: every cell of a sport column centred on the same line. */}
+      <div role="table" className="grid grid-cols-[1fr_repeat(3,5rem)] text-sm">
+        <div role="row" className="contents text-muted-foreground">
+          <span role="columnheader" />
+          {sports.map(({ mode, label, icon: Icon }) => (
+            <span
+              key={mode}
+              role="columnheader"
+              className="flex flex-col items-center justify-end gap-1 pb-2 text-xs"
+            >
+              <Icon className="size-4" />
+              {t(label)}
+            </span>
+          ))}
+        </div>
+        {PANEL_BOXES.map(({ box, label }) => (
+          <div key={box} role="row" className="contents">
+            <span role="rowheader" className="flex items-center border-t py-2.5">
+              {t(label)}
+            </span>
+            {PANEL_SPORTS.map((sport) => (
+              <span key={sport} role="cell" className="flex items-center justify-center border-t">
+                <Checkbox
+                  aria-label={`${t(label)} · ${t(sports.find((s) => s.mode === sport)!.label)}`}
+                  checked={!hiddenBoxes(settings, sport).includes(box)}
+                  onCheckedChange={(checked) =>
+                    save.mutate((current) => ({
+                      activity_panel_hidden: withBox(
+                        current.activity_panel_hidden,
+                        sport,
+                        box,
+                        checked === true,
+                      ),
+                    }))
+                  }
+                />
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {t("Photos, comment and summary only show beside the activity list.")}
+      </p>
     </div>
   );
 }
@@ -269,8 +352,9 @@ function AiPage() {
 }
 
 function StoragePage() {
+  const { settings, save } = useSettings();
   const { data: info } = useQuery({ queryKey: ["storage"], queryFn: api.storageInfo });
-  if (!info) return null;
+  if (!info || !settings) return null;
   const rows = [
     [t("Data folder"), info.dataDir],
     [
@@ -281,22 +365,43 @@ function StoragePage() {
         size: formatBytes(info.mediaSize),
       }),
     ],
+    [
+      t("Activity files (TCX, GPX)"),
+      t("{{count}} files · {{size}}", {
+        count: info.activityFiles,
+        files: formatNumber(info.activityFiles),
+        size: formatBytes(info.activitySize),
+      }) +
+        (info.keptOriginals > 0
+          ? ` · ${t("including {{count}} originals kept by fixes ({{size}})", {
+              count: info.keptOriginals,
+              size: formatBytes(info.keptOriginalsSize),
+            })}`
+          : ""),
+    ],
     [t("Total size"), formatBytes(info.totalSize)],
   ];
   return (
-    <dl className="grid max-w-xl gap-3 text-sm">
-      {rows.map(([label, value]) => (
-        <div key={label} className="grid gap-0.5">
-          <dt className="text-muted-foreground">{label}</dt>
-          <dd className="font-medium break-all">{value}</dd>
-        </div>
-      ))}
-      <p className="text-xs text-muted-foreground">
-        {t(
-          "All data stays on this computer. The folder is shared with the previous Python version of RunningMate.",
-        )}
-      </p>
-    </dl>
+    <div className="grid max-w-xl gap-6">
+      <dl className="grid gap-3 text-sm">
+        {rows.map(([label, value]) => (
+          <div key={label} className="grid gap-0.5">
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd className="font-medium break-all">{value}</dd>
+          </div>
+        ))}
+        <p className="text-xs text-muted-foreground">
+          {t(
+            "All data stays on this computer. The folder is shared with the previous Python version of RunningMate.",
+          )}
+        </p>
+      </dl>
+      <PhotoSizeSetting
+        value={settings.photo_size}
+        onChange={(photo_size) => save.mutate({ photo_size })}
+      />
+      <ShrinkPhotos size={settings.photo_size} />
+    </div>
   );
 }
 
@@ -315,7 +420,7 @@ export function SystemSettingsDialog({
         <DialogHeader>
           <DialogTitle>{t("Settings")}</DialogTitle>
           <DialogDescription className="sr-only">
-            {t("Language, appearance, AI summary and storage")}
+            {t("Language, appearance, activity panel, AI summary and storage")}
           </DialogDescription>
         </DialogHeader>
         <Tabs
@@ -328,6 +433,9 @@ export function SystemSettingsDialog({
           <div className="min-h-0 min-w-0 flex-1 overflow-auto">
             <TabsContent value="general">
               <GeneralPage />
+            </TabsContent>
+            <TabsContent value="panel">
+              <PanelPage />
             </TabsContent>
             <TabsContent value="ai">
               <AiPage />

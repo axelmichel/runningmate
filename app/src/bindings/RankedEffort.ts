@@ -10,6 +10,10 @@ date: number,
  */
 elapsed: number, avgHeartRate: number | null, 
 /**
+ * Position of the pass within its activity, km.
+ */
+startKm: number, endKm: number, 
+/**
  * 1 for the fastest; equal times share a rank.
  */
 rank: number, };

@@ -10,11 +10,14 @@ const row = (index: number, distance: number | null): SegmentRow => ({
   distance,
   duration: null,
   pace: null,
+  gap: null,
   speed: null,
   heartRate: null,
   power: null,
   steps: null,
   elevationGain: null,
+  start: null,
+  end: null,
 });
 
 const points = [0, 0.4, 1, 1.6, 2.05].map((distance): TrackPoint => ({
@@ -25,6 +28,7 @@ const points = [0, 0.4, 1, 1.6, 2.05].map((distance): TrackPoint => ({
   elevation: 0,
   heartRate: null,
   pace: null,
+  gap: null,
   cadence: null,
 }));
 

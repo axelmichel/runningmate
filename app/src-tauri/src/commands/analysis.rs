@@ -2,8 +2,8 @@ use tauri::State;
 
 use crate::{
     analysis::{
-        self, HeartRateTrend, SegmentRow, fitness::FitnessDay, health::HealthReport,
-        series::TrackPoint, training_effect::TrainingEffect, zones::ZoneTime,
+        self, HeartRateTrend, SegmentRow, effect_score::EffectScore, fitness::FitnessDay,
+        health::HealthReport, series::TrackPoint, training_effect::TrainingEffect, zones::ZoneTime,
     },
     db::Db,
     error::AppResult,
@@ -27,9 +27,16 @@ pub fn activity_heart_rate_zones(db: State<'_, Db>, id: i64) -> AppResult<Option
     analysis::heart_rate_zones(&*db.conn()?, id, &paths::imports_dir()?)
 }
 
+/// EPOC-based training effect; `None` without any heart rate.
+/// The 1–12 effect score, beside the EPOC training effect.
 #[tauri::command(async)]
-pub fn activity_training_effect(db: State<'_, Db>, id: i64) -> AppResult<TrainingEffect> {
-    analysis::training_effect(&*db.conn()?, id)
+pub fn activity_effect_score(db: State<'_, Db>, id: i64) -> AppResult<EffectScore> {
+    analysis::effect_score(&*db.conn()?, id)
+}
+
+#[tauri::command(async)]
+pub fn activity_training_effect(db: State<'_, Db>, id: i64) -> AppResult<Option<TrainingEffect>> {
+    analysis::training_effect(&*db.conn()?, id, &paths::imports_dir()?)
 }
 
 #[tauri::command(async)]

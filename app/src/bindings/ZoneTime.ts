@@ -6,7 +6,7 @@ export type ZoneTime = {
  */
 zone: number, 
 /**
- * Lowest bpm in the zone. Zone 1 starts at half of the zone 5 bound, as in Python.
+ * Lowest bpm in the zone; zone 1 starts at the method's floor.
  */
 minBpm: number, maxBpm: number, seconds: number, 
 /**

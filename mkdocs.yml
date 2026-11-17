@@ -8,17 +8,25 @@ theme:
 nav:
   - Home: index.md
   - App :
-      - Main Screen: ui/main-window.md
+      - Sync: ui/sync.md
+      - Dashboard: ui/dashboard.md
+      - Activities: ui/main-window.md
       - Detail View: ui/detail-window.md
+      - Health Data: ui/health.md
       - Segments: ui/segments.md
       - Goals: ui/goals.md
       - Training: ui/training.md
       - Heat Map: ui/heat-map.md
+      - Gallery: ui/gallery.md
+      - Compare: ui/compare.md
+      - Settings: ui/settings.md
       - User Settings: ui/user-settings.md
   - Metrics :
+      - Activity Data: metrics/activity-data.md
       - Heart Rate Zones: metrics/heart-rate-zones.md
       - Pace: metrics/pace.md
       - Trainings Effect: metrics/trainings-effect.md
+      - Fitness and Form: metrics/fitness.md
 
 extra_javascript:
     - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML

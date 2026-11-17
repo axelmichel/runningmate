@@ -172,7 +172,7 @@ function LinkRuns({ status, onDone }: { status: SessionStatus; onDone: () => voi
                 onClick={() => link.mutate({ activityId: candidate.id, unlinked: false })}
               >
                 <Link2 className="size-3.5 shrink-0" />
-                <span className="min-w-0 flex-1 truncate">
+                <span data-private className="min-w-0 flex-1 truncate">
                   {candidate.title || t("Activity")} · {formatDateTime(candidate.date)}
                 </span>
                 <span className="tabular-nums">

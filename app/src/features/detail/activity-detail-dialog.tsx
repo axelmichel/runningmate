@@ -44,6 +44,8 @@ import { MapTab } from "./map-tab";
 import { RouteSegmentsTab } from "./route-segments-tab";
 import { SegmentsTab } from "./segments-tab";
 import { StatsTab } from "./stats-tab";
+import { UnsavedGuardProvider } from "./unsaved-guard";
+import { useGuard } from "./use-unsaved-guard";
 import { ZonesTab } from "./zones-tab";
 import { ShareTab } from "@/features/share/share-tab";
 
@@ -69,7 +71,7 @@ const NAV_ITEMS: (NavItem & { value: Tab })[] = [
   { value: "zones", label: tk("Heart rate zones"), icon: HeartPulse },
   { value: "share", label: tk("Social share"), icon: Share2 },
   { value: "edit", label: tk("Edit"), icon: Pencil },
-  { value: "fix", label: tk("Fix route"), icon: Wrench },
+  { value: "fix", label: tk("Fix data"), icon: Wrench },
 ];
 
 const NAV_STORAGE_KEY = "runningmate-detail-nav";
@@ -99,14 +101,26 @@ type ActivityDetailDialogProps = {
   dataDir?: string;
 };
 
-/** The detail window of the Python app (`ui/dialog_detail.py`) as a large dialog. */
-export function ActivityDetailDialog({
+/**
+ * The detail window of the Python app (`ui/dialog_detail.py`) as a large dialog. Leaving it, or
+ * a page, with unsaved edits asks first.
+ */
+export function ActivityDetailDialog(props: ActivityDetailDialogProps) {
+  return (
+    <UnsavedGuardProvider>
+      <GuardedDetailDialog {...props} />
+    </UnsavedGuardProvider>
+  );
+}
+
+function GuardedDetailDialog({
   activityId,
   onClose,
   onPrevious,
   onNext,
   dataDir,
 }: ActivityDetailDialogProps) {
+  const guard = useGuard();
   // The page the user picked stays selected while moving between activities.
   const [tab, setTab] = useState<Tab | null>(null);
   const [navOpen, toggleNav] = useStoredToggle(NAV_STORAGE_KEY, true);
@@ -117,8 +131,10 @@ export function ActivityDetailDialog({
       open={activityId !== null}
       onOpenChange={(open) => {
         if (open) return;
-        setTab(null);
-        onClose();
+        guard(() => {
+          setTab(null);
+          onClose();
+        });
       }}
     >
       <DialogContent
@@ -139,13 +155,14 @@ export function ActivityDetailDialog({
             activityId={activityId}
             dataDir={dataDir}
             tab={tab}
-            onTabChange={setTab}
+            onTabChange={(next) => guard(() => setTab(next))}
+            onSaved={() => setTab("general")}
             navOpen={navOpen}
             onToggleNav={toggleNav}
             maximized={maximized}
             onToggleMaximized={toggleMaximized}
-            onPrevious={onPrevious}
-            onNext={onNext}
+            onPrevious={onPrevious && (() => guard(onPrevious))}
+            onNext={onNext && (() => guard(onNext))}
           />
         )}
       </DialogContent>
@@ -157,7 +174,10 @@ type DetailContentProps = {
   activityId: number;
   dataDir?: string;
   tab: Tab | null;
+  /** Asks first when the page has unsaved edits. */
   onTabChange: (tab: Tab) => void;
+  /** Back to the overview after the edit page saved. */
+  onSaved: () => void;
   navOpen: boolean;
   onToggleNav: () => void;
   maximized: boolean;
@@ -190,6 +210,7 @@ function DetailContent({
   dataDir,
   tab,
   onTabChange,
+  onSaved,
   navOpen,
   onToggleNav,
   maximized,
@@ -219,10 +240,19 @@ function DetailContent({
           <PanelLeft />
         </HeaderButton>
         <div className="flex min-w-0 flex-1 items-baseline gap-3">
-          <DialogTitle className="truncate">{activity.title}</DialogTitle>
-          <DialogDescription className="shrink-0 whitespace-nowrap">
-            {formatDateTime(activity.date)} ·{" "}
-            {t(activity.typeDetail || activity.activityType || "")}
+          <DialogTitle data-private className="truncate">
+            {activity.title}
+          </DialogTitle>
+          <DialogDescription className="flex min-w-0 overflow-hidden whitespace-nowrap">
+            <span className="shrink-0">
+              {formatDateTime(activity.date)} ·{" "}
+              {t(activity.typeDetail || activity.activityType || "")}
+            </span>
+            {activity.location && (
+              <span data-private className="truncate" title={activity.location}>
+                &nbsp;· {activity.location}
+              </span>
+            )}
           </DialogDescription>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -281,10 +311,10 @@ function DetailContent({
             <ShareTab activity={activity} />
           </TabsContent>
           <TabsContent value="edit">
-            <EditTab activity={activity} onSaved={() => onTabChange("general")} />
+            <EditTab activity={activity} onSaved={onSaved} />
           </TabsContent>
           <TabsContent value="fix" className="h-full">
-            <FixTab activityId={activity.id} />
+            <FixTab activityId={activity.id} view={activity.viewMode} />
           </TabsContent>
         </div>
       </Tabs>

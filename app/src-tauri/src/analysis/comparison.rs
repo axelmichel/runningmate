@@ -119,8 +119,13 @@ pub struct SplitFacts {
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct TrainingEffectFacts {
-    /// 1 (very light) to 12 (very hard), relative to the last 90 days.
-    pub score_of_12: u8,
+    /// 0.0–5.0 from the peak EPOC, as on Garmin watches.
+    pub aerobic_training_effect: f64,
+    pub aerobic_meaning: &'static str,
+    /// 0.0–5.0 from the time near the maximum heart rate.
+    pub anaerobic_training_effect: f64,
+    pub anaerobic_meaning: &'static str,
+    pub peak_epoc_ml_per_kg: f64,
     pub recovery_hours: f64,
 }
 
@@ -499,15 +504,14 @@ pub fn comparison(
     } else {
         None
     };
-    let effect = if segment_rows.is_empty() {
-        None
-    } else {
-        let effect = training_effect(conn, id)?;
-        Some(TrainingEffectFacts {
-            score_of_12: effect.score,
-            recovery_hours: round1(effect.recovery_hours),
-        })
-    };
+    let effect = training_effect(conn, id, imports_dir)?.map(|e| TrainingEffectFacts {
+        aerobic_training_effect: e.aerobic,
+        aerobic_meaning: super::training_effect::label(e.aerobic),
+        anaerobic_training_effect: e.anaerobic,
+        anaerobic_meaning: super::training_effect::label(e.anaerobic),
+        peak_epoc_ml_per_kg: e.peak_epoc,
+        recovery_hours: e.recovery_hours.round(),
+    });
     let zones = heart_rate_zones(conn, id, imports_dir)?
         .unwrap_or_default()
         .into_iter()

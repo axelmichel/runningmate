@@ -20,6 +20,7 @@ type ColumnKey =
   | "type"
   | "date"
   | "title"
+  | "location"
   | "duration"
   | "distance"
   | "elevationGain"
@@ -48,8 +49,18 @@ const COLUMNS: Record<ColumnKey, Column> = {
     sortField: "title",
     width: 240,
     render: (row) => (
-      <span className="block truncate" title={row.title ?? undefined}>
+      <span data-private className="block truncate" title={row.title ?? undefined}>
         {row.title}
+      </span>
+    ),
+  },
+  location: {
+    header: tk("Location"),
+    sortField: "location",
+    width: 200,
+    render: (row) => (
+      <span data-private className="block truncate" title={row.location ?? undefined}>
+        {row.location}
       </span>
     ),
   },
@@ -119,6 +130,18 @@ const VIEW_COLUMNS: Record<ViewMode, ColumnKey[]> = {
   Cycling: [...BASE, "avgPace", "avgHeartRate", "avgPower", "pause"],
 };
 
-export function columnsFor(view: ViewMode): Column[] {
-  return VIEW_COLUMNS[view].map((key) => COLUMNS[key]);
+/** Columns that can be switched on in the table header, shown after the title. */
+export type OptionalColumn = "location";
+
+export const OPTIONAL_COLUMNS: { key: OptionalColumn; label: string }[] = [
+  { key: "location", label: tk("Location") },
+];
+
+export function columnsFor(view: ViewMode, optional: OptionalColumn[] = []): Column[] {
+  const keys = VIEW_COLUMNS[view].flatMap((key): ColumnKey[] =>
+    key === "title"
+      ? ["title", ...OPTIONAL_COLUMNS.map((c) => c.key).filter((k) => optional.includes(k))]
+      : [key],
+  );
+  return keys.map((key) => COLUMNS[key]);
 }

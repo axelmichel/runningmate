@@ -18,7 +18,7 @@ use crate::{
 #[serde(rename_all = "camelCase", default)]
 #[ts(export, optional_fields)]
 pub struct ActivityFilter {
-    /// Matched against title and comment.
+    /// Words that each have to appear in the title, comment or place name.
     pub search_text: Option<String>,
     /// Unix timestamp, inclusive.
     #[ts(type = "number", optional)]
@@ -41,13 +41,18 @@ pub struct ActivityFilter {
 impl ActivityFilter {
     /// Appends `AND …` conditions for the set fields to `sql` and their values to `params`.
     pub(crate) fn apply(&self, sql: &mut String, params: &mut Vec<Value>) {
-        if let Some(text) = self.search_text.as_deref().map(str::trim)
-            && !text.is_empty()
+        for word in self
+            .search_text
+            .as_deref()
+            .unwrap_or_default()
+            .split_whitespace()
         {
-            sql.push_str(" AND (activities.title LIKE ? OR activities.comment LIKE ?)");
-            let pattern = format!("%{text}%");
-            params.push(Value::Text(pattern.clone()));
-            params.push(Value::Text(pattern));
+            sql.push_str(
+                " AND (activities.title LIKE ? ESCAPE '\\' OR activities.comment LIKE ? ESCAPE '\\'
+                    OR activities.location LIKE ? ESCAPE '\\')",
+            );
+            let pattern = Value::Text(like_pattern(word));
+            params.extend([pattern.clone(), pattern.clone(), pattern]);
         }
         let ranges: [(&str, Option<Value>, Option<Value>); 4] = [
             (
@@ -84,6 +89,15 @@ impl ActivityFilter {
     }
 }
 
+/// `%word%` with the LIKE wildcards in `word` matched literally.
+fn like_pattern(word: &str) -> String {
+    let escaped = word
+        .replace('\\', "\\\\")
+        .replace('%', "\\%")
+        .replace('_', "\\_");
+    format!("%{escaped}%")
+}
+
 /// Sortable table columns. Type-specific columns fall back to the date in the `All` view.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -92,6 +106,7 @@ pub enum SortField {
     #[default]
     Date,
     Title,
+    Location,
     Type,
     Duration,
     Distance,
@@ -141,6 +156,8 @@ pub struct ActivityRow {
     #[ts(type = "number | null")]
     pub date: Option<i64>,
     pub title: Option<String>,
+    /// Place name of the start, once looked up.
+    pub location: Option<String>,
     pub activity_type: Option<String>,
     /// View the activity type belongs to (`All` for unknown types).
     pub view_mode: ViewMode,
@@ -218,6 +235,7 @@ fn sort_expression(view: ViewMode, field: SortField) -> String {
     match field {
         SortField::Date => "activities.date".into(),
         SortField::Title => "activities.title".into(),
+        SortField::Location => "activities.location".into(),
         SortField::Type => {
             "COALESCE(NULLIF(activities.type_detail, ''), activities.activity_type)".into()
         }
@@ -241,6 +259,7 @@ fn read_row(row: &Row) -> rusqlite::Result<ActivityRow> {
         id: row.get("id")?,
         date: opt_i64(row, "date")?,
         title: opt_string(row, "title")?,
+        location: opt_string(row, "location")?,
         view_mode: ViewMode::from_activity_type(activity_type.as_deref().unwrap_or_default()),
         activity_type,
         display_type: opt_string(row, "display_type")?,
@@ -269,7 +288,8 @@ pub fn list(conn: &Connection, query: &ActivityQuery) -> AppResult<ActivityPage>
     };
 
     let mut sql = format!(
-        "SELECT activities.id, activities.date, activities.title, activities.activity_type,
+        "SELECT activities.id, activities.date, activities.title, activities.location,
+            activities.activity_type,
             COALESCE(NULLIF(activities.type_detail, ''), activities.activity_type) AS display_type,
             activities.duration, activities.distance, activities.elevation_gain,
             {} AS avg_speed, {} AS avg_pace, {} AS avg_heart_rate, {} AS avg_power,
@@ -400,6 +420,8 @@ pub struct ActivityDetail {
     pub date: Option<i64>,
     pub title: Option<String>,
     pub comment: Option<String>,
+    /// Place name of the start, once looked up.
+    pub location: Option<String>,
     pub activity_type: Option<String>,
     pub type_detail: Option<String>,
     #[ts(type = "number | null")]
@@ -418,6 +440,8 @@ pub struct ActivityDetail {
     pub reviewed: bool,
     pub avg_speed: Option<f64>,
     pub avg_pace: Option<String>,
+    /// Grade-adjusted pace, "MM:SS" like `avg_pace`; `None` for rides.
+    pub avg_gap: Option<String>,
     pub fastest_pace: Option<String>,
     pub slowest_pace: Option<String>,
     #[ts(type = "number | null")]
@@ -528,7 +552,7 @@ pub fn get(conn: &Connection, id: i64) -> AppResult<ActivityDetail> {
     let sql = format!(
         "SELECT activities.*, {} AS avg_speed, {} AS avg_pace, {} AS fastest_pace,
             {} AS slowest_pace, {} AS avg_heart_rate, {} AS avg_power, {} AS avg_steps,
-            {} AS total_steps, {} AS pause, {equipment_cols},
+            {} AS total_steps, {} AS pause, {} AS avg_gap, {equipment_cols},
             EXISTS (SELECT 1 FROM media WHERE media.activity_id = activities.id) AS has_media
          FROM activities{equipment_join}
          WHERE activities.id = ?1",
@@ -541,6 +565,8 @@ pub fn get(conn: &Connection, id: i64) -> AppResult<ActivityDetail> {
         steps("avg_steps"),
         steps("total_steps"),
         typed("pause"),
+        // Like the steps, only runs and walks have it.
+        steps("avg_gap"),
     );
 
     Ok(conn.query_row(&sql, [id], |row| {
@@ -565,6 +591,7 @@ pub fn get(conn: &Connection, id: i64) -> AppResult<ActivityDetail> {
             date: opt_i64(row, "date")?,
             title: opt_string(row, "title")?,
             comment,
+            location: opt_string(row, "location")?,
             activity_type: opt_string(row, "activity_type")?,
             type_detail: opt_string(row, "type_detail")?,
             duration: opt_i64(row, "duration")?,
@@ -576,6 +603,7 @@ pub fn get(conn: &Connection, id: i64) -> AppResult<ActivityDetail> {
             edited,
             avg_speed: opt_f64(row, "avg_speed")?,
             avg_pace: opt_string(row, "avg_pace")?,
+            avg_gap: opt_string(row, "avg_gap")?,
             fastest_pace: opt_string(row, "fastest_pace")?,
             slowest_pace: opt_string(row, "slowest_pace")?,
             avg_heart_rate: opt_i64(row, "avg_heart_rate")?,
@@ -702,11 +730,32 @@ pub fn set_equipment(
     Ok(())
 }
 
-/// Deletes an activity with its per-type row, segments, weather and derived data. Media rows
-/// and files are kept, as in the Python app. The assigned shoe or bike gives the distance back.
-pub fn delete(conn: &mut Connection, id: i64) -> AppResult<()> {
+/// Files of a deleted activity, for the caller to remove from disk.
+#[derive(Debug, Default, PartialEq)]
+pub struct DeletedFiles {
+    /// Archive name, for `{file_id}.tcx.tar.gz`, its original and the Python images.
+    pub file_id: Option<String>,
+    /// Photos and videos as stored: copies in the media folder or linked originals.
+    pub media: Vec<String>,
+}
+
+/// Deletes an activity with everything belonging to it: its per-type row, splits, weather,
+/// photo and video rows and derived data. A training session it was linked to stays, unlinked;
+/// segments drawn on it stay too. The assigned shoe or bike gives the distance back. Returns the
+/// files to remove.
+pub fn delete(conn: &mut Connection, id: i64) -> AppResult<DeletedFiles> {
     let view = ViewMode::from_activity_type(&activity_type_of(conn, id)?);
     let tx = conn.transaction()?;
+    let file_id: Option<String> = tx.query_row(
+        "SELECT file_id FROM activities WHERE id = ?1",
+        [id],
+        |row| row.get(0),
+    )?;
+    let media = {
+        let mut stmt = tx.prepare("SELECT file_path FROM media WHERE activity_id = ?1")?;
+        stmt.query_map([id], |row| row.get(0))?
+            .collect::<rusqlite::Result<Vec<String>>>()?
+    };
     add_to_equipment(&tx, id, -distance_of(&tx, id)?)?;
     if let Some(table) = view.table() {
         tx.execute(&format!("DELETE FROM {table} WHERE activity_id = ?1"), [id])?;
@@ -721,11 +770,16 @@ pub fn delete(conn: &mut Connection, id: i64) -> AppResult<()> {
         "ai_summaries",
         "segment_efforts",
         "activity_tracks",
+        "media",
     ] {
         tx.execute(&format!("DELETE FROM {table} WHERE activity_id = ?1"), [id])?;
     }
+    tx.execute(
+        "UPDATE training_sessions SET activity_id = NULL WHERE activity_id = ?1",
+        [id],
+    )?;
     tx.commit()?;
-    Ok(())
+    Ok(DeletedFiles { file_id, media })
 }
 
 #[cfg(test)]
@@ -843,6 +897,41 @@ pub(crate) mod tests {
         let mut q = query(ViewMode::All);
         q.filter.max_date = Some(1_700_150_000);
         assert_eq!(ids(&list(&conn, &q).unwrap()), [2, 1]);
+    }
+
+    #[test]
+    fn search_matches_every_word_in_title_comment_or_place() {
+        let db = seeded();
+        let conn = db.conn().unwrap();
+        conn.execute(
+            "UPDATE activities SET location = 'Freiburg im Breisgau, Wiehre' WHERE id IN (1, 4)",
+            [],
+        )
+        .unwrap();
+        let search = |text: &str| {
+            let mut q = query(ViewMode::All);
+            q.filter.search_text = Some(text.into());
+            ids(&list(&conn, &q).unwrap())
+        };
+        assert_eq!(search("wiehre"), [4, 1]);
+        // Each word may match a different field, but all have to match.
+        assert_eq!(search("freiburg morning"), [1]);
+        assert_eq!(search("  Muddy   wiehre "), [4]);
+        assert_eq!(search("freiburg ride"), Vec::<i64>::new());
+        // Not a phrase: the words may come in any order.
+        assert_eq!(search("run morning"), [1]);
+        // LIKE wildcards are plain characters.
+        assert_eq!(search("%"), Vec::<i64>::new());
+        assert_eq!(search("_"), Vec::<i64>::new());
+        let page = list(&conn, &query(ViewMode::All)).unwrap();
+        assert_eq!(
+            page.rows[3].location.as_deref(),
+            Some("Freiburg im Breisgau, Wiehre")
+        );
+        assert_eq!(
+            get(&conn, 4).unwrap().location.as_deref(),
+            Some("Freiburg im Breisgau, Wiehre")
+        );
     }
 
     #[test]
@@ -987,12 +1076,15 @@ pub(crate) mod tests {
             [],
         )
         .unwrap();
-        delete(&mut conn, 1).unwrap();
+        crate::db::media::insert(&conn, 1, crate::db::media::MediaType::Image, "/m/a.jpg").unwrap();
+        let files = delete(&mut conn, 1).unwrap();
+        assert_eq!(files.media, ["/m/a.jpg"]);
         assert!(matches!(get(&conn, 1), Err(AppError::NotFound(_))));
         let left: i64 = conn
             .query_row(
                 "SELECT (SELECT COUNT(*) FROM runs WHERE activity_id = 1)
-                      + (SELECT COUNT(*) FROM weather WHERE activity_id = 1)",
+                      + (SELECT COUNT(*) FROM weather WHERE activity_id = 1)
+                      + (SELECT COUNT(*) FROM media WHERE activity_id = 1)",
                 [],
                 |r| r.get(0),
             )

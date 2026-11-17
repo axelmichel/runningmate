@@ -177,6 +177,10 @@ pub struct GoalProgress {
     #[ts(type = "number")]
     pub hits: i64,
     pub last_hit: Option<GoalActivity>,
+    /// s, the fastest hit scaled to the target distance, e.g. 48 min for a 10 km goal hit by
+    /// 12 km in 57:36. Per-activity distance goals only.
+    #[ts(type = "number | null")]
+    pub best_duration: Option<i64>,
 }
 
 /// A goal an activity hit.
@@ -555,6 +559,15 @@ fn progress_of<Tz: TimeZone>(
             date: activity.date,
         }
     });
+    let best_duration = (goal.spec.metric == GoalMetric::Distance && goal.spec.per_activity)
+        .then(|| {
+            hits.iter()
+                .map(|&index| &activities[index])
+                .filter(|a| a.distance > 0.0 && a.duration > 0)
+                .map(|a| (a.duration as f64 * goal.spec.target / a.distance).round() as i64)
+                .min()
+        })
+        .flatten();
     Ok(GoalProgress {
         goal,
         status,
@@ -565,6 +578,7 @@ fn progress_of<Tz: TimeZone>(
         streak,
         hits: hits.len() as i64,
         last_hit,
+        best_duration,
     })
 }
 
@@ -1059,5 +1073,20 @@ mod tests {
         )
         .unwrap();
         assert!(list(&conn).unwrap().is_empty());
+    }
+
+    #[test]
+    fn distance_goals_keep_the_fastest_hit_scaled_to_the_target() {
+        let db = seeded();
+        let conn = db.conn().unwrap();
+        let ten = spec(GoalMetric::Distance, 10.0, true, GoalPeriod::Open);
+        create(&conn, &input(ViewMode::Running, ten, "2025-11-01"), 0).unwrap();
+        let total = spec(GoalMetric::Distance, 30.0, false, GoalPeriod::Open);
+        create(&conn, &input(ViewMode::Running, total, "2025-11-01"), 0).unwrap();
+        let progress = progress_at(&conn, at("2025-11-12", 12));
+        // 10 km in 2900 s beats 21.1 km in 7200 s, which is 3412 s for 10 km.
+        assert_eq!(progress[0].hits, 2);
+        assert_eq!(progress[0].best_duration, Some(2900));
+        assert_eq!(progress[1].best_duration, None);
     }
 }

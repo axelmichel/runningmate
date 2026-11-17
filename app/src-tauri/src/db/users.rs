@@ -38,6 +38,54 @@ impl Gender {
     }
 }
 
+/// How the heart-rate zones are set.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum ZoneMethod {
+    /// The user's own upper bounds (`zone1`–`zone5`).
+    #[default]
+    Custom,
+    /// Shares of the maximum heart rate.
+    PercentMax,
+    /// Shares of the heart-rate reserve (max − rest) on top of the resting heart rate.
+    Karvonen,
+}
+
+impl ZoneMethod {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Custom => "custom",
+            Self::PercentMax => "percentMax",
+            Self::Karvonen => "karvonen",
+        }
+    }
+
+    fn parse(value: &str) -> Self {
+        match value {
+            "percentMax" => Self::PercentMax,
+            "karvonen" => Self::Karvonen,
+            _ => Self::Custom,
+        }
+    }
+}
+
+/// Effective heart-rate zones: where zone 1 starts and the upper bound of each zone (bpm).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ZoneBounds {
+    #[ts(type = "number")]
+    pub floor: i64,
+    /// Upper bound of zones 1–5, ascending.
+    #[ts(type = "[number, number, number, number, number]")]
+    pub upper: [i64; 5],
+}
+
+/// Upper bounds of zones 1–5 in percent for the derived methods; zone 1 starts at `FLOOR_PERCENT`.
+const ZONE_PERCENTS: [i64; 5] = [60, 70, 80, 90, 100];
+const FLOOR_PERCENT: i64 = 50;
+
 #[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
@@ -60,9 +108,14 @@ pub struct User {
     pub hr_max: Option<i64>,
     pub vo2max: Option<f64>,
     pub gender: Option<Gender>,
-    /// Upper bound (bpm) of zones 1–5; `None` until the zones have been saved.
+    pub zone_method: ZoneMethod,
+    /// The user's own upper bounds (bpm) of zones 1–5; `None` until they have been saved.
+    /// Kept when another method is chosen, so switching back restores them.
     #[ts(type = "[number, number, number, number, number] | null")]
-    pub zones: Option<[i64; 5]>,
+    pub custom_zones: Option<[i64; 5]>,
+    /// The zones in effect for `zone_method` (see [`resolve_zones`]); `None` while the method
+    /// lacks what it needs: saved custom bounds, a maximum or (Karvonen) a resting heart rate.
+    pub zones: Option<ZoneBounds>,
 }
 
 #[derive(Debug, Clone, Deserialize, TS)]
@@ -91,9 +144,12 @@ pub struct ZonesInput {
     pub vo2max: f64,
     #[ts(type = "number")]
     pub hr_min: i64,
-    /// Upper bound (bpm) of zones 1–5, ascending.
-    #[ts(type = "[number, number, number, number, number]")]
-    pub zones: [i64; 5],
+    pub method: ZoneMethod,
+    /// Upper bound (bpm) of zones 1–5, ascending; required for `custom`, kept as they are when
+    /// missing for the other methods.
+    #[serde(default)]
+    #[ts(optional, type = "[number, number, number, number, number] | null")]
+    pub zones: Option<[i64; 5]>,
 }
 
 /// Age in whole years on `today` for a "DD.MM.YYYY" birthday.
@@ -106,12 +162,52 @@ pub fn age_on(birthday: &str, today: NaiveDate) -> Option<i64> {
     (age >= 0).then_some(i64::from(age))
 }
 
-/// Suggested zone bounds: 60/70/80/90/100 % of the maximum heart rate, which is the profile's
-/// value or, without one, `220 - age`. (The Python app subtracted the age from the profile value
-/// too, so a measured maximum of 185 at 56 gave a zone 5 of 129.)
+/// Zones at `ZONE_PERCENTS` of the range from `base` up to `max`, rounded down.
+fn share_of(base: i64, max: i64) -> ZoneBounds {
+    let at = |percent: i64| base + (max - base) * percent / 100;
+    ZoneBounds {
+        floor: at(FLOOR_PERCENT),
+        upper: ZONE_PERCENTS.map(at),
+    }
+}
+
+/// The zones in effect, the one place every consumer gets them from (via [`get`] or [`zones`]):
+/// - `Custom`: the saved bounds; zone 1 starts at half of the zone 5 bound, as in Python.
+/// - `PercentMax`: 60/70/80/90/100 % of the maximum heart rate, zone 1 from 50 %.
+/// - `Karvonen`: rest + p × (max − rest) for the same shares p.
+///
+/// `None` when the method lacks its inputs; heart rates of 0 count as missing.
+pub fn resolve_zones(
+    method: ZoneMethod,
+    custom: Option<[i64; 5]>,
+    hr_min: Option<i64>,
+    hr_max: Option<i64>,
+) -> Option<ZoneBounds> {
+    let max = hr_max.filter(|m| *m > 0);
+    match method {
+        ZoneMethod::Custom => custom.map(|upper| ZoneBounds {
+            floor: upper[4] / 2,
+            upper,
+        }),
+        ZoneMethod::PercentMax => max.map(|max| share_of(0, max)),
+        ZoneMethod::Karvonen => {
+            let rest = hr_min.filter(|r| *r > 0)?;
+            max.filter(|max| rest < *max).map(|max| share_of(rest, max))
+        }
+    }
+}
+
+/// The user's zones in effect; `None` without a user or while the method lacks its inputs.
+pub fn zones(conn: &Connection) -> AppResult<Option<ZoneBounds>> {
+    Ok(get(conn)?.and_then(|u| u.zones))
+}
+
+/// Suggested custom bounds: the `PercentMax` zones of the profile's maximum heart rate or,
+/// without one, of `220 - age`. (The Python app subtracted the age from the profile value too,
+/// so a measured maximum of 185 at 56 gave a zone 5 of 129.)
 pub fn suggested_zones(hr_max: Option<i64>, age: i64) -> [i64; 5] {
-    let max = hr_max.filter(|m| *m > 0).unwrap_or(220 - age) as f64;
-    [0.6, 0.7, 0.8, 0.9, 1.0].map(|share| (max * share) as i64)
+    let max = hr_max.filter(|m| *m > 0).unwrap_or(220 - age);
+    share_of(0, max).upper
 }
 
 pub fn get(conn: &Connection) -> AppResult<Option<User>> {
@@ -124,6 +220,14 @@ pub fn get(conn: &Connection) -> AppResult<Option<User>> {
                 opt_i64(row, "zone4")?,
                 opt_i64(row, "zone5")?,
             ];
+            let custom_zones = zones
+                .iter()
+                .all(Option::is_some)
+                .then(|| zones.map(Option::unwrap_or_default));
+            let zone_method =
+                ZoneMethod::parse(&opt_string(row, "zone_method")?.unwrap_or_default());
+            let hr_min = opt_i64(row, "hr_min")?;
+            let hr_max = opt_i64(row, "hr_max")?;
             Ok(User {
                 id: row.get("id")?,
                 name: opt_string(row, "name")?,
@@ -131,16 +235,15 @@ pub fn get(conn: &Connection) -> AppResult<Option<User>> {
                 height: opt_i64(row, "height")?,
                 birthday: opt_string(row, "birthday")?,
                 age: opt_i64(row, "age")?,
-                hr_min: opt_i64(row, "hr_min")?,
-                hr_max: opt_i64(row, "hr_max")?,
+                hr_min,
+                hr_max,
                 vo2max: opt_f64(row, "vo2max")?,
                 gender: opt_string(row, "gender")?
                     .as_deref()
                     .and_then(Gender::parse),
-                zones: zones
-                    .iter()
-                    .all(Option::is_some)
-                    .then(|| zones.map(Option::unwrap_or_default)),
+                zone_method,
+                custom_zones,
+                zones: resolve_zones(zone_method, custom_zones, hr_min, hr_max),
             })
         })
         .optional()?)
@@ -196,17 +299,41 @@ pub fn save(conn: &Connection, input: &UserInput) -> AppResult<User> {
     get(conn)?.ok_or_else(|| AppError::NotFound("user".into()))
 }
 
+/// Saves VO2max and the zone method; custom bounds are stored when given (and required for
+/// `custom`). The derived methods need a maximum and, for Karvonen, a resting heart rate.
 pub fn save_zones(conn: &Connection, input: &ZonesInput) -> AppResult<User> {
     let user = get(conn)?.ok_or_else(|| AppError::NotFound("user".into()))?;
-    if !input.zones.windows(2).all(|pair| pair[0] < pair[1]) {
+    if let Some(bounds) = input.zones
+        && !bounds.windows(2).all(|pair| pair[0] < pair[1])
+    {
         return Err(AppError::Invalid("zone bounds must be ascending".into()));
     }
-    let [z1, z2, z3, z4, z5] = input.zones;
+    let custom = input.zones.or(user.custom_zones);
+    if resolve_zones(input.method, custom, Some(input.hr_min), user.hr_max).is_none() {
+        return Err(AppError::Invalid(
+            match input.method {
+                ZoneMethod::Custom => "custom zones need five bounds",
+                ZoneMethod::PercentMax => {
+                    "zones from the maximum heart rate need one in the profile"
+                }
+                ZoneMethod::Karvonen => {
+                    "Karvonen zones need a resting and a maximum heart rate in the profile"
+                }
+            }
+            .into(),
+        ));
+    }
     conn.execute(
-        "UPDATE users SET vo2max = ?1, hr_min = ?2, zone1 = ?3, zone2 = ?4, zone3 = ?5,
-            zone4 = ?6, zone5 = ?7 WHERE id = ?8",
-        params![input.vo2max, input.hr_min, z1, z2, z3, z4, z5, user.id],
+        "UPDATE users SET vo2max = ?1, hr_min = ?2, zone_method = ?3 WHERE id = ?4",
+        params![input.vo2max, input.hr_min, input.method.as_str(), user.id],
     )?;
+    if let Some([z1, z2, z3, z4, z5]) = input.zones {
+        conn.execute(
+            "UPDATE users SET zone1 = ?1, zone2 = ?2, zone3 = ?3, zone4 = ?4, zone5 = ?5
+             WHERE id = ?6",
+            params![z1, z2, z3, z4, z5, user.id],
+        )?;
+    }
     get(conn)?.ok_or_else(|| AppError::NotFound("user".into()))
 }
 
@@ -384,11 +511,125 @@ mod tests {
             &ZonesInput {
                 vo2max: 48.0,
                 hr_min: 50,
-                zones: [110, 130, 150, 165, 185],
+                method: ZoneMethod::Custom,
+                zones: Some([110, 130, 150, 165, 185]),
             },
         )
         .unwrap();
-        assert_eq!(user.zones, Some([110, 130, 150, 165, 185]));
+        assert_eq!(user.custom_zones, Some([110, 130, 150, 165, 185]));
+        assert_eq!(
+            user.zones,
+            Some(ZoneBounds {
+                floor: 92,
+                upper: [110, 130, 150, 165, 185]
+            })
+        );
+
+        // A derived method keeps the custom bounds for switching back; the profile drives it.
+        let user = save_zones(
+            &conn,
+            &ZonesInput {
+                vo2max: 48.0,
+                hr_min: 50,
+                method: ZoneMethod::Karvonen,
+                zones: None,
+            },
+        )
+        .unwrap();
+        assert_eq!(user.zone_method, ZoneMethod::Karvonen);
+        assert_eq!(user.custom_zones, Some([110, 130, 150, 165, 185]));
+        assert_eq!(user.zones.unwrap().upper, [131, 144, 158, 171, 185]);
+        save(
+            &conn,
+            &UserInput {
+                hr_min: 60,
+                ..input()
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            zones(&conn).unwrap().unwrap().upper,
+            [135, 147, 160, 172, 185]
+        );
+    }
+
+    #[test]
+    fn resolves_zones_for_each_method() {
+        let custom = Some([110, 130, 150, 165, 185]);
+        let resolve = |method| resolve_zones(method, custom, Some(50), Some(185));
+        assert_eq!(
+            resolve(ZoneMethod::Custom),
+            Some(ZoneBounds {
+                floor: 92,
+                upper: [110, 130, 150, 165, 185]
+            })
+        );
+        // 185 × 50/60/70/80/90/100 %, rounded down as the suggestion is.
+        assert_eq!(
+            resolve(ZoneMethod::PercentMax),
+            Some(ZoneBounds {
+                floor: 92,
+                upper: [111, 129, 148, 166, 185]
+            })
+        );
+        // 50 + p × 135.
+        assert_eq!(
+            resolve(ZoneMethod::Karvonen),
+            Some(ZoneBounds {
+                floor: 117,
+                upper: [131, 144, 158, 171, 185]
+            })
+        );
+    }
+
+    #[test]
+    fn zones_need_their_inputs() {
+        let custom = Some([110, 130, 150, 165, 185]);
+        assert_eq!(
+            resolve_zones(ZoneMethod::Custom, None, Some(50), Some(185)),
+            None
+        );
+        assert_eq!(
+            resolve_zones(ZoneMethod::PercentMax, custom, Some(50), None),
+            None
+        );
+        assert_eq!(
+            resolve_zones(ZoneMethod::PercentMax, custom, None, Some(0)),
+            None
+        );
+        // Percent of max doesn't need a resting heart rate; Karvonen does.
+        assert!(resolve_zones(ZoneMethod::PercentMax, None, None, Some(185)).is_some());
+        assert_eq!(
+            resolve_zones(ZoneMethod::Karvonen, custom, None, Some(185)),
+            None
+        );
+        assert_eq!(
+            resolve_zones(ZoneMethod::Karvonen, custom, Some(0), Some(185)),
+            None
+        );
+        assert_eq!(
+            resolve_zones(ZoneMethod::Karvonen, custom, Some(50), None),
+            None
+        );
+        assert_eq!(
+            resolve_zones(ZoneMethod::Karvonen, custom, Some(190), Some(185)),
+            None
+        );
+    }
+
+    #[test]
+    fn existing_users_keep_custom_zones() {
+        let db = Db::open_in_memory().unwrap();
+        let conn = db.conn().unwrap();
+        conn.execute(
+            "INSERT INTO users (name, hr_min, hr_max, zone1, zone2, zone3, zone4, zone5)
+             VALUES ('Axel', 50, 185, 98, 114, 131, 147, 164)",
+            [],
+        )
+        .unwrap();
+        let user = get(&conn).unwrap().unwrap();
+        assert_eq!(user.zone_method, ZoneMethod::Custom);
+        assert_eq!(user.zones.unwrap().upper, [98, 114, 131, 147, 164]);
     }
 
     #[test]
@@ -404,12 +645,26 @@ mod tests {
         let zones = ZonesInput {
             vo2max: 0.0,
             hr_min: 50,
-            zones: [150, 140, 160, 170, 180],
+            method: ZoneMethod::Custom,
+            zones: Some([150, 140, 160, 170, 180]),
         };
         assert!(matches!(
             save_zones(&conn, &zones),
             Err(AppError::Invalid(_))
         ));
+        // Custom without bounds (none saved yet), and Karvonen without a resting heart rate.
+        for (method, hr_min) in [(ZoneMethod::Custom, 50), (ZoneMethod::Karvonen, 0)] {
+            let zones = ZonesInput {
+                vo2max: 0.0,
+                hr_min,
+                method,
+                zones: None,
+            };
+            assert!(matches!(
+                save_zones(&conn, &zones),
+                Err(AppError::Invalid(_))
+            ));
+        }
     }
 
     #[test]

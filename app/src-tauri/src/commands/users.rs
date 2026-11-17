@@ -3,7 +3,9 @@ use tauri::State;
 use crate::{
     db::{
         Db,
-        users::{self, Equipment, EquipmentKind, User, UserInput, ZonesInput},
+        users::{
+            self, Equipment, EquipmentKind, User, UserInput, ZoneBounds, ZoneMethod, ZonesInput,
+        },
     },
     error::{AppError, AppResult},
 };
@@ -35,6 +37,22 @@ pub fn suggested_heart_rate_zones(db: State<'_, Db>) -> AppResult<[i64; 5]> {
         .or(user.age)
         .unwrap_or(0);
     Ok(users::suggested_zones(user.hr_max, age))
+}
+
+/// The zones `method` would give with the saved profile and custom bounds, for the zones form
+/// to show before it is saved; `None` while the method lacks its inputs.
+#[tauri::command(async)]
+pub fn preview_heart_rate_zones(
+    db: State<'_, Db>,
+    method: ZoneMethod,
+) -> AppResult<Option<ZoneBounds>> {
+    let user = users::get(&*db.conn()?)?.ok_or_else(|| AppError::NotFound("user".into()))?;
+    Ok(users::resolve_zones(
+        method,
+        user.custom_zones,
+        user.hr_min,
+        user.hr_max,
+    ))
 }
 
 #[tauri::command(async)]

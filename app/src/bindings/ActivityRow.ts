@@ -8,7 +8,11 @@ export type ActivityRow = { id: number,
 /**
  * Unix timestamp of the start.
  */
-date: number | null, title: string | null, activityType: string | null, 
+date: number | null, title: string | null, 
+/**
+ * Place name of the start, once looked up.
+ */
+location: string | null, activityType: string | null, 
 /**
  * View the activity type belongs to (`All` for unknown types).
  */

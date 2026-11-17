@@ -17,6 +17,10 @@ duration: number | null,
  */
 pace: number | null, 
 /**
+ * Grade-adjusted pace, min/km; `None` for rides and splits stored before it was computed.
+ */
+gap: number | null, 
+/**
  * m/s.
  */
 speed: number | null, heartRate: number | null, power: number | null, 
@@ -27,4 +31,8 @@ steps: number | null,
 /**
  * Metres.
  */
-elevationGain: number | null, };
+elevationGain: number | null, 
+/**
+ * Unix milliseconds of the first and last sample, for correcting the split's samples.
+ */
+start: number | null, end: number | null, };

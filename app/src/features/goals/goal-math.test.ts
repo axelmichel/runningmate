@@ -184,6 +184,7 @@ describe("goal progress", () => {
       streak: 0,
       hits: 0,
       lastHit: null,
+      bestDuration: null,
     };
     expect(goalHint(progress, 5 * 86400)).toBe("60 km to go · 2 days left");
     expect(goalHint({ ...progress, status: "missed" }, 0)).toBe("Missed");

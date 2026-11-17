@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Pencil, Trash2, X } from "lucide-react";
+import { ChartNoAxesCombined, Check, Pencil, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -27,6 +27,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VIEW_MODES } from "@/features/activities/view-mode";
+import { useOpenCompare } from "@/features/compare/compare-context";
+import { pickPasses, segmentSelection } from "@/features/compare/compare-math";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { formatDate, formatNumber } from "@/lib/format";
@@ -88,7 +90,9 @@ function Title({ segment }: { segment: RouteSegment }) {
   if (!editing) {
     return (
       <div className="flex min-w-0 items-center gap-1">
-        <DialogTitle className="truncate">{segment.title}</DialogTitle>
+        <DialogTitle data-private className="truncate">
+          {segment.title}
+        </DialogTitle>
         <Button
           variant="ghost"
           size="icon-sm"
@@ -148,14 +152,15 @@ function Content({
   segmentId,
   highlight,
   onOpenActivity,
-  onDeleted,
+  onClose,
 }: {
   segmentId: number;
   highlight?: number;
   onOpenActivity?: (activityId: number) => void;
-  onDeleted: () => void;
+  onClose: () => void;
 }) {
   const queryClient = useQueryClient();
+  const openCompare = useOpenCompare();
   const [confirming, setConfirming] = useState(false);
   const { data: detail } = useQuery({
     queryKey: ["routeSegment", segmentId],
@@ -165,7 +170,7 @@ function Content({
     mutationFn: () => api.deleteSegment(segmentId),
     onSuccess: () => {
       toast.success(t("Segment deleted"));
-      onDeleted();
+      onClose();
       invalidateSegments(queryClient);
     },
     onError: (error) =>
@@ -191,6 +196,20 @@ function Content({
             {t("created {{date}}", { date: formatDate(segment.created) })}
           </DialogDescription>
         </div>
+        {openCompare && leaderboard.length > 1 && (
+          <Button
+            variant="outline"
+            size="sm"
+            title={t("Compare the fastest passes on the Compare page")}
+            onClick={() => {
+              onClose();
+              openCompare(segmentSelection(segment, pickPasses(leaderboard, "fastest")));
+            }}
+          >
+            <ChartNoAxesCombined />
+            {t("Compare")}
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon-sm"
@@ -303,7 +322,7 @@ export function SegmentDetailDialog({
             segmentId={segmentId}
             highlight={highlight}
             onOpenActivity={onOpenActivity}
-            onDeleted={onClose}
+            onClose={onClose}
           />
         )}
       </DialogContent>

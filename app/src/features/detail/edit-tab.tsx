@@ -22,6 +22,7 @@ import { api } from "@/lib/api";
 import { formatNumber, parseDuration } from "@/lib/format";
 
 import { MediaGallery } from "./media-gallery";
+import { useUnsavedChanges } from "./use-unsaved-guard";
 
 /** Unix timestamp → `datetime-local` input value in local time. */
 function toLocalInput(timestamp: number | null): string {
@@ -96,7 +97,7 @@ export function EditTab({ activity, onSaved }: { activity: ActivityDetail; onSav
     queryKey: ["typeDetails", activity.viewMode],
     queryFn: () => api.activityTypeDetails(activity.viewMode),
   });
-  const [form, setForm] = useState({
+  const [initial] = useState(() => ({
     title: activity.title ?? "",
     comment: activity.comment ?? "",
     typeDetail: activity.typeDetail ?? "",
@@ -104,7 +105,8 @@ export function EditTab({ activity, onSaved }: { activity: ActivityDetail; onSav
     duration: durationText(activity.duration),
     distance: activity.distance?.toString() ?? "",
     elevation: activity.elevationGain?.toString() ?? "",
-  });
+  }));
+  const [form, setForm] = useState(initial);
   const duration = parseDuration(form.duration);
   const distance = Number(form.distance);
   const elevation = Number(form.elevation);
@@ -135,6 +137,11 @@ export function EditTab({ activity, onSaved }: { activity: ActivityDetail; onSav
     onError: (error) => toast.error(t("Could not save: {{error}}", { error: String(error) })),
   });
 
+  const dirty = (Object.keys(form) as (keyof typeof form)[]).some((k) => form[k] !== initial[k]);
+  useUnsavedChanges(dirty, () =>
+    valid ? save.mutateAsync() : Promise.reject(new Error("invalid form")),
+  );
+
   const set = (key: keyof typeof form) => (event: { target: { value: string } }) =>
     setForm({ ...form, [key]: event.target.value });
 
@@ -150,11 +157,17 @@ export function EditTab({ activity, onSaved }: { activity: ActivityDetail; onSav
         >
           <div className="grid gap-2">
             <Label htmlFor="title">{t("Title")}</Label>
-            <Input id="title" value={form.title} onChange={set("title")} />
+            <Input data-private id="title" value={form.title} onChange={set("title")} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="comment">{t("Comment")}</Label>
-            <Textarea id="comment" rows={5} value={form.comment} onChange={set("comment")} />
+            <Textarea
+              data-private
+              id="comment"
+              rows={5}
+              value={form.comment}
+              onChange={set("comment")}
+            />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">

@@ -39,12 +39,15 @@ export function SearchBar({ filter, onFilterChange, onClose }: SearchBarProps) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="relative w-72">
+      <div className="relative w-80">
         <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           ref={input}
           value={text}
-          placeholder={t("Search title or comment…")}
+          placeholder={t("Search title, comment, place or 10km, >21…")}
+          title={t(
+            "Every word has to appear in the title, comment or place. Distances: 10km (about), >21, <5km, 10-15km.",
+          )}
           className="pl-8"
           onChange={(event) => setText(event.target.value)}
           onKeyDown={(event) => event.key === "Escape" && onClose()}

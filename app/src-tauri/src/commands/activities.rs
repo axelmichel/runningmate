@@ -1,6 +1,10 @@
-use std::{fs, path::Path};
+use std::{
+    fs,
+    path::Path,
+    sync::atomic::{AtomicBool, Ordering as AtomicOrdering},
+};
 
-use tauri::{Manager, State};
+use tauri::{Emitter, Manager, State};
 
 use crate::{
     activity_type::ViewMode,
@@ -10,15 +14,19 @@ use crate::{
             self, ActivityDetail, ActivityFilter, ActivityPage, ActivityQuery, ActivitySummary,
             ActivityUpdate, DayTotal,
         },
-        media::{self, ActivityPhoto, Media},
+        locations,
+        media::{self, ActivityPhoto, GalleryItem, Media},
         performances::{self, BestPerformance},
         tracks::{self, RouteHeatmap},
         weather::{self, Weather},
     },
     error::{AppError, AppResult},
-    media_files, paths,
+    importer::archive,
+    media_files::{self, ShrinkPreview, ShrinkSummary},
+    paths,
     photos_library::{self, LibraryAsset, PhotosAccess},
     photos_picker,
+    settings::{self, PhotoSize},
 };
 
 #[tauri::command(async)]
@@ -75,6 +83,13 @@ pub fn get_activity(db: State<'_, Db>, id: i64) -> AppResult<ActivityDetail> {
     activities::get(&*db.conn()?, id)
 }
 
+/// Activities of the same sport from about the same start over about the same distance, newest
+/// first (the Compare page).
+#[tauri::command(async)]
+pub fn similar_activities(db: State<'_, Db>, id: i64, limit: usize) -> AppResult<Vec<i64>> {
+    locations::similar(&*db.conn()?, id, limit)
+}
+
 #[tauri::command(async)]
 pub fn update_activity(db: State<'_, Db>, update: ActivityUpdate) -> AppResult<ActivityDetail> {
     let mut conn = db.conn()?;
@@ -95,7 +110,42 @@ pub fn set_activity_equipment(
 
 #[tauri::command(async)]
 pub fn delete_activity(db: State<'_, Db>, id: i64) -> AppResult<()> {
-    activities::delete(&mut *db.conn()?, id)
+    let files = activities::delete(&mut *db.conn()?, id)?;
+    remove_activity_files(&files, &paths::data_dir()?)
+}
+
+/// Removes a deleted activity's files from the data folder: its archive and the original kept
+/// by a fix, copied photos and videos, and the images the Python app wrote. Linked originals
+/// stay where they are; only the link is gone. Files already missing are fine.
+fn remove_activity_files(files: &activities::DeletedFiles, data_dir: &Path) -> AppResult<()> {
+    let remove = |path: &Path| match fs::remove_file(path) {
+        Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e),
+        _ => Ok(()),
+    };
+    let media_dir = fs::canonicalize(data_dir.join("media")).ok();
+    for path in &files.media {
+        let inside = fs::canonicalize(path)
+            .ok()
+            .zip(media_dir.as_ref())
+            .is_some_and(|(file, dir)| file.starts_with(dir));
+        if inside {
+            remove(Path::new(path))?;
+        }
+    }
+    if let Some(file_id) = files.file_id.as_deref().filter(|id| !id.is_empty()) {
+        let imports = data_dir.join("imports");
+        remove(&archive::archive_path(&imports, file_id))?;
+        remove(&archive::original_path(&imports, file_id))?;
+        let prefix = format!("{file_id}_");
+        if let Ok(entries) = fs::read_dir(data_dir.join("images")) {
+            for entry in entries.flatten() {
+                if entry.file_name().to_string_lossy().starts_with(&prefix) {
+                    remove(&entry.path())?;
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -135,8 +185,42 @@ pub fn recent_photos(
     Ok(photos)
 }
 
+/// Every photo and video with its activity, for the gallery.
+#[tauri::command(async)]
+pub fn gallery_media(app: tauri::AppHandle, db: State<'_, Db>) -> AppResult<Vec<GalleryItem>> {
+    let items = media::gallery(&*db.conn()?, &paths::media_dir()?)?;
+    let media: Vec<Media> = items.iter().map(|i| i.media.clone()).collect();
+    allow_linked(&app, &media);
+    Ok(items)
+}
+
+/// The photo size setting; a settings file that can't be read means the default.
+fn photo_size() -> PhotoSize {
+    settings::load().map(|s| s.photo_size).unwrap_or_default()
+}
+
+/// Copies files into the media folder on a blocking thread, as scaling photos takes a moment.
+async fn copy_all(
+    app: tauri::AppHandle,
+    activity_id: i64,
+    files: Vec<std::path::PathBuf>,
+) -> AppResult<Vec<Media>> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let media_dir = paths::media_dir()?;
+        let size = photo_size();
+        let db = app.state::<Db>();
+        files
+            .iter()
+            .map(|file| media_files::add(&db, &media_dir, activity_id, file, false, size))
+            .collect::<AppResult<Vec<_>>>()
+    })
+    .await
+    .map_err(|e| AppError::Invalid(e.to_string()))?
+}
+
 /// Adds a photo or video to an activity: copied into the media folder, or with `link` the
-/// original file is referenced (temporary and Photos-library files are always copied).
+/// original file is referenced (temporary and Photos-library files are always copied). Copied
+/// photos are scaled down as the photo size setting says.
 #[tauri::command(async)]
 pub fn add_media(
     app: tauri::AppHandle,
@@ -146,11 +230,12 @@ pub fn add_media(
     link: bool,
 ) -> AppResult<Media> {
     let media = media_files::add(
-        &*db.conn()?,
+        &db,
         &paths::media_dir()?,
         activity_id,
         Path::new(&source_path),
         link,
+        photo_size(),
     )?;
     allow_linked(&app, std::slice::from_ref(&media));
     Ok(media)
@@ -177,15 +262,7 @@ pub async fn add_media_from_photos(
     let files = receiver
         .await
         .map_err(|_| AppError::Invalid("the photo picker closed unexpectedly".into()))?;
-    let media_dir = paths::media_dir()?;
-    let added = {
-        let db = window.state::<Db>();
-        let conn = db.conn()?;
-        files
-            .iter()
-            .map(|file| media_files::add(&conn, &media_dir, activity_id, file, false))
-            .collect::<AppResult<Vec<_>>>()
-    };
+    let added = copy_all(window.app_handle().clone(), activity_id, files).await;
     let _ = fs::remove_dir_all(&staging);
     added
 }
@@ -201,6 +278,47 @@ pub fn delete_media(db: State<'_, Db>, id: i64) -> AppResult<()> {
         fs::remove_file(file)?;
     }
     Ok(())
+}
+
+pub const SHRINK_EVENT: &str = "media://shrink";
+
+/// Set while stored photos are being shrunk, so a second run can't start.
+static SHRINKING: AtomicBool = AtomicBool::new(false);
+
+/// How many copied photos are larger than the photo size setting allows (linked originals
+/// don't count).
+#[tauri::command(async)]
+pub fn photos_to_shrink(db: State<'_, Db>) -> AppResult<ShrinkPreview> {
+    let photos = media_files::photos_to_shrink(&db, &paths::media_dir()?, photo_size())?;
+    Ok(media_files::preview(&photos))
+}
+
+/// Replaces the copied photos larger than the photo size setting by smaller versions,
+/// reporting each through `media://shrink`. Linked originals are never changed.
+#[tauri::command]
+pub async fn shrink_photos(app: tauri::AppHandle) -> AppResult<ShrinkSummary> {
+    if SHRINKING.swap(true, AtomicOrdering::SeqCst) {
+        return Err(AppError::Invalid("photos are being shrunk already".into()));
+    }
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        let media_dir = paths::media_dir()?;
+        let size = photo_size();
+        let db = app.state::<Db>();
+        let photos = media_files::photos_to_shrink(&db, &media_dir, size)?;
+        Ok(media_files::shrink_stored(
+            &db,
+            &media_dir,
+            &photos,
+            size,
+            |progress| {
+                let _ = app.emit(SHRINK_EVENT, progress);
+            },
+        ))
+    })
+    .await
+    .map_err(|e| AppError::Invalid(e.to_string()));
+    SHRINKING.store(false, AtomicOrdering::SeqCst);
+    result?
 }
 
 #[tauri::command(async)]
@@ -294,15 +412,48 @@ pub async fn add_library_photos(
         .await
         .map_err(|e| AppError::Invalid(e.to_string()))?
     };
-    let added = exported.and_then(|files| {
-        let media_dir = paths::media_dir()?;
-        let db = app.state::<Db>();
-        let conn = db.conn()?;
-        files
-            .iter()
-            .map(|file| media_files::add(&conn, &media_dir, activity_id, file, false))
-            .collect::<AppResult<Vec<_>>>()
-    });
+    let added = match exported {
+        Ok(files) => copy_all(app, activity_id, files).await,
+        Err(e) => Err(e),
+    };
     let _ = fs::remove_dir_all(&staging);
     added
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn deleting_removes_the_activity_files_but_not_linked_originals() {
+        let dir = tempfile::tempdir().unwrap();
+        let data = dir.path();
+        for sub in ["media", "imports", "images"] {
+            fs::create_dir_all(data.join(sub)).unwrap();
+        }
+        let file = |path: std::path::PathBuf| {
+            fs::write(&path, b"").unwrap();
+            path
+        };
+        let copy = file(data.join("media/copy.jpg"));
+        let linked = file(dir.path().join("original.jpg"));
+        let archive = file(data.join("imports/run.tcx.tar.gz"));
+        let original = file(data.join("imports/run.orig.tcx.tar.gz"));
+        let image = file(data.join("images/run_track.png"));
+        let other = file(data.join("images/runner_track.png"));
+        let files = activities::DeletedFiles {
+            file_id: Some("run".into()),
+            media: [&copy, &linked]
+                .iter()
+                .map(|p| p.to_string_lossy().into_owned())
+                .collect(),
+        };
+        remove_activity_files(&files, data).unwrap();
+        for gone in [&copy, &archive, &original, &image] {
+            assert!(!gone.exists(), "{gone:?} kept");
+        }
+        assert!(linked.exists() && other.exists());
+        // A second run finds nothing left to remove.
+        remove_activity_files(&files, data).unwrap();
+    }
 }

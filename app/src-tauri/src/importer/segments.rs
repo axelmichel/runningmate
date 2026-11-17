@@ -3,7 +3,7 @@
 
 use chrono::{DateTime, Utc};
 
-use super::track::Track;
+use super::track::{PAUSE_THRESHOLD, Track};
 use crate::activity_type::ViewMode;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16,6 +16,9 @@ pub struct Segment {
     pub avg_speed: Option<f64>,
     /// min/km over the segment's elapsed time.
     pub avg_pace: f64,
+    /// Grade-adjusted pace, min/km: the elapsed time over the flat distance that costs as
+    /// much as the segment's. `None` for rides.
+    pub avg_gap: Option<f64>,
     /// Steps per minute of one foot; `None` for rides.
     pub avg_steps: Option<i64>,
     /// km.
@@ -49,6 +52,8 @@ struct Accumulator {
     steps: Vec<f64>,
     start: Option<(f64, f64, DateTime<Utc>)>,
     distance: f64,
+    /// km on the flat costing as much as `distance` (see [`super::grade`]).
+    flat_distance: f64,
     elevation_gain: f64,
 }
 
@@ -73,6 +78,8 @@ impl Accumulator {
         } else {
             0.0
         };
+        let avg_gap = (view != ViewMode::Cycling && avg_pace > 0.0 && self.flat_distance > 0.0)
+            .then(|| avg_pace * self.distance / self.flat_distance);
         let steps = average(&self.steps).filter(|s| *s != 0.0);
         Some(Segment {
             latitude,
@@ -81,6 +88,7 @@ impl Accumulator {
             avg_power: safe_round(average(&self.power)),
             avg_speed: average(&self.speed),
             avg_pace,
+            avg_gap,
             avg_steps: (view != ViewMode::Cycling).then(|| safe_round(steps)),
             distance: self.distance,
             elevation_gain: self.elevation_gain,
@@ -122,6 +130,14 @@ pub fn split(track: &Track) -> Vec<Segment> {
             }
         }
         current.distance += track.geodesic[i] / 1000.0;
+        // The step over a pause isn't adjusted, as the pause isn't in the grade-adjusted pace.
+        let factor = track.grade_factor[i];
+        current.flat_distance += track.geodesic[i] / 1000.0
+            * if track.raw_time_diff[i] > PAUSE_THRESHOLD || factor.is_nan() {
+                1.0
+            } else {
+                factor
+            };
         if current.distance >= length {
             segments.extend(std::mem::take(&mut current).finish(point.time, track.view));
             current.start = Some((point.latitude, point.longitude, point.time));
@@ -198,6 +214,7 @@ mod tests {
             avg_power: 0,
             avg_speed: None,
             avg_pace: pace,
+            avg_gap: None,
             avg_steps: None,
             distance,
             elevation_gain: 0.0,

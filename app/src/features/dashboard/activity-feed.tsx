@@ -132,7 +132,9 @@ function Entry({ row, onOpen }: { row: ActivityRow; onOpen: (id: number) => void
             <Icon className="size-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-base font-semibold">{row.title || t("Activity")}</div>
+            <div data-private className="truncate text-base font-semibold">
+              {row.title || t("Activity")}
+            </div>
             <div className="text-xs text-muted-foreground">
               {formatDateTime(row.date)} · {t(row.displayType || row.activityType || "")}
             </div>
@@ -141,7 +143,11 @@ function Entry({ row, onOpen }: { row: ActivityRow; onOpen: (id: number) => void
           <SessionBadge activityId={row.id} enabled={visible} />
           <TrophyBadge activityId={row.id} enabled={visible} />
         </div>
-        {comment && <p className="line-clamp-4 text-sm whitespace-pre-line">{comment}</p>}
+        {comment && (
+          <p data-private className="line-clamp-4 text-sm whitespace-pre-line">
+            {comment}
+          </p>
+        )}
         <div className="flex flex-wrap gap-x-8 gap-y-2">
           <Metric label={t("Distance")} value={`${formatNumber(row.distance, 2)} km`} />
           {cycling ? (

@@ -116,7 +116,9 @@ export function SegmentProgressChart({
               return (
                 <div className="grid gap-0.5 rounded-lg border bg-background px-2.5 py-1.5 text-xs shadow-xl">
                   <div className="font-medium">{formatDate(pass.date)}</div>
-                  <div className="text-muted-foreground">{pass.activityTitle}</div>
+                  <div data-private className="text-muted-foreground">
+                    {pass.activityTitle}
+                  </div>
                   <div className="tabular-nums">
                     {formatDuration(pass.elapsed)} ·{" "}
                     {formatEffortSpeed(view, distance, pass.elapsed)}

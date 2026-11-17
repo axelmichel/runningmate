@@ -14,6 +14,7 @@ import type { BestPerformance } from "@/bindings/BestPerformance";
 import type { ConnectorLink } from "@/bindings/ConnectorLink";
 import type { DateRange } from "@/bindings/DateRange";
 import type { DayTotal } from "@/bindings/DayTotal";
+import type { EffectScore } from "@/bindings/EffectScore";
 import type { Equipment } from "@/bindings/Equipment";
 import type { EquipmentKind } from "@/bindings/EquipmentKind";
 import type { ExportCandidate } from "@/bindings/ExportCandidate";
@@ -23,6 +24,7 @@ import type { FixSource } from "@/bindings/FixSource";
 import type { FolderSyncStatus } from "@/bindings/FolderSyncStatus";
 import type { GarminSignInResult } from "@/bindings/GarminSignInResult";
 import type { GarminStatus } from "@/bindings/GarminStatus";
+import type { GalleryItem } from "@/bindings/GalleryItem";
 import type { Goal } from "@/bindings/Goal";
 import type { GoalHit } from "@/bindings/GoalHit";
 import type { GoalInput } from "@/bindings/GoalInput";
@@ -44,9 +46,12 @@ import type { Preview } from "@/bindings/Preview";
 import type { RouteHeatmap } from "@/bindings/RouteHeatmap";
 import type { RouteOutline } from "@/bindings/RouteOutline";
 import type { RouteSegment } from "@/bindings/RouteSegment";
+import type { SampleEdit } from "@/bindings/SampleEdit";
 import type { SegmentDetail } from "@/bindings/SegmentDetail";
 import type { SegmentRow } from "@/bindings/SegmentRow";
 import type { SessionInput } from "@/bindings/SessionInput";
+import type { ShrinkPreview } from "@/bindings/ShrinkPreview";
+import type { ShrinkSummary } from "@/bindings/ShrinkSummary";
 import type { StorageInfo } from "@/bindings/StorageInfo";
 import type { SystemSettings } from "@/bindings/SystemSettings";
 import type { TrackPoint } from "@/bindings/TrackPoint";
@@ -58,6 +63,8 @@ import type { User } from "@/bindings/User";
 import type { UserInput } from "@/bindings/UserInput";
 import type { ViewMode } from "@/bindings/ViewMode";
 import type { Weather } from "@/bindings/Weather";
+import type { ZoneBounds } from "@/bindings/ZoneBounds";
+import type { ZoneMethod } from "@/bindings/ZoneMethod";
 import type { ZonesInput } from "@/bindings/ZonesInput";
 import type { ZoneTime } from "@/bindings/ZoneTime";
 
@@ -79,6 +86,9 @@ export const api = {
   routeHeatmap: (viewMode: ViewMode, filter?: ActivityFilter) =>
     invoke<RouteHeatmap>("route_heatmap", { viewMode, filter }),
   getActivity: (id: number) => invoke<ActivityDetail>("get_activity", { id }),
+  /** Ids of up to `limit` activities like `id` (sport, start, distance), newest first. */
+  similarActivities: (id: number, limit: number) =>
+    invoke<number[]>("similar_activities", { id, limit }),
   updateActivity: (update: ActivityUpdate) => invoke<ActivityDetail>("update_activity", { update }),
   setActivityEquipment: (activityId: number, equipmentId: number | null) =>
     invoke<ActivityDetail>("set_activity_equipment", { activityId, equipmentId }),
@@ -100,8 +110,10 @@ export const api = {
   activitySegments: (id: number) => invoke<SegmentRow[]>("activity_segments", { id }),
   activityHeartRateZones: (id: number) =>
     invoke<ZoneTime[] | null>("activity_heart_rate_zones", { id }),
+  /** The 1–12 effect score, beside the EPOC training effect. */
+  activityEffectScore: (id: number) => invoke<EffectScore>("activity_effect_score", { id }),
   activityTrainingEffect: (id: number) =>
-    invoke<TrainingEffect>("activity_training_effect", { id }),
+    invoke<TrainingEffect | null>("activity_training_effect", { id }),
   fitnessTrend: (id: number) => invoke<FitnessDay[]>("fitness_trend", { id }),
   heartRateTrend: (id: number) => invoke<HeartRateTrend>("heart_rate_trend", { id }),
   /** Fitness and heart rate between two Unix times (the Health data page). */
@@ -118,6 +130,9 @@ export const api = {
   /** Replaces stretches with drawn routes and recomputes the activity. */
   applyActivityFix: (id: number, edits: FixEdit[]) =>
     invoke<void>("apply_activity_fix", { id, edits }),
+  /** Corrects the heart rate or steps of stretches and recomputes the activity. */
+  applySampleFix: (id: number, edits: SampleEdit[]) =>
+    invoke<void>("apply_sample_fix", { id, edits }),
   revertActivityFix: (id: number) => invoke<void>("revert_activity_fix", { id }),
   /** Imported files without GPS, waiting for their route to be drawn. */
   pendingRoutes: () => invoke<PendingRoute[]>("pending_routes"),
@@ -152,6 +167,8 @@ export const api = {
   // Media, weather, best performances
   listMedia: (activityId: number) => invoke<Media[]>("list_media", { activityId }),
   /** The latest photos of all activities, newest activity first. */
+  /** Every photo and video with its activity, newest activity first. */
+  galleryMedia: () => invoke<GalleryItem[]>("gallery_media"),
   recentPhotos: (limit: number) => invoke<ActivityPhoto[]>("recent_photos", { limit }),
   /** Copies the file into the media folder, or links to it when `link` is set. */
   addMedia: (activityId: number, sourcePath: string, link: boolean) =>
@@ -166,6 +183,10 @@ export const api = {
   addLibraryPhotos: (activityId: number, ids: string[]) =>
     invoke<Media[]>("add_library_photos", { activityId, ids }),
   deleteMedia: (id: number) => invoke<void>("delete_media", { id }),
+  /** Copied photos larger than the photo size setting allows. */
+  photosToShrink: () => invoke<ShrinkPreview>("photos_to_shrink"),
+  /** Replaces them by smaller versions; reports each through `media://shrink`. */
+  shrinkPhotos: () => invoke<ShrinkSummary>("shrink_photos"),
   getWeather: (activityId: number) => invoke<Weather | null>("get_weather", { activityId }),
   activityBestPerformances: (activityId: number) =>
     invoke<BestPerformance[]>("activity_best_performances", { activityId }),
@@ -233,6 +254,9 @@ export const api = {
   saveHeartRateZones: (input: ZonesInput) => invoke<User>("save_heart_rate_zones", { input }),
   suggestedHeartRateZones: () =>
     invoke<[number, number, number, number, number]>("suggested_heart_rate_zones"),
+  /** The zones `method` would give with the saved profile; `null` while it lacks its inputs. */
+  previewHeartRateZones: (method: ZoneMethod) =>
+    invoke<ZoneBounds | null>("preview_heart_rate_zones", { method }),
   listEquipment: (kind: EquipmentKind) => invoke<Equipment[]>("list_equipment", { kind }),
   addEquipment: (kind: EquipmentKind, name: string, weight: number | null, inUse: boolean) =>
     invoke<Equipment[]>("add_equipment", { kind, name, weight, inUse }),

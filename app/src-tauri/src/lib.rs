@@ -8,9 +8,11 @@ mod garmin;
 mod importer;
 mod media_files;
 mod menu;
+mod nominatim;
 mod open_meteo;
 mod osm_routing;
 mod paths;
+mod photo_shrink;
 mod photos_library;
 mod photos_picker;
 mod settings;
@@ -42,6 +44,8 @@ pub fn run() {
             let handle = app.handle().clone();
             tauri::async_runtime::spawn_blocking(move || {
                 commands::import::apply_data_fixes(&handle);
+                // Place names still missing, e.g. of activities from before the lookup.
+                commands::locations::locate_later(&handle);
             });
             app.manage(commands::garmin::PendingGarminSignIn::default());
             app.manage(commands::import::ImportCancel::default());
@@ -63,12 +67,14 @@ pub fn run() {
             commands::share::save_share_image,
             commands::share::share_image,
             commands::activities::get_activity,
+            commands::activities::similar_activities,
             commands::activities::update_activity,
             commands::activities::set_activity_equipment,
             commands::activities::delete_activity,
             commands::activities::activity_type_details,
             commands::activities::list_media,
             commands::activities::recent_photos,
+            commands::activities::gallery_media,
             commands::activities::add_media,
             commands::activities::add_media_from_photos,
             commands::activities::photos_access,
@@ -77,6 +83,8 @@ pub fn run() {
             commands::activities::library_photo_thumbnail,
             commands::activities::add_library_photos,
             commands::activities::delete_media,
+            commands::activities::photos_to_shrink,
+            commands::activities::shrink_photos,
             commands::activities::get_weather,
             commands::activities::activity_best_performances,
             commands::activities::top_best_performances,
@@ -84,6 +92,7 @@ pub fn run() {
             commands::users::save_user,
             commands::users::save_heart_rate_zones,
             commands::users::suggested_heart_rate_zones,
+            commands::users::preview_heart_rate_zones,
             commands::users::list_equipment,
             commands::users::add_equipment,
             commands::users::set_equipment_in_use,
@@ -91,6 +100,7 @@ pub fn run() {
             commands::analysis::activity_series,
             commands::analysis::activity_segments,
             commands::analysis::activity_heart_rate_zones,
+            commands::analysis::activity_effect_score,
             commands::analysis::activity_training_effect,
             commands::analysis::fitness_trend,
             commands::analysis::heart_rate_trend,
@@ -113,6 +123,7 @@ pub fn run() {
             commands::import::sync_folder,
             commands::repair::activity_fix_source,
             commands::repair::apply_activity_fix,
+            commands::repair::apply_sample_fix,
             commands::repair::revert_activity_fix,
             commands::repair::pending_routes,
             commands::repair::pending_fix_source,

@@ -6,7 +6,10 @@ use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-use crate::error::{AppError, AppResult};
+use crate::{
+    activity_type::ViewMode,
+    error::{AppError, AppResult},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "lowercase")]
@@ -126,6 +129,52 @@ pub fn recent_photos(
     Ok(photos)
 }
 
+/// A photo or video with the activity it belongs to, for the gallery.
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct GalleryItem {
+    #[ts(type = "number")]
+    pub activity_id: i64,
+    pub activity_title: Option<String>,
+    /// Unix timestamp of the activity's start.
+    #[ts(type = "number | null")]
+    pub activity_date: Option<i64>,
+    pub view_mode: ViewMode,
+    pub media: Media,
+}
+
+/// Every photo and video, newest activity first and in the order added within one; files that
+/// no longer exist are skipped.
+pub fn gallery(conn: &Connection, media_dir: &Path) -> AppResult<Vec<GalleryItem>> {
+    let mut stmt = conn.prepare(
+        "SELECT media.id, media.media_type, media.file_path, media.activity_id,
+            activities.title, activities.date, activities.activity_type
+         FROM media JOIN activities ON activities.id = media.activity_id
+         ORDER BY activities.date DESC, media.activity_id, media.id",
+    )?;
+    let items = stmt.query_map([], |row| {
+        Ok(GalleryItem {
+            activity_id: row.get("activity_id")?,
+            activity_title: row.get("title")?,
+            activity_date: row.get("date")?,
+            view_mode: ViewMode::from_activity_type(
+                &row.get::<_, Option<String>>("activity_type")?
+                    .unwrap_or_default(),
+            ),
+            media: from_row(row, media_dir)?,
+        })
+    })?;
+    let mut out = Vec::new();
+    for item in items {
+        let item = item?;
+        if !item.media.missing {
+            out.push(item);
+        }
+    }
+    Ok(out)
+}
+
 pub fn insert(
     conn: &Connection,
     activity_id: i64,
@@ -137,6 +186,31 @@ pub fn insert(
         params![activity_id, media_type.as_str(), file_path],
     )?;
     Ok(conn.last_insert_rowid())
+}
+
+/// Photos copied into the media folder that still exist, one per file.
+pub fn copied_photos(conn: &Connection, media_dir: &Path) -> AppResult<Vec<Media>> {
+    let mut stmt = conn.prepare(
+        "SELECT MIN(id) AS id, media_type, file_path FROM media
+         WHERE media_type = 'image' GROUP BY file_path ORDER BY id",
+    )?;
+    let rows = stmt.query_map([], |row| from_row(row, media_dir))?;
+    let mut photos = Vec::new();
+    for photo in rows {
+        let photo = photo?;
+        if !photo.linked && !photo.missing {
+            photos.push(photo);
+        }
+    }
+    Ok(photos)
+}
+
+/// Points every row of the file `from` at `to`, after the file was replaced.
+pub fn move_file(conn: &Connection, from: &str, to: &str) -> AppResult<usize> {
+    Ok(conn.execute(
+        "UPDATE media SET file_path = ?2 WHERE file_path = ?1",
+        params![from, to],
+    )?)
 }
 
 /// Deletes the row and returns the file path, so the caller can remove the file.
@@ -204,6 +278,72 @@ mod tests {
         assert_eq!(ids, [2, 1]);
         assert!(photos[0].media.file_path.ends_with("new.jpg"));
         assert_eq!(recent_photos(&conn, 1, dir.path()).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn the_gallery_has_photos_and_videos_with_their_activity() {
+        use crate::db::activities::tests::insert_activity;
+
+        let db = Db::open_in_memory().unwrap();
+        let conn = db.conn().unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let file = |name: &str| {
+            let path = dir.path().join(name);
+            std::fs::write(&path, b"").unwrap();
+            path.to_str().unwrap().to_string()
+        };
+        insert_activity(&conn, 1, "Biking", 1_000, 40.0, "Ride");
+        insert_activity(&conn, 2, "Running", 2_000, 5.0, "Run");
+        insert(&conn, 1, MediaType::Image, &file("ride.jpg")).unwrap();
+        insert(&conn, 2, MediaType::Image, &file("run.jpg")).unwrap();
+        insert(&conn, 2, MediaType::Video, &file("run.mp4")).unwrap();
+        insert(&conn, 2, MediaType::Image, "/gone/missing.jpg").unwrap();
+
+        let items = gallery(&conn, dir.path()).unwrap();
+        let ids: Vec<_> = items.iter().map(|i| i.activity_id).collect();
+        assert_eq!(ids, [2, 2, 1]);
+        assert_eq!(items[0].activity_title.as_deref(), Some("Run"));
+        assert_eq!(items[1].media.media_type, MediaType::Video);
+        assert_eq!(items[2].view_mode, ViewMode::Cycling);
+    }
+
+    #[test]
+    fn copied_photos_skip_videos_links_and_missing_files() {
+        let db = Db::open_in_memory().unwrap();
+        let conn = db.conn().unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let media_dir = dir.path().join("media");
+        std::fs::create_dir_all(&media_dir).unwrap();
+        let file = |path: std::path::PathBuf| {
+            std::fs::write(&path, b"").unwrap();
+            path.to_str().unwrap().to_string()
+        };
+        let copy = file(media_dir.join("run.jpg"));
+        let linked = file(dir.path().join("original.jpg"));
+        insert(&conn, 1, MediaType::Image, &copy).unwrap();
+        insert(&conn, 2, MediaType::Image, &copy).unwrap();
+        insert(&conn, 1, MediaType::Image, &linked).unwrap();
+        insert(
+            &conn,
+            1,
+            MediaType::Video,
+            &file(media_dir.join("clip.mp4")),
+        )
+        .unwrap();
+        insert(
+            &conn,
+            1,
+            MediaType::Image,
+            media_dir.join("gone.jpg").to_str().unwrap(),
+        )
+        .unwrap();
+
+        let photos = copied_photos(&conn, &media_dir).unwrap();
+        assert_eq!(photos.len(), 1);
+        assert_eq!(photos[0].file_path, copy);
+
+        assert_eq!(move_file(&conn, &copy, "/new/run.jpg").unwrap(), 2);
+        assert!(list(&conn, 2, &media_dir).unwrap()[0].file_path == "/new/run.jpg");
     }
 
     #[test]

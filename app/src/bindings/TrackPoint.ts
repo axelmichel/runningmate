@@ -18,6 +18,10 @@ elevation: number, heartRate: number | null,
  */
 pace: number | null, 
 /**
+ * Grade-adjusted pace, min/km; `None` where the pace is, for rides and after a pause.
+ */
+gap: number | null, 
+/**
  * Steps per minute (both feet), `None` without cadence or when standing still.
  */
 cadence: number | null, };
