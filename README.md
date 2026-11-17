@@ -82,6 +82,13 @@ cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 
 See [`app/README.md`](app/README.md) for the layout of the code.
 
+### Releasing
+Set the version in `app/package.json`, `app/src-tauri/tauri.conf.json` and
+`app/src-tauri/Cargo.toml`, merge, then push a tag starting with `v` (e.g. `v1.1.0`). The
+**Release - installers** workflow builds the installers for macOS (Apple silicon and Intel),
+Windows and Linux and attaches them to a draft release of that tag. For a release that exists
+already, run the workflow by hand under Actions and type in its tag.
+
 ### Documentation
 The documentation is written in Markdown in the `docs` folder and built with
 [MkDocs](https://www.mkdocs.org/) (`pip install mkdocs mkdocs-material`, then `mkdocs serve`).
