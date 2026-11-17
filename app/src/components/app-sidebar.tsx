@@ -1,5 +1,6 @@
 import {
   CalendarCheck,
+  ChartNoAxesCombined,
   Flame,
   Images,
   Gauge,
@@ -35,12 +36,21 @@ type AppSidebarProps = {
     | "goals"
     | "training"
     | "heatmap"
-    | "gallery";
+    | "gallery"
+    | "compare";
   /** The activity view, marked while the activities page is shown. */
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   onPageChange: (
-    page: "dashboard" | "health" | "segments" | "goals" | "training" | "heatmap" | "gallery",
+    page:
+      | "dashboard"
+      | "health"
+      | "segments"
+      | "goals"
+      | "training"
+      | "heatmap"
+      | "gallery"
+      | "compare",
   ) => void;
   searchOpen: boolean;
   onSearchToggle: () => void;
@@ -166,6 +176,16 @@ export function AppSidebar({
                 >
                   <Images />
                   <span>{t("Gallery")}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={page === "compare"}
+                  tooltip={`${t("Compare")} (⇧⌘C)`}
+                  onClick={() => onPageChange("compare")}
+                >
+                  <ChartNoAxesCombined />
+                  <span>{t("Compare")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

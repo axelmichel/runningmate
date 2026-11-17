@@ -10,6 +10,22 @@ mediaFiles: number,
  */
 mediaSize: number, 
 /**
+ * Archived activity files (`{file_id}.tcx.tar.gz`, with a GPX file they were converted from).
+ */
+activityFiles: number, 
+/**
+ * Bytes of the archives, the originals kept by fixes and files waiting for a route.
+ */
+activitySize: number, 
+/**
+ * Originals kept by the fix editor (`{file_id}.orig.tcx.tar.gz`), included in the size.
+ */
+keptOriginals: number, 
+/**
+ * Bytes.
+ */
+keptOriginalsSize: number, 
+/**
  * Bytes in the whole data folder.
  */
 totalSize: number, };

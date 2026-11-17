@@ -7,32 +7,29 @@ import { cumulativeMetres } from "./fix-math";
 
 export type { SampleChannel, SampleEdit };
 
-export type SampleIssueKind = "spike" | "dropout" | "startArtifact" | "cadenceLock";
+export type SampleIssueKind = "missing" | "dropout" | "outlier" | "startArtifact";
 
-/** A stretch of implausible values, as sample indices (both included). */
+/** A stretch of implausible or missing values, as sample indices (both included). */
 export type SampleIssue = { kind: SampleIssueKind; start: number; end: number };
 
-/** A jump of more than this (bpm) between samples this close (s) is suspicious. */
-const HR_JUMP = 25;
-const HR_JUMP_SECONDS = 5;
-/** A spike that doesn't come back within 10 bpm of where it left inside this time is real. */
-const HR_SPIKE_RETURN = 10;
-const HR_SPIKE_SECONDS = 300;
-/** A strap settling in: a sudden drop within the first minutes, staying lower afterwards. */
+/** Values are compared with the median of the samples this many seconds around them. */
+const BASELINE_SECONDS = 30;
+/** Further than this from that median (bpm, steps per minute) is an outlier. */
+const OUTLIER: Record<SampleChannel, number> = { heartRate: 20, steps: 25 };
+/** A strap settling in: a drop of more than this (bpm) within the first minutes… */
+const START_DROP = 25;
 const START_SECONDS = 900;
 const START_DROP_SECONDS = 10;
-/** Heart rate this close to the steps per minute, for this long, is the strap reading steps. */
-const LOCK_BPM = 4;
-const LOCK_SECONDS = 30;
-const LOCK_MIN_STEPS = 120;
+/** …after which the heart rate stays this much lower for a minute. */
+const START_STAYS = 12;
 /** Missing values for this long count as a dropout. */
 const DROPOUT_SECONDS = 10;
 /** Steps missing while covering this many metres are a dropout, not a stop. */
 const DROPOUT_METRES = 20;
-/** More steps per minute than this is a sensor fault. */
-const MAX_STEPS = 260;
 /** Problems closer together than this become one stretch. */
 const MERGE_SECONDS = 10;
+/** Interpolation leans on the median of the values this many seconds outside a stretch. */
+export const ANCHOR_SECONDS = 30;
 
 export function valueOf(sample: FixSample, channel: SampleChannel): number | null {
   const value = channel === "heartRate" ? sample.heartRate : sample.steps;
@@ -46,6 +43,36 @@ function withValue(sample: FixSample, channel: SampleChannel, value: number | nu
 const seconds = (samples: FixSample[], a: number, b: number) =>
   (samples[b].time - samples[a].time) / 1000;
 
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = sorted.length >> 1;
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+/**
+ * What an interpolation starts or ends at, beside the stretch from `edge` going `step` (−1
+ * before, +1 after): the median of the values within [`ANCHOR_SECONDS`] of the nearest one, so
+ * a single stray value next to the stretch doesn't set the level. The backend does the same.
+ */
+function anchor(
+  samples: FixSample[],
+  channel: SampleChannel,
+  edge: number,
+  step: 1 | -1,
+): { time: number; value: number } | null {
+  let i = edge + step;
+  while (i >= 0 && i < samples.length && valueOf(samples[i], channel) === null) i += step;
+  if (i < 0 || i >= samples.length) return null;
+  const time = samples[i].time;
+  const values: number[] = [];
+  for (let j = i; j >= 0 && j < samples.length; j += step) {
+    if (Math.abs(samples[j].time - time) > ANCHOR_SECONDS * 1000) break;
+    const value = valueOf(samples[j], channel);
+    if (value !== null) values.push(value);
+  }
+  return { time, value: median(values) };
+}
+
 /** The samples with the edits applied, as the backend applies them (for the preview). */
 export function previewSampleEdits(samples: FixSample[], edits: SampleEdit[]): FixSample[] {
   let out = samples;
@@ -58,19 +85,24 @@ export function previewSampleEdits(samples: FixSample[], edits: SampleEdit[]): F
     const { channel, op } = edit;
     const next = [...out];
     if (op.kind === "interpolate") {
-      let before: FixSample | undefined;
-      for (let i = first - 1; i >= 0 && !before; i--) if (valueOf(out[i], channel)) before = out[i];
-      const after = out.slice(last + 1).find((s) => valueOf(s, channel) !== null);
+      const before = anchor(out, channel, first, -1);
+      const after = anchor(out, channel, last, 1);
       if (!before && !after) continue;
       for (let i = first; i <= last; i++) {
         const time = out[i].time;
         const value =
           before && after
-            ? valueOf(before, channel)! +
-              ((valueOf(after, channel)! - valueOf(before, channel)!) * (time - before.time)) /
+            ? before.value +
+              ((after.value - before.value) * (time - before.time)) /
                 (after.time - before.time || 1)
-            : valueOf((before ?? after)!, channel);
+            : (before ?? after)!.value;
         next[i] = withValue(out[i], channel, value);
+      }
+    } else if (op.kind === "values") {
+      if (op.values.length !== last - first + 1) continue;
+      for (let i = first; i <= last; i++) {
+        const value = op.values[i - first];
+        next[i] = withValue(out[i], channel, value > 0 ? value : null);
       }
     } else {
       for (let i = first; i <= last; i++) {
@@ -127,105 +159,244 @@ function runs(
   return out;
 }
 
-/** Spikes, dropouts, a strap settling in at the start and heart rate locked onto the steps. */
-export function detectHeartRateIssues(samples: FixSample[]): SampleIssue[] {
-  if (!samples.some((s) => valueOf(s, "heartRate") !== null)) return [];
-  const issues: SampleIssue[] = [];
-  const hr = (i: number) => valueOf(samples[i], "heartRate");
+/** Medians of the values in the [`BASELINE_SECONDS`] before and after each sample. */
+function sideLevels(
+  samples: FixSample[],
+  channel: SampleChannel,
+): { before: number | null; after: number | null }[] {
+  const window = BASELINE_SECONDS * 1000;
+  const level = (from: number, to: number) => {
+    const values = samples
+      .slice(from, to)
+      .map((s) => valueOf(s, channel))
+      .filter((v): v is number => v !== null);
+    return values.length ? median(values) : null;
+  };
+  let from = 0;
+  let to = 0;
+  return samples.map((sample, i) => {
+    while (samples[from].time < sample.time - window) from += 1;
+    while (to < samples.length && samples[to].time <= sample.time + window) to += 1;
+    return { before: level(from, i), after: level(i + 1, to) };
+  });
+}
 
-  // Dropouts between the first and last value (none at all before the strap connects is fine).
-  const firstValue = samples.findIndex((s) => valueOf(s, "heartRate") !== null);
+/**
+ * Missing values (at the start or end, or a dropout in between), values far off the run's
+ * level around them, and for heart rate a strap settling in: reading high in the first minutes,
+ * then dropping suddenly.
+ */
+function detect(samples: FixSample[], channel: SampleChannel): SampleIssue[] {
+  const has = (i: number) => valueOf(samples[i], channel) !== null;
+  const first = samples.findIndex((_, i) => has(i));
+  if (first < 0) return [];
+  let last = samples.length - 1;
+  while (!has(last)) last -= 1;
+  const issues: SampleIssue[] = [];
+  if (seconds(samples, 0, first) >= DROPOUT_SECONDS) {
+    issues.push({ kind: "missing", start: 0, end: first - 1 });
+  }
+  if (seconds(samples, last, samples.length - 1) >= DROPOUT_SECONDS) {
+    issues.push({ kind: "missing", start: last + 1, end: samples.length - 1 });
+  }
+  // Steps stop when you stand still; only missing steps while moving are a dropout.
+  const metres = channel === "steps" ? cumulativeMetres(samples) : null;
   for (const [start, end] of runs(
     samples,
-    (s, i) => i > firstValue && valueOf(s, "heartRate") === null,
+    (_, i) => i > first && i < last && !has(i),
     DROPOUT_SECONDS,
   )) {
-    if (end < samples.length - 1) issues.push({ kind: "dropout", start, end });
-  }
-
-  // Jumps: a spike when it comes back, a strap settling in when it drops early and stays down.
-  let previous: number | null = null;
-  for (let i = 0; i < samples.length; i++) {
-    const value = hr(i);
-    if (value === null) continue;
-    if (previous !== null && seconds(samples, previous, i) <= HR_JUMP_SECONDS) {
-      const base = hr(previous)!;
-      if (Math.abs(value - base) > HR_JUMP) {
-        let back: number | null = null;
-        for (let j = i + 1; j < samples.length && seconds(samples, i, j) <= HR_SPIKE_SECONDS; j++) {
-          const v = hr(j);
-          if (v !== null && Math.abs(v - base) <= HR_SPIKE_RETURN) {
-            back = j;
-            break;
-          }
-        }
-        if (back !== null) {
-          issues.push({ kind: "spike", start: i, end: back - 1 });
-          previous = back;
-          i = back;
-          continue;
-        }
-        if (value < base && seconds(samples, 0, i) <= START_SECONDS) {
-          issues.push({ kind: "startArtifact", start: 0, end: previous });
-        }
-      }
-    }
-    previous = i;
-  }
-
-  // A sudden fall over a few samples early on also counts as settling in.
-  if (!issues.some((issue) => issue.kind === "startArtifact")) {
-    for (let i = 0; i < samples.length && seconds(samples, 0, i) <= START_SECONDS; i++) {
-      const value = hr(i);
-      // The way down from a spike isn't the strap settling in.
-      if (value === null || issues.some((x) => i >= x.start && i <= x.end + 1)) continue;
-      for (let j = i + 1; j < samples.length && seconds(samples, i, j) <= START_DROP_SECONDS; j++) {
-        const later = hr(j);
-        if (later !== null && value - later > HR_JUMP) {
-          const stays = samples
-            .slice(j, j + 60)
-            .every((s) => (valueOf(s, "heartRate") ?? later) < value - HR_JUMP / 2);
-          if (stays) {
-            issues.push({ kind: "startArtifact", start: 0, end: j - 1 });
-            i = samples.length;
-          }
-          break;
-        }
-      }
+    if (!metres || metres[end] - metres[start] >= DROPOUT_METRES) {
+      issues.push({ kind: "dropout", start, end });
     }
   }
 
-  for (const [start, end] of runs(
-    samples,
-    (s) => {
-      const value = valueOf(s, "heartRate");
-      const steps = valueOf(s, "steps");
-      return (
-        value !== null &&
-        steps !== null &&
-        steps >= LOCK_MIN_STEPS &&
-        Math.abs(value - steps) <= LOCK_BPM
-      );
-    },
-    LOCK_SECONDS,
-  )) {
-    issues.push({ kind: "cadenceLock", start, end });
+  // Beyond the levels on both sides: a spike. Between them, or close to one, is a change of
+  // level (a hill, a walk break, slowing down) and fine. Early on only what follows counts,
+  // since the start itself may be the problem.
+  const levels = sideLevels(samples, channel);
+  const limit = OUTLIER[channel];
+  const off = (s: FixSample, i: number) => {
+    const value = valueOf(s, channel);
+    if (value === null) return false;
+    const early = seconds(samples, first, i) < 2 * BASELINE_SECONDS;
+    const sides = [early ? null : levels[i].before, levels[i].after].filter(
+      (v): v is number => v !== null,
+    );
+    // Starting low and warming up is normal; at the start only reading too high is wrong.
+    return (
+      sides.length > 0 &&
+      (value > Math.max(...sides) + limit || (!early && value < Math.min(...sides) - limit))
+    );
+  };
+  for (const [start, end] of runs(samples, off, 0)) {
+    if (!(metres && slowedDown(samples, metres, levels, channel, start, end))) {
+      issues.push({ kind: "outlier", start, end });
+    }
+  }
+
+  if (channel === "heartRate") {
+    const settled = startArtifact(samples);
+    if (settled !== null) issues.push({ kind: "startArtifact", start: 0, end: settled });
   }
   return merged(samples, issues);
 }
 
-/** Steps missing while moving, and impossible step rates. */
+/** Below this share of the speed around it, fewer steps are real: you slowed down or stopped. */
+const SLOWER = 0.85;
+
+/** Whether a stretch of too few steps comes with lower speed, so the steps are right. */
+function slowedDown(
+  samples: FixSample[],
+  metres: number[],
+  levels: { before: number | null; after: number | null }[],
+  channel: SampleChannel,
+  start: number,
+  end: number,
+): boolean {
+  const value = valueOf(samples[start], channel)!;
+  const { before, after } = levels[start];
+  if (value > Math.min(...[before, after].filter((v): v is number => v !== null))) return false;
+  const speed = (a: number, b: number) =>
+    b > a ? (metres[b] - metres[a]) / Math.max(1, seconds(samples, a, b)) : null;
+  const window = BASELINE_SECONDS * 1000;
+  let from = start;
+  while (from > 0 && samples[from - 1].time >= samples[start].time - window) from -= 1;
+  let to = end;
+  while (to < samples.length - 1 && samples[to + 1].time <= samples[end].time + window) to += 1;
+  const around = [speed(from, start), speed(end, to)].filter((v): v is number => v !== null);
+  const inside = speed(Math.max(0, start - 1), end) ?? 0;
+  return around.length === 0 || inside < SLOWER * Math.max(...around);
+}
+
+/** Last sample of a strap reading high before a sudden drop early on, or `null`. */
+function startArtifact(samples: FixSample[]): number | null {
+  const hr = (i: number) => valueOf(samples[i], "heartRate");
+  for (let i = 0; i < samples.length && seconds(samples, 0, i) <= START_SECONDS; i++) {
+    const value = hr(i);
+    if (value === null) continue;
+    for (let j = i + 1; j < samples.length && seconds(samples, i, j) <= START_DROP_SECONDS; j++) {
+      const later = hr(j);
+      if (later === null || value - later <= START_DROP) continue;
+      // Real only when it stays down for the next minute.
+      let k = j;
+      const after: number[] = [];
+      while (k < samples.length && seconds(samples, j, k) <= 60) {
+        const v = hr(k++);
+        if (v !== null) after.push(v);
+      }
+      const before = samples
+        .slice(0, i + 1)
+        .map((s) => valueOf(s, "heartRate"))
+        .filter((v): v is number => v !== null);
+      // A strap reads high from the first seconds; warming up starts low.
+      const opening = samples
+        .filter((s) => s.time - samples[0].time <= BASELINE_SECONDS * 1000)
+        .map((s) => valueOf(s, "heartRate"))
+        .filter((v): v is number => v !== null);
+      const rest = samples
+        .slice(j)
+        .map((s) => valueOf(s, "heartRate"))
+        .filter((v): v is number => v !== null);
+      const high = opening.length > 0 && median(opening) > median(rest) + START_STAYS;
+      if (high && after.length && median(after) < median(before) - START_STAYS) return j - 1;
+      break;
+    }
+  }
+  return null;
+}
+
+/** Problems of the heart rate. */
+export function detectHeartRateIssues(samples: FixSample[]): SampleIssue[] {
+  return detect(samples, "heartRate");
+}
+
+/** Problems of the steps. */
 export function detectStepsIssues(samples: FixSample[]): SampleIssue[] {
-  if (!samples.some((s) => valueOf(s, "steps") !== null)) return [];
+  return detect(samples, "steps");
+}
+
+/** Speed is averaged over this many seconds up to a sample: heart rate follows effort late. */
+const EFFORT_SECONDS = 60;
+/** How quickly heart rate (and, much quicker, the steps) follow a change of effort (s). */
+const RESPONSE_SECONDS: Record<SampleChannel, number> = { heartRate: 45, steps: 3 };
+/** Recorded samples needed to learn how the values follow the speed. */
+const MIN_FIT_SAMPLES = 120;
+
+/** m/s averaged over the [`EFFORT_SECONDS`] up to each sample. */
+function effortSpeeds(samples: FixSample[]): number[] {
   const metres = cumulativeMetres(samples);
-  const issues: SampleIssue[] = [];
-  for (const [start, end] of runs(samples, (s) => valueOf(s, "steps") === null, DROPOUT_SECONDS)) {
-    if (metres[end] - metres[start] >= DROPOUT_METRES) issues.push({ kind: "dropout", start, end });
+  let from = 0;
+  return samples.map((sample, i) => {
+    while (samples[from].time < sample.time - EFFORT_SECONDS * 1000) from += 1;
+    const seconds = (sample.time - samples[from].time) / 1000;
+    return seconds > 0 ? (metres[i] - metres[from]) / seconds : 0;
+  });
+}
+
+/**
+ * Values for samples `first` to `last` estimated from the speed, for a stretch where they are
+ * missing or wrong: how the values follow the speed is learned from the rest of the activity
+ * (a straight line through value against speed), the heart rate climbs towards that level
+ * with a delay as it does at the start of a run, and the estimate is bent to meet the
+ * recorded values on both sides. `null` when the rest of the activity doesn't tell enough.
+ */
+export function estimateStretch(
+  samples: FixSample[],
+  channel: SampleChannel,
+  first: number,
+  last: number,
+): number[] | null {
+  const speeds = effortSpeeds(samples);
+  // Value against speed on the recorded samples outside the stretch, while moving.
+  const points: [number, number][] = [];
+  samples.forEach((sample, i) => {
+    const value = valueOf(sample, channel);
+    if ((i < first || i > last) && value !== null && speeds[i] > 0.5) {
+      points.push([speeds[i], value]);
+    }
+  });
+  if (points.length < MIN_FIT_SAMPLES) return null;
+  const n = points.length;
+  const meanV = points.reduce((sum, [v]) => sum + v, 0) / n;
+  const meanY = points.reduce((sum, [, y]) => sum + y, 0) / n;
+  const varV = points.reduce((sum, [v]) => sum + (v - meanV) ** 2, 0);
+  const slope =
+    varV > 0 ? points.reduce((sum, [v, y]) => sum + (v - meanV) * (y - meanY), 0) / varV : 0;
+  // Faster never means a lower heart rate or fewer steps; without a relation the level stays.
+  const b = Math.max(0, slope);
+  const level = (speed: number) => meanY + b * (speed - meanV);
+
+  const before = anchor(samples, channel, first, -1);
+  const after = anchor(samples, channel, last, 1);
+  // At the very start the heart rate is still low, about where standing still would put it,
+  // but no lower than 55 % and no higher than 75 % of the level the recording settles at.
+  const settled = after?.value ?? meanY;
+  const start =
+    before?.value ??
+    (channel === "heartRate"
+      ? Math.min(0.75 * settled, Math.max(0.55 * settled, level(0)))
+      : level(speeds[first]));
+  const tau = RESPONSE_SECONDS[channel];
+  const estimate: number[] = [];
+  let value = start;
+  let time = before?.time ?? samples[first].time;
+  for (let i = first; i <= last; i++) {
+    const dt = Math.max(0, (samples[i].time - time) / 1000);
+    value += (level(speeds[i]) - value) * (1 - Math.exp(-dt / tau));
+    time = samples[i].time;
+    estimate.push(value);
   }
-  for (const [start, end] of runs(samples, (s) => (s.steps ?? 0) > MAX_STEPS, 0)) {
-    issues.push({ kind: "spike", start, end });
+  // Bent to end where the recording goes on, growing from nothing at the start of the stretch.
+  if (after) {
+    const t0 = samples[first].time;
+    const span = samples[last].time - t0 || 1;
+    const miss = after.value - estimate[estimate.length - 1];
+    for (let i = first; i <= last; i++) {
+      estimate[i - first] += (miss * (samples[i].time - t0)) / span;
+    }
   }
-  return merged(samples, issues);
+  return estimate.map((v) => Math.max(1, Math.round(v)));
 }
 
 /** A changed split: the average heart rate and steps per minute it should have. */

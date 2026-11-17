@@ -6,13 +6,17 @@
 
 use rusqlite::{Connection, OptionalExtension, params};
 
-use crate::error::AppResult;
+use crate::{activity_type::ViewMode, error::AppResult};
 
 /// A start this far (metres) from the looked-up point counts as moved.
 const MOVED_METRES: f64 = 200.0;
 /// A name found within this distance (metres) of a start is used for it without a request.
 const NEARBY_METRES: f64 = 100.0;
 const METRES_PER_DEGREE: f64 = 111_320.0;
+/// Starts this close (metres) count as the same place for similar activities.
+const SIMILAR_START_METRES: f64 = 200.0;
+/// Share of the distance a similar activity may be off by.
+const SIMILAR_DISTANCE_SHARE: f64 = 0.05;
 
 /// An activity waiting for its place name, with its start point.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -147,6 +151,88 @@ pub fn forget_if_moved(conn: &Connection, activity_id: i64) -> AppResult<bool> {
     Ok(moved)
 }
 
+/// Where an activity starts: the looked-up point (kept in step with the start by
+/// `forget_if_moved`), or else its first position.
+fn known_start(
+    conn: &Connection,
+    activity_id: i64,
+    looked_up: (Option<f64>, Option<f64>),
+) -> AppResult<Option<(f64, f64)>> {
+    match looked_up {
+        (Some(lat), Some(lon)) => Ok(Some((lat, lon))),
+        _ => start_point(conn, activity_id),
+    }
+}
+
+/// Activities of the same sport as `activity_id` that start within 200 m of it and cover its
+/// distance ±5 %, newest first, at most `limit`. Empty when it has no distance or no GPS.
+pub fn similar(conn: &Connection, activity_id: i64, limit: usize) -> AppResult<Vec<i64>> {
+    type Row = (i64, Option<String>, Option<f64>, Option<f64>, Option<f64>);
+    let read = |row: &rusqlite::Row| -> rusqlite::Result<Row> {
+        Ok((
+            row.get(0)?,
+            row.get(1)?,
+            row.get(2)?,
+            row.get(3)?,
+            row.get(4)?,
+        ))
+    };
+    let columns = "id, activity_type, distance, location_latitude, location_longitude";
+    let Some((_, activity_type, distance, lat, lon)) = conn
+        .query_row(
+            &format!("SELECT {columns} FROM activities WHERE id = ?1"),
+            [activity_id],
+            read,
+        )
+        .optional()?
+    else {
+        return Ok(Vec::new());
+    };
+    let Some(distance) = distance.filter(|d| *d > 0.0) else {
+        return Ok(Vec::new());
+    };
+    let Some(origin) = known_start(conn, activity_id, (lat, lon))? else {
+        return Ok(Vec::new());
+    };
+    let activity_type = activity_type.unwrap_or_default();
+    let view = ViewMode::from_activity_type(&activity_type);
+    // Runs include trail runs and so on; types outside the views only match themselves.
+    let same_sport = |other: &str| match view {
+        ViewMode::All => other == activity_type,
+        _ => ViewMode::from_activity_type(other) == view,
+    };
+    let candidates = conn
+        .prepare(&format!(
+            "SELECT {columns} FROM activities
+             WHERE id != ?1 AND distance BETWEEN ?2 AND ?3
+             ORDER BY date DESC, id DESC"
+        ))?
+        .query_map(
+            params![
+                activity_id,
+                distance * (1.0 - SIMILAR_DISTANCE_SHARE),
+                distance * (1.0 + SIMILAR_DISTANCE_SHARE)
+            ],
+            read,
+        )?
+        .collect::<Result<Vec<_>, _>>()?;
+    let mut found = Vec::new();
+    for (id, other_type, _, lat, lon) in candidates {
+        if found.len() >= limit {
+            break;
+        }
+        if !same_sport(other_type.as_deref().unwrap_or_default()) {
+            continue;
+        }
+        if known_start(conn, id, (lat, lon))?
+            .is_some_and(|start| distance_metres(origin, start) <= SIMILAR_START_METRES)
+        {
+            found.push(id);
+        }
+    }
+    Ok(found)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -259,5 +345,35 @@ mod tests {
     fn measures_metres() {
         let d = distance_metres((48.0, 7.9), (48.001, 7.9));
         assert!((d - 111.3).abs() < 0.5, "{d}");
+    }
+
+    #[test]
+    fn finds_similar_activities_by_sport_start_and_distance() {
+        let db = seeded();
+        let conn = db.conn().unwrap();
+        // Activity 1: a 10 km run from (47.98, 7.86).
+        insert_activity(&conn, 10, "Trailrun", 1_700_300_000, 10.3, "Same start");
+        segment(&conn, 10, 0, Some((47.9805, 7.8605)));
+        insert_activity(&conn, 11, "Running", 1_700_400_000, 10.0, "Looked up");
+        segment(&conn, 11, 0, None);
+        conn.execute(
+            "UPDATE activities SET location_latitude = 47.9801, location_longitude = 7.8601
+             WHERE id = 11",
+            [],
+        )
+        .unwrap();
+        insert_activity(&conn, 12, "Running", 1_700_500_000, 11.0, "Too long");
+        segment(&conn, 12, 0, Some((47.98, 7.86)));
+        insert_activity(&conn, 13, "Running", 1_700_600_000, 10.0, "Elsewhere");
+        segment(&conn, 13, 0, Some((47.99, 7.86)));
+        insert_activity(&conn, 14, "Biking", 1_700_700_000, 10.0, "A ride");
+        segment(&conn, 14, 0, Some((47.98, 7.86)));
+        insert_activity(&conn, 15, "Running", 1_700_800_000, 9.6, "No GPS");
+
+        assert_eq!(similar(&conn, 1, 10).unwrap(), [11, 10]);
+        assert_eq!(similar(&conn, 1, 1).unwrap(), [11]);
+        // Without a start there is nothing to compare with.
+        assert!(similar(&conn, 15, 10).unwrap().is_empty());
+        assert!(similar(&conn, 99, 10).unwrap().is_empty());
     }
 }

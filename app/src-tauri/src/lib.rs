@@ -12,6 +12,7 @@ mod nominatim;
 mod open_meteo;
 mod osm_routing;
 mod paths;
+mod photo_shrink;
 mod photos_library;
 mod photos_picker;
 mod settings;
@@ -66,6 +67,7 @@ pub fn run() {
             commands::share::save_share_image,
             commands::share::share_image,
             commands::activities::get_activity,
+            commands::activities::similar_activities,
             commands::activities::update_activity,
             commands::activities::set_activity_equipment,
             commands::activities::delete_activity,
@@ -81,6 +83,8 @@ pub fn run() {
             commands::activities::library_photo_thumbnail,
             commands::activities::add_library_photos,
             commands::activities::delete_media,
+            commands::activities::photos_to_shrink,
+            commands::activities::shrink_photos,
             commands::activities::get_weather,
             commands::activities::activity_best_performances,
             commands::activities::top_best_performances,
@@ -96,6 +100,7 @@ pub fn run() {
             commands::analysis::activity_series,
             commands::analysis::activity_segments,
             commands::analysis::activity_heart_rate_zones,
+            commands::analysis::activity_effect_score,
             commands::analysis::activity_training_effect,
             commands::analysis::fitness_trend,
             commands::analysis::heart_rate_trend,

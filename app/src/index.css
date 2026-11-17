@@ -82,6 +82,19 @@
   --sport-running: #e13342;
   --sport-cycling: #7c4ddb;
   --sport-walking: #e8802f;
+  /* Compare page (features/compare): one colour per activity slot, in this order. Checked as a
+     set (colour-blind separation of neighbours) against the light surface; the bars and lines
+     always come with a legend naming the activity. */
+  --compare-1: #2a78d6;
+  --compare-2: #eb6834;
+  --compare-3: #1baf7a;
+  --compare-4: #eda100;
+  --compare-5: #e87ba4;
+  --compare-6: #008300;
+  --compare-7: #6250d6;
+  --compare-8: #e34948;
+  --compare-9: #0e95b5;
+  --compare-10: #9c6b00;
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -121,6 +134,17 @@
   --sport-running: #e13342;
   --sport-cycling: #9b6cf0;
   --sport-walking: #d4762a;
+  /* The same slots in steps checked against the dark card. */
+  --compare-1: #3987e5;
+  --compare-2: #d95926;
+  --compare-3: #199e70;
+  --compare-4: #c98500;
+  --compare-5: #d55181;
+  --compare-6: #008300;
+  --compare-7: #9085e9;
+  --compare-8: #e66767;
+  --compare-9: #159fbf;
+  --compare-10: #a87510;
   --sidebar: #35193e;
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: #f37651;

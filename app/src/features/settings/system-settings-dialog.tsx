@@ -34,6 +34,7 @@ import { setLanguage, t, tk } from "@/i18n";
 import { api } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
 
+import { PhotoSizeSetting, ShrinkPhotos } from "./photo-size";
 import { formatBytes } from "./validation";
 
 type Page = "general" | "panel" | "ai" | "storage";
@@ -198,46 +199,47 @@ function PanelPage() {
       <p className="text-sm text-muted-foreground">
         {t("Boxes shown beside the activity list and in the detail window.")}
       </p>
-      <table className="text-sm">
-        <thead>
-          <tr className="text-muted-foreground">
-            <th className="py-2 text-left font-normal" />
-            {sports.map(({ mode, label, icon: Icon }) => (
-              <th key={mode} className="w-20 py-2 font-normal">
-                <span className="inline-flex flex-col items-center gap-1">
-                  <Icon className="size-4" />
-                  {t(label)}
-                </span>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {PANEL_BOXES.map(({ box, label }) => (
-            <tr key={box}>
-              <td className="py-2">{t(label)}</td>
-              {PANEL_SPORTS.map((sport) => (
-                <td key={sport} className="py-2 text-center">
-                  <Checkbox
-                    aria-label={`${t(label)} · ${t(sports.find((s) => s.mode === sport)!.label)}`}
-                    checked={!hiddenBoxes(settings, sport).includes(box)}
-                    onCheckedChange={(checked) =>
-                      save.mutate((current) => ({
-                        activity_panel_hidden: withBox(
-                          current.activity_panel_hidden,
-                          sport,
-                          box,
-                          checked === true,
-                        ),
-                      }))
-                    }
-                  />
-                </td>
-              ))}
-            </tr>
+      {/* A grid rather than a table: every cell of a sport column centred on the same line. */}
+      <div role="table" className="grid grid-cols-[1fr_repeat(3,5rem)] text-sm">
+        <div role="row" className="contents text-muted-foreground">
+          <span role="columnheader" />
+          {sports.map(({ mode, label, icon: Icon }) => (
+            <span
+              key={mode}
+              role="columnheader"
+              className="flex flex-col items-center justify-end gap-1 pb-2 text-xs"
+            >
+              <Icon className="size-4" />
+              {t(label)}
+            </span>
           ))}
-        </tbody>
-      </table>
+        </div>
+        {PANEL_BOXES.map(({ box, label }) => (
+          <div key={box} role="row" className="contents">
+            <span role="rowheader" className="flex items-center border-t py-2.5">
+              {t(label)}
+            </span>
+            {PANEL_SPORTS.map((sport) => (
+              <span key={sport} role="cell" className="flex items-center justify-center border-t">
+                <Checkbox
+                  aria-label={`${t(label)} · ${t(sports.find((s) => s.mode === sport)!.label)}`}
+                  checked={!hiddenBoxes(settings, sport).includes(box)}
+                  onCheckedChange={(checked) =>
+                    save.mutate((current) => ({
+                      activity_panel_hidden: withBox(
+                        current.activity_panel_hidden,
+                        sport,
+                        box,
+                        checked === true,
+                      ),
+                    }))
+                  }
+                />
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
       <p className="text-xs text-muted-foreground">
         {t("Photos, comment and summary only show beside the activity list.")}
       </p>
@@ -350,8 +352,9 @@ function AiPage() {
 }
 
 function StoragePage() {
+  const { settings, save } = useSettings();
   const { data: info } = useQuery({ queryKey: ["storage"], queryFn: api.storageInfo });
-  if (!info) return null;
+  if (!info || !settings) return null;
   const rows = [
     [t("Data folder"), info.dataDir],
     [
@@ -362,22 +365,43 @@ function StoragePage() {
         size: formatBytes(info.mediaSize),
       }),
     ],
+    [
+      t("Activity files (TCX, GPX)"),
+      t("{{count}} files · {{size}}", {
+        count: info.activityFiles,
+        files: formatNumber(info.activityFiles),
+        size: formatBytes(info.activitySize),
+      }) +
+        (info.keptOriginals > 0
+          ? ` · ${t("including {{count}} originals kept by fixes ({{size}})", {
+              count: info.keptOriginals,
+              size: formatBytes(info.keptOriginalsSize),
+            })}`
+          : ""),
+    ],
     [t("Total size"), formatBytes(info.totalSize)],
   ];
   return (
-    <dl className="grid max-w-xl gap-3 text-sm">
-      {rows.map(([label, value]) => (
-        <div key={label} className="grid gap-0.5">
-          <dt className="text-muted-foreground">{label}</dt>
-          <dd className="font-medium break-all">{value}</dd>
-        </div>
-      ))}
-      <p className="text-xs text-muted-foreground">
-        {t(
-          "All data stays on this computer. The folder is shared with the previous Python version of RunningMate.",
-        )}
-      </p>
-    </dl>
+    <div className="grid max-w-xl gap-6">
+      <dl className="grid gap-3 text-sm">
+        {rows.map(([label, value]) => (
+          <div key={label} className="grid gap-0.5">
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd className="font-medium break-all">{value}</dd>
+          </div>
+        ))}
+        <p className="text-xs text-muted-foreground">
+          {t(
+            "All data stays on this computer. The folder is shared with the previous Python version of RunningMate.",
+          )}
+        </p>
+      </dl>
+      <PhotoSizeSetting
+        value={settings.photo_size}
+        onChange={(photo_size) => save.mutate({ photo_size })}
+      />
+      <ShrinkPhotos size={settings.photo_size} />
+    </div>
   );
 }
 

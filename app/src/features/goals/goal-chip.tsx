@@ -40,7 +40,7 @@ export function GoalChip({
       style={style}
       disabled={!onClick}
       className={cn(
-        "grid w-60 shrink-0 gap-1.5 rounded-lg border bg-card px-3 py-2 text-left transition-colors enabled:hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+        "flex min-w-0 flex-col gap-1.5 rounded-lg border bg-card px-3 py-2 text-left transition-colors enabled:hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
         (status === "missed" || status === "ended") && "opacity-60",
         className,
       )}
@@ -89,7 +89,8 @@ export function GoalChip({
           />
         </>
       )}
-      <div className="truncate text-xs text-muted-foreground">
+      {/* At the bottom, so it lines up across chips of different content. */}
+      <div className="mt-auto truncate text-xs text-muted-foreground">
         {[
           (!counted || !reached) && hint,
           progress.streak > 1 && t("{{count}} in a row", { count: progress.streak }),

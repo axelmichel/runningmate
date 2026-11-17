@@ -17,9 +17,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { t, tk } from "@/i18n";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 import { useRecomputed } from "./fix-math";
 import { RouteFixEditor } from "./route-fix-editor";
@@ -88,15 +88,22 @@ export function FixTab({ activityId, view }: { activityId: number; view: ViewMod
   const parts = PARTS.filter(({ part }) => part !== "steps" || view !== "Cycling");
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
-      <Tabs value={part} onValueChange={(value) => guard(() => setPart(value as Part))}>
-        <TabsList>
-          {parts.map(({ part, label }) => (
-            <TabsTrigger key={part} value={part}>
-              {t(label)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      {/* Buttons rather than nested tabs, which would take the page navigation's vertical layout. */}
+      <div role="tablist" className="flex w-fit gap-1 rounded-lg bg-muted p-[3px]">
+        {parts.map(({ part: value, label }) => (
+          <Button
+            key={value}
+            role="tab"
+            size="sm"
+            variant={part === value ? "secondary" : "ghost"}
+            aria-selected={part === value}
+            className={cn("h-7", part === value && "bg-background shadow-sm hover:bg-background")}
+            onClick={() => part !== value && guard(() => setPart(value))}
+          >
+            {t(label)}
+          </Button>
+        ))}
+      </div>
       <div className="min-h-0 flex-1">
         {part === "route" ? (
           <RouteFixEditor

@@ -14,6 +14,7 @@ import type { BestPerformance } from "@/bindings/BestPerformance";
 import type { ConnectorLink } from "@/bindings/ConnectorLink";
 import type { DateRange } from "@/bindings/DateRange";
 import type { DayTotal } from "@/bindings/DayTotal";
+import type { EffectScore } from "@/bindings/EffectScore";
 import type { Equipment } from "@/bindings/Equipment";
 import type { EquipmentKind } from "@/bindings/EquipmentKind";
 import type { ExportCandidate } from "@/bindings/ExportCandidate";
@@ -49,6 +50,8 @@ import type { SampleEdit } from "@/bindings/SampleEdit";
 import type { SegmentDetail } from "@/bindings/SegmentDetail";
 import type { SegmentRow } from "@/bindings/SegmentRow";
 import type { SessionInput } from "@/bindings/SessionInput";
+import type { ShrinkPreview } from "@/bindings/ShrinkPreview";
+import type { ShrinkSummary } from "@/bindings/ShrinkSummary";
 import type { StorageInfo } from "@/bindings/StorageInfo";
 import type { SystemSettings } from "@/bindings/SystemSettings";
 import type { TrackPoint } from "@/bindings/TrackPoint";
@@ -83,6 +86,9 @@ export const api = {
   routeHeatmap: (viewMode: ViewMode, filter?: ActivityFilter) =>
     invoke<RouteHeatmap>("route_heatmap", { viewMode, filter }),
   getActivity: (id: number) => invoke<ActivityDetail>("get_activity", { id }),
+  /** Ids of up to `limit` activities like `id` (sport, start, distance), newest first. */
+  similarActivities: (id: number, limit: number) =>
+    invoke<number[]>("similar_activities", { id, limit }),
   updateActivity: (update: ActivityUpdate) => invoke<ActivityDetail>("update_activity", { update }),
   setActivityEquipment: (activityId: number, equipmentId: number | null) =>
     invoke<ActivityDetail>("set_activity_equipment", { activityId, equipmentId }),
@@ -104,6 +110,8 @@ export const api = {
   activitySegments: (id: number) => invoke<SegmentRow[]>("activity_segments", { id }),
   activityHeartRateZones: (id: number) =>
     invoke<ZoneTime[] | null>("activity_heart_rate_zones", { id }),
+  /** The 1–12 effect score, beside the EPOC training effect. */
+  activityEffectScore: (id: number) => invoke<EffectScore>("activity_effect_score", { id }),
   activityTrainingEffect: (id: number) =>
     invoke<TrainingEffect | null>("activity_training_effect", { id }),
   fitnessTrend: (id: number) => invoke<FitnessDay[]>("fitness_trend", { id }),
@@ -175,6 +183,10 @@ export const api = {
   addLibraryPhotos: (activityId: number, ids: string[]) =>
     invoke<Media[]>("add_library_photos", { activityId, ids }),
   deleteMedia: (id: number) => invoke<void>("delete_media", { id }),
+  /** Copied photos larger than the photo size setting allows. */
+  photosToShrink: () => invoke<ShrinkPreview>("photos_to_shrink"),
+  /** Replaces them by smaller versions; reports each through `media://shrink`. */
+  shrinkPhotos: () => invoke<ShrinkSummary>("shrink_photos"),
   getWeather: (activityId: number) => invoke<Weather | null>("get_weather", { activityId }),
   activityBestPerformances: (activityId: number) =>
     invoke<BestPerformance[]>("activity_best_performances", { activityId }),

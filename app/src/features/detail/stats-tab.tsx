@@ -171,18 +171,63 @@ export function StatsTab({ activityId, view }: { activityId: number; view: ViewM
                 connectNulls
                 isAnimationActive={false}
               />
-              {hasGap && (
-                <Line
-                  dataKey="gap"
-                  type="monotone"
-                  stroke="var(--color-gap)"
-                  strokeDasharray="4 3"
-                  dot={false}
-                  connectNulls
-                  isAnimationActive={false}
-                />
-              )}
-              {hasGap && <ChartLegend content={<ChartLegendContent />} />}
+            </LineChart>
+          </ChartContainer>
+        </ChartCard>
+      )}
+      {/* The pace on the flat for the same effort, with the pace faint behind it. */}
+      {hasGap && (
+        <ChartCard title={t("Grade-adjusted pace (GAP)")}>
+          <ChartContainer config={config} className="aspect-auto h-48 w-full">
+            <LineChart data={points}>
+              <CartesianGrid vertical={false} />
+              {distanceAxis}
+              {/* Faster (lower) paces at the top. */}
+              <YAxis
+                width={40}
+                reversed
+                tickLine={false}
+                axisLine={false}
+                domain={["dataMin", "dataMax"]}
+                tickFormatter={(v: number) => formatPace(v)}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value, name) => (
+                      <div className="flex flex-1 items-center justify-between gap-4 leading-none">
+                        <span className="text-muted-foreground">
+                          {name === "gap" ? t("GAP") : t("Pace")}
+                        </span>
+                        <span className="font-mono font-medium text-foreground tabular-nums">
+                          {formatPace(Number(value))} /km
+                        </span>
+                      </div>
+                    )}
+                    labelFormatter={(_, payload) =>
+                      `${formatNumber((payload?.[0]?.payload as TrackPoint | undefined)?.distance, 2)} km`
+                    }
+                  />
+                }
+              />
+              <Line
+                dataKey="pace"
+                type="monotone"
+                stroke="var(--color-pace)"
+                strokeOpacity={0.3}
+                dot={false}
+                connectNulls
+                isAnimationActive={false}
+              />
+              <Line
+                dataKey="gap"
+                type="monotone"
+                stroke="var(--color-gap)"
+                dot={false}
+                connectNulls
+                isAnimationActive={false}
+              />
+              <ChartLegend content={<ChartLegendContent />} />
             </LineChart>
           </ChartContainer>
         </ChartCard>

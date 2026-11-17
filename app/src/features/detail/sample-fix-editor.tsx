@@ -1,7 +1,6 @@
-import { ArrowDownUp, Equal, Spline, Trash2, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ArrowDownUp, Equal, Gauge, Spline, Trash2, X } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceArea, XAxis, YAxis } from "recharts";
-import type { CategoricalChartFunc } from "recharts/types/chart/types";
 
 import type { FixSource } from "@/bindings/FixSource";
 import type { SampleOp } from "@/bindings/SampleOp";
@@ -21,6 +20,7 @@ import { cumulativeMetres } from "./fix-math";
 import {
   detectHeartRateIssues,
   detectStepsIssues,
+  estimateStretch,
   previewSampleEdits,
   valueOf,
   type SampleChannel,
@@ -34,11 +34,15 @@ import { useUnsavedChanges } from "./use-unsaved-guard";
 const MAX_POINTS = 2000;
 
 const ISSUE_LABELS: Record<SampleIssueKind, string> = {
-  spike: tk("Spike"),
+  missing: tk("No values recorded"),
   dropout: tk("Dropout"),
+  outlier: tk("Implausible values"),
   startArtifact: tk("Implausible start"),
-  cadenceLock: tk("Reads the steps"),
 };
+
+/** Plot area inside the chart: the y-axis on the left, the margin on the right (px). */
+const Y_AXIS_WIDTH = 44;
+const MARGIN_RIGHT = 12;
 
 const CHANNELS: Record<SampleChannel, { label: string; unit: string; color: string }> = {
   heartRate: { label: tk("Heart rate (bpm)"), unit: "bpm", color: "var(--chart-3)" },
@@ -115,9 +119,23 @@ export function SampleFixEditor({
   }, [samples, preview, km, channel]);
   const hasValues = samples.some((s) => valueOf(s, channel) !== null);
 
-  const sampleAt = (state: Parameters<CategoricalChartFunc>[0]) => {
-    const index = Number(state.activeTooltipIndex);
-    return Number.isInteger(index) && data[index] ? data[index].i : null;
+  // Selecting goes by the pointer's position along the axis, so stretches without any values
+  // (nothing drawn there) can be selected too.
+  const plot = useRef<HTMLDivElement>(null);
+  const sampleAt = (clientX: number) => {
+    const box = plot.current?.getBoundingClientRect();
+    if (!box || samples.length === 0) return 0;
+    const left = box.left + Y_AXIS_WIDTH;
+    const share = Math.min(1, Math.max(0, (clientX - left) / (box.right - MARGIN_RIGHT - left)));
+    const target = km[0] + share * (km[km.length - 1] - km[0]);
+    let lo = 0;
+    let hi = km.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (km[mid] < target) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo > 0 && target - km[lo - 1] < km[lo] - target ? lo - 1 : lo;
   };
   const sorted = (a: number, b: number): [number, number] => (a <= b ? [a, b] : [b, a]);
   const select = (issue: SampleIssue) => setRange([issue.start, issue.end]);
@@ -140,14 +158,21 @@ export function SampleFixEditor({
         samples.findIndex((s) => s.time >= time),
       )
     ] ?? 0;
+  // The estimate from the pace for the selected stretch, if the rest of the activity tells enough.
+  const estimate = useMemo(
+    () => (range ? estimateStretch(preview, channel, range[0], range[1]) : null),
+    [preview, channel, range],
+  );
   const opLabel = (op: SampleOp) =>
     op.kind === "interpolate"
       ? t("Interpolated")
-      : op.kind === "set"
-        ? t("Set to {{value}}", { value: `${formatNumber(op.value)} ${unit}` })
-        : t("Shifted by {{value}}", {
-            value: `${op.value > 0 ? "+" : ""}${formatNumber(op.value)} ${unit}`,
-          });
+      : op.kind === "values"
+        ? t("Estimated from the pace")
+        : op.kind === "set"
+          ? t("Set to {{value}}", { value: `${formatNumber(op.value)} ${unit}` })
+          : t("Shifted by {{value}}", {
+              value: `${op.value > 0 ? "+" : ""}${formatNumber(op.value)} ${unit}`,
+            });
   const before = average(samples.map((s) => valueOf(s, channel)));
   const after = average(preview.map((s) => valueOf(s, channel)));
   const selectionAverage = range
@@ -158,91 +183,92 @@ export function SampleFixEditor({
   return (
     <div className="flex h-full min-h-0 gap-4">
       <div className="flex min-h-72 min-w-0 flex-1 flex-col gap-2 select-none">
-        <ChartContainer
-          config={config satisfies ChartConfig}
-          className="aspect-auto min-h-0 w-full flex-1 cursor-crosshair"
+        <div
+          ref={plot}
+          className="flex min-h-0 flex-1 cursor-crosshair"
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            const i = sampleAt(event.clientX);
+            setDragFrom(i);
+            setRange([i, i]);
+          }}
+          onPointerMove={(event) => {
+            if (dragFrom !== null) setRange(sorted(dragFrom, sampleAt(event.clientX)));
+          }}
+          onPointerUp={() => {
+            setDragFrom(null);
+            if (range && range[0] === range[1]) setRange(null);
+          }}
         >
-          <LineChart
-            data={data}
-            margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
-            onMouseDown={(state) => {
-              const i = sampleAt(state);
-              if (i === null) return;
-              setDragFrom(i);
-              setRange([i, i]);
-            }}
-            onMouseMove={(state) => {
-              const i = sampleAt(state);
-              if (dragFrom !== null && i !== null) setRange(sorted(dragFrom, i));
-            }}
-            onMouseUp={() => {
-              setDragFrom(null);
-              if (range && range[0] === range[1]) setRange(null);
-            }}
-            onMouseLeave={() => setDragFrom(null)}
+          <ChartContainer
+            config={config satisfies ChartConfig}
+            className="aspect-auto min-h-0 w-full flex-1"
           >
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="km"
-              type="number"
-              domain={["dataMin", "dataMax"]}
-              tickFormatter={(v: number) => `${formatNumber(v, 1)} km`}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              width={44}
-              tickLine={false}
-              axisLine={false}
-              domain={["dataMin - 5", "dataMax + 5"]}
-              tickFormatter={(v: number) => formatNumber(v)}
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(_, payload) =>
-                    `${formatNumber((payload?.[0]?.payload as Point | undefined)?.km, 2)} km`
-                  }
-                />
-              }
-            />
-            {range && (
-              <ReferenceArea
-                x1={km[range[0]]}
-                x2={km[range[1]]}
-                fill="var(--primary)"
-                fillOpacity={0.12}
-                stroke="var(--primary)"
-                strokeOpacity={0.4}
+            <LineChart data={data} margin={{ top: 8, right: MARGIN_RIGHT, bottom: 0, left: 0 }}>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="km"
+                type="number"
+                domain={["dataMin", "dataMax"]}
+                tickFormatter={(v: number) => `${formatNumber(v, 1)} km`}
+                tickLine={false}
+                axisLine={false}
               />
-            )}
-            {edits.length > 0 && (
+              <YAxis
+                width={Y_AXIS_WIDTH}
+                tickLine={false}
+                axisLine={false}
+                domain={["dataMin - 5", "dataMax + 5"]}
+                tickFormatter={(v: number) => formatNumber(v)}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={(_, payload) =>
+                      `${formatNumber((payload?.[0]?.payload as Point | undefined)?.km, 2)} km`
+                    }
+                  />
+                }
+              />
+              {range && (
+                <ReferenceArea
+                  x1={km[range[0]]}
+                  x2={km[range[1]]}
+                  fill="var(--primary)"
+                  fillOpacity={0.12}
+                  stroke="var(--primary)"
+                  strokeOpacity={0.4}
+                />
+              )}
+              {edits.length > 0 && (
+                <Line
+                  dataKey="original"
+                  type="monotone"
+                  stroke="var(--muted-foreground)"
+                  strokeOpacity={0.5}
+                  strokeDasharray="3 3"
+                  dot={false}
+                  strokeWidth={1}
+                  connectNulls
+                  isAnimationActive={false}
+                />
+              )}
               <Line
-                dataKey="original"
+                dataKey="edited"
                 type="monotone"
-                stroke="var(--muted-foreground)"
-                strokeOpacity={0.5}
-                strokeDasharray="3 3"
+                stroke="var(--color-edited)"
                 dot={false}
-                strokeWidth={1}
+                strokeWidth={1.5}
                 connectNulls
                 isAnimationActive={false}
               />
-            )}
-            <Line
-              dataKey="edited"
-              type="monotone"
-              stroke="var(--color-edited)"
-              dot={false}
-              strokeWidth={1.5}
-              connectNulls
-              isAnimationActive={false}
-            />
-          </LineChart>
-        </ChartContainer>
+            </LineChart>
+          </ChartContainer>
+        </div>
         <p className="text-xs text-muted-foreground">
           {hasValues
-            ? t("Drag over the chart to select a stretch.")
+            ? t("Drag over the chart to select a stretch, also where nothing was recorded.")
             : t("This activity has no values recorded here.")}
         </p>
       </div>
@@ -320,6 +346,20 @@ export function SampleFixEditor({
                 {t("Average {{value}}", { value: `${formatNumber(selectionAverage)} ${unit}` })}
               </p>
             )}
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!estimate}
+              title={
+                estimate
+                  ? t("From your pace, the way the rest of the activity follows it")
+                  : t("Not enough recorded values in the rest of the activity")
+              }
+              onClick={() => estimate && addEdit({ kind: "values", values: estimate })}
+            >
+              <Gauge />
+              {t("Estimate from the pace")}
+            </Button>
             <Button size="sm" variant="outline" onClick={() => addEdit({ kind: "interpolate" })}>
               <Spline />
               {t("Interpolate")}

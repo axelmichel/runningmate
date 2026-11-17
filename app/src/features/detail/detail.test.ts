@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import type { TrainingEffect } from "@/bindings/TrainingEffect";
 
 import { PACE_RAMP, rampColor, robustRange } from "./color-scale";
-import { basisNotes, effectLabel, effectLevel, formatRecovery } from "./training-effect";
+import {
+  basisNotes,
+  effectDescription,
+  effectLabel,
+  effectLevel,
+  formatRecovery,
+} from "./training-effect";
 
 describe("colour scale", () => {
   it("interpolates and clamps", () => {
@@ -70,5 +76,13 @@ describe("training effect wording", () => {
       "Resting heart rate 60 bpm from your profile.",
       "Rated for your VO2max of 48.2, estimated from your runs.",
     ]);
+  });
+});
+
+describe("effect score wording", () => {
+  it("describes each score", () => {
+    expect(effectDescription(1)).toMatch(/^Recovery/);
+    expect(effectDescription(6)).toMatch(/^Tempo/);
+    expect(effectDescription(12)).toMatch(/^Anaerobic/);
   });
 });

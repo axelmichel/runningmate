@@ -188,6 +188,31 @@ pub fn insert(
     Ok(conn.last_insert_rowid())
 }
 
+/// Photos copied into the media folder that still exist, one per file.
+pub fn copied_photos(conn: &Connection, media_dir: &Path) -> AppResult<Vec<Media>> {
+    let mut stmt = conn.prepare(
+        "SELECT MIN(id) AS id, media_type, file_path FROM media
+         WHERE media_type = 'image' GROUP BY file_path ORDER BY id",
+    )?;
+    let rows = stmt.query_map([], |row| from_row(row, media_dir))?;
+    let mut photos = Vec::new();
+    for photo in rows {
+        let photo = photo?;
+        if !photo.linked && !photo.missing {
+            photos.push(photo);
+        }
+    }
+    Ok(photos)
+}
+
+/// Points every row of the file `from` at `to`, after the file was replaced.
+pub fn move_file(conn: &Connection, from: &str, to: &str) -> AppResult<usize> {
+    Ok(conn.execute(
+        "UPDATE media SET file_path = ?2 WHERE file_path = ?1",
+        params![from, to],
+    )?)
+}
+
 /// Deletes the row and returns the file path, so the caller can remove the file.
 pub fn delete(conn: &Connection, id: i64) -> AppResult<String> {
     let path: String = conn
@@ -280,6 +305,45 @@ mod tests {
         assert_eq!(items[0].activity_title.as_deref(), Some("Run"));
         assert_eq!(items[1].media.media_type, MediaType::Video);
         assert_eq!(items[2].view_mode, ViewMode::Cycling);
+    }
+
+    #[test]
+    fn copied_photos_skip_videos_links_and_missing_files() {
+        let db = Db::open_in_memory().unwrap();
+        let conn = db.conn().unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let media_dir = dir.path().join("media");
+        std::fs::create_dir_all(&media_dir).unwrap();
+        let file = |path: std::path::PathBuf| {
+            std::fs::write(&path, b"").unwrap();
+            path.to_str().unwrap().to_string()
+        };
+        let copy = file(media_dir.join("run.jpg"));
+        let linked = file(dir.path().join("original.jpg"));
+        insert(&conn, 1, MediaType::Image, &copy).unwrap();
+        insert(&conn, 2, MediaType::Image, &copy).unwrap();
+        insert(&conn, 1, MediaType::Image, &linked).unwrap();
+        insert(
+            &conn,
+            1,
+            MediaType::Video,
+            &file(media_dir.join("clip.mp4")),
+        )
+        .unwrap();
+        insert(
+            &conn,
+            1,
+            MediaType::Image,
+            media_dir.join("gone.jpg").to_str().unwrap(),
+        )
+        .unwrap();
+
+        let photos = copied_photos(&conn, &media_dir).unwrap();
+        assert_eq!(photos.len(), 1);
+        assert_eq!(photos[0].file_path, copy);
+
+        assert_eq!(move_file(&conn, &copy, "/new/run.jpg").unwrap(), 2);
+        assert!(list(&conn, 2, &media_dir).unwrap()[0].file_path == "/new/run.jpg");
     }
 
     #[test]

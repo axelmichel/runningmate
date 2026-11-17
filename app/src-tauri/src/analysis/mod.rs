@@ -4,6 +4,7 @@
 
 pub mod cardio;
 pub mod comparison;
+pub mod effect_score;
 pub mod fitness;
 pub mod health;
 pub mod series;
@@ -25,6 +26,7 @@ use serde::Serialize;
 use ts_rs::TS;
 
 use self::{
+    effect_score::{EffectScore, SegmentAverages},
     fitness::FitnessDay,
     training_effect::{HeartRateBasis, TrainingEffect},
     zones::ZoneTime,
@@ -230,6 +232,77 @@ pub fn training_effect(
     ))
 }
 
+fn averages_from_row(row: &rusqlite::Row) -> rusqlite::Result<Option<SegmentAverages>> {
+    Ok(
+        match (
+            opt_f64(row, "hr")?,
+            opt_f64(row, "power")?,
+            opt_f64(row, "speed")?,
+            opt_f64(row, "pace")?,
+        ) {
+            (Some(heart_rate), Some(power), Some(speed), Some(pace)) => Some(SegmentAverages {
+                heart_rate,
+                power,
+                speed,
+                pace,
+            }),
+            _ => None,
+        },
+    )
+}
+
+/// The 1–12 effect score: the activity's split averages against the splits of the same sport in
+/// the 90 days before it.
+pub fn effect_score(conn: &Connection, id: i64) -> AppResult<EffectScore> {
+    let (view, date) = activity_basics(conn, id)?;
+    let current = conn.query_row(
+        "SELECT AVG(seg_avg_heart_rate) AS hr, AVG(seg_avg_power) AS power,
+            AVG(seg_avg_speed) AS speed, AVG(seg_avg_pace) AS pace
+         FROM activity_details WHERE activity_id = ?1",
+        [id.to_string()],
+        averages_from_row,
+    )?;
+    // Python only scores activities where every average is non-zero.
+    let Some(current) = current.filter(|c| {
+        [c.heart_rate, c.power, c.speed, c.pace]
+            .iter()
+            .all(|v| *v != 0.0)
+    }) else {
+        return Ok(EffectScore {
+            score: 1,
+            recovery_hours: effect_score::recovery_hours(1),
+        });
+    };
+
+    let types = view.allowed_types();
+    let placeholders = vec!["?"; types.len()].join(", ");
+    // Like the activity itself, earlier segments only count with the values the load uses: a
+    // segment recorded without heart rate has load 0 and would pull the baseline down.
+    let power = if view == ViewMode::Cycling {
+        " AND seg_avg_power > 0"
+    } else {
+        ""
+    };
+    let sql = format!(
+        "SELECT seg_avg_heart_rate AS hr, seg_avg_power AS power, seg_avg_speed AS speed,
+            seg_avg_pace AS pace
+         FROM activity_details JOIN activities ON activity_details.activity_id = activities.id
+         WHERE activities.id != ? AND activities.activity_type IN ({placeholders})
+           AND activities.date BETWEEN ? AND ?
+           AND seg_avg_heart_rate > 0 AND seg_avg_pace > 0 AND seg_avg_speed > 0{power}"
+    );
+    let mut values: Vec<rusqlite::types::Value> = vec![id.into()];
+    values.extend(types.iter().map(|t| (*t).to_string().into()));
+    values.push((date - HISTORY_DAYS * DAY_SECONDS).into());
+    values.push(date.into());
+    let history: Vec<SegmentAverages> = conn
+        .prepare(&sql)?
+        .query_map(rusqlite::params_from_iter(values), averages_from_row)?
+        .filter_map(|r| r.transpose())
+        .collect::<Result<_, _>>()?;
+    Ok(effect_score::effect_score(view, &current, &history))
+}
+
 /// Fitness, fatigue and form for the 90 days up to the activity.
 pub fn fitness_trend(conn: &Connection, id: i64) -> AppResult<Vec<FitnessDay>> {
     let (_, date) = activity_basics(conn, id)?;
@@ -432,5 +505,32 @@ mod tests {
         );
         segment(2, 0);
         assert_eq!(fitness_trend(&conn, 3).unwrap(), fitness);
+    }
+
+    #[test]
+    fn effect_score_leaves_out_history_without_heart_rate() {
+        let db = Db::open_in_memory().unwrap();
+        let conn = db.conn().unwrap();
+        let day = 1_746_530_314;
+        let segment = |id: i64, hr: i64| {
+            conn.execute(
+                "INSERT INTO activity_details (activity_id, segment_id, seg_distance,
+                    seg_avg_pace, seg_avg_heart_rate, seg_avg_power, seg_avg_speed)
+                 VALUES (?1, 0, 1.0, 6.0, ?2, 160, 2.8)",
+                rusqlite::params![id.to_string(), hr],
+            )
+            .unwrap();
+        };
+        insert_activity(&conn, 1, "Running", day - 2 * DAY_SECONDS, 1.0, "With HR");
+        segment(1, 125);
+        insert_activity(&conn, 3, "Running", day, 1.0, "Today");
+        segment(3, 125);
+        let with_history = effect_score(&conn, 3).unwrap();
+        assert_eq!(with_history.score, 7);
+
+        // An earlier run recorded without heart rate doesn't change it.
+        insert_activity(&conn, 2, "Running", day - DAY_SECONDS, 1.0, "Without HR");
+        segment(2, 0);
+        assert_eq!(effect_score(&conn, 3).unwrap(), with_history);
     }
 }
